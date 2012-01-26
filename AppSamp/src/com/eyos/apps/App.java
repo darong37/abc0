@@ -1,4 +1,4 @@
-package com.eyos;
+package com.eyos.apps;
 
 public class App {
 
