@@ -1,4 +1,4 @@
-package com.eyos.base.core;
+package com.eyos.base;
 
 public class DataSourceProvider {
 
