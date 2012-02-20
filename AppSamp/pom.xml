@@ -1,0 +1,17 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"…>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>eyos.com</groupId>
+  <artifactId>AppSamp</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0.0</version>
+  <name>Application Sample</name>
+  <url></url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>jar</scope>
+    </dependencies>
+  </dependencies>
+</project>
