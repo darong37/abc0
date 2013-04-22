@@ -1,0 +1,29 @@
+#!/usr/bin/bash -u
+## Required
+typeset APPLDIR=$( cd $(dirname $0) && pwd )
+typeset BASEDIR='..'            # ベースフォルダの  APPLDIRからの相対パス
+typeset CONFDIR='conf'          # 環境設定フォルダのBASEDIRからの相対パス
+## Optional
+#typeset DEFENVS='common'       # include設定ファイル名,複数指定可(space区切)
+#typeset ENVOPTS='siglmt:1'     # 環境設定用オプション,複数指定可(space区切)
+#typeset FPATH_B='func'         # Autoload Function Directory
+
+. $APPLDIR/$BASEDIR/$CONFDIR/defenv
+
+#### Main
+Hello
+{
+	ERRON
+	#
+	echo
+	echo
+
+	hoge
+	echo
+	echo
+} 2>&1 | tee -a $LOGFILE
+Bye
+
+#### Final
+
+exit
