@@ -3,9 +3,10 @@ cd
 git clone  git clone https://github.com/darong37/_home.git
 
 
-git add $target
-
 git status
-git push
+
+git add $target
+git commit -a -m "hoge"
+git push origin master
 
 
