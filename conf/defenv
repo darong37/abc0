@@ -1,0 +1,378 @@
+#!/usr/bin/bash -u
+######################################################################
+#@(#) Project        : Common Project
+#@(#) Team           : Infrastructure
+#@(#) Name           : defenv
+#@(#) Function       : Application Basic Centralized Definition of Environment.
+#@(#) Version        : v.1.0.0
+#@(#) Usege          : . ../$APPLDIR/$BASEDIR/$CONFDIR/defenv
+#@(#) Return code    :
+#@(#)                  0  : Successful completion.
+#@(#)                  >0 : An error condition occurred.
+#@(#) Host           : AIX
+#@(#) ACL            : bin / bin / 0444
+#@(#) Relation file  : *.conf
+#@(#) Notes          : following shell valiables must be defined.
+#@(#)                      APPLDIR
+#@(#)                      BASEDIR
+#@(#)                      CONFDIR
+#@(#)                      DEFENVS
+#@(#)                     (ENVOPTS) siglmt: arguments limit for definition of SIGNATURE
+#@(#)                     (FPATH_B)
+#@(#)
+#@(#)                  above variables will be preformated(full path),
+#@(#)
+#@(#)                  and then newly define following variables.
+#@(#)
+#@(#)                      APPLNAM
+#@(#)                      FIXMSGFMT
+#@(#)                      O_SIGLMT
+#@(#)                      SIGNATURE
+#@(#)                      LOCKKEY
+#@(#)
+#@(#)                      CSUBDIR
+#@(#)                      HSUBDIR
+#@(#)                      LOGSDIR
+#@(#)                      LOGFILE
+#@(#)                      LOGHIST
+#@(#)
+#@(#)                      TMPLOGS
+#@(#)                      TMPFILE
+#@(#)
+#@(#)                      SRVMODE
+#@(#)                      SRVROLE
+#@(#)
+######################################################################
+#@(#) Revision history
+#@(#) Date             Developer/Corrector Description
+#@(#) ________________ ___________________ ___________________________
+#@(#) 2013/02/06        E.Yoshida          New
+######################################################################
+unalias -a
+shopt -s expand_aliases
+if [[ "${1:-}" = "--xtrace" ]];then
+	set -x
+	shift
+fi
+[[ $( set -o |grep xtrace |perl -ple 's/^xtrace\s+//' ) != "off" ]] \
+&& export PS4='  +$LINENO	' \
+
+
+######################################################################
+# Definition
+######################################################################
+# $0 info
+readonly APPLNAM=$(basename $0 .sh)
+[[ $APPLNAM = 'bash' ]] && APPLDIR=${APPLDIR:-$PWD}
+
+# Basic Setting/Preformat
+#  check
+#	BASEDIR:-'..'
+#	CONFDIR:-'conf'
+#
+#	DEFENVS:-''
+#	ENVOPTS:-''
+#	FPATH_B:-''
+#
+readonly APPLDIR=${APPLDIR:-$( cd $(dirname  $0) && pwd )}
+readonly BASEDIR=$( cd ${APPLDIR} && cd ${BASEDIR:-'..'}   && pwd )
+readonly CONFDIR=$( cd ${BASEDIR} && cd ${CONFDIR:-'conf'} && pwd )
+readonly DEFENVS=${DEFENVS:-''}
+readonly ENVOPTS=${ENVOPTS:-''}
+readonly FPATH_B=${FPATH_B:+$( cd ${BASEDIR} && cd ${FPATH_B:-''} && pwd )}
+
+[[ ${APPLDIR:-/} != '/' ]] || { 
+	echo "defenv: Invalid dir-structure(APPLDIR: $APPLDIR)"
+	exit
+}
+[[ ${BASEDIR:-/} != '/' ]]  || { 
+	echo "defenv: Invalid dir-structure(BASEDIR: $BASEDIR)"
+	exit
+}
+[[ ${CONFDIR:-/} != '/' ]]  || { 
+	echo "defenv: Invalid dir-structure(CONFDIR: $CONFDIR)"
+	exit
+}
+
+
+# Constant/Default Value
+#  check
+#	default value
+#
+readonly LOGSDIR="${BASEDIR}/logs"     # BASEDIR からの相対パス
+readonly TMPLOGS="${BASEDIR}/tmp"      # 一時ファイルフォルダ
+readonly CSUBDIR='current'             # 最新ログサブフォルダ名
+readonly HSUBDIR='history'             # 履歴ログサブフォルダ名
+
+#readonly _DIRMOD='1777'
+#readonly _DIROWN='root:sys'
+
+
+######################################################################
+# ENV Options(ENVOPTS) 
+######################################################################
+typeset -i O_SIGLMT=8
+for _opt in $ENVOPTS;do
+  case $_opt in
+	'siglmt:'*)  O_SIGLMT=${_opt##siglmt:}
+	             ;;
+	*)           echo "Invalid ENVOPTS :'$_opt'"
+	             exit 98
+	             ;;
+  esac
+done
+unset _opt
+
+readonly O_SIGLMT
+
+
+######################################################################
+# Function Auto Load for bash (FPATH_B)
+######################################################################
+if [[ $FPATH_B != '' ]];then
+	for _func in $( ls -1 $FPATH_B 2>&- );do
+		_func=$( basename $_func )
+		( . $FPATH_B/${_func} ) || {
+			echo "Error while loading function: $_func in $FPATH_B"
+			exit 97
+		}
+		. $FPATH_B/$_func
+	done
+	unset _func
+fi
+
+
+######################################################################
+# SIGNATURE
+######################################################################
+typeset SIGNATURE="$(basename $0)"
+
+typeset    _prm
+typeset -i _cnt=0
+for _prm in "$@";do
+	_cnt=_cnt+1
+	(( _cnt > O_SIGLMT )) && break
+	
+	typeset _prm=$(
+		{
+			cat <<-'__PERL__'
+				s{^.+/}{};             # basename
+				s{\s+}{ }g;            # comprese space|tab
+				__END__
+			__PERL__
+			echo $_prm
+		} | perl -pl ''
+	)
+	SIGNATURE="${SIGNATURE} ${_prm}"
+done
+unset _prm
+unset _cnt
+
+readonly SIGNATURE
+
+
+######################################################################
+# Message Format
+######################################################################
+### the following is usage for main
+typeset FIXMSGFMT="%s [BASH] [%-5s] [%04d] [%4d,%4d] [${SIGNATURE:-$(basename $0)} #%03d] [%s]"
+F_say () { printf "$FIXMSGFMT" "$(date +'%H:%M:%S')" "${3:-Fatal}" ${4:-9999} $$ $PPID $1 "$2"; }
+# typeset MSG=$( F_say $LINENO 'any message' )
+### period
+
+unset _cmdlin
+
+readonly FIXMSGFMT
+
+
+######################################################################
+# Directory/File Policy
+######################################################################
+if [[ ! -d "${LOGSDIR}" ]]; then
+	mkdir -p "${LOGSDIR}"
+#	chmod ${_DIRMOD} "${LOGSDIR}"
+#	chown ${_DIROWN} "${LOGSDIR}"
+fi
+
+if [[ ! -d "${LOGSDIR}/${CSUBDIR}" ]]; then
+	mkdir -p         "${LOGSDIR}/${CSUBDIR}"
+#	chmod ${_DIRMOD} "${LOGSDIR}/${CSUBDIR}"
+#	chown ${_DIROWN} "${LOGSDIR}/${CSUBDIR}"
+fi
+
+if [[ ! -d "${LOGSDIR}/${HSUBDIR}" ]]; then
+	mkdir -p         "${LOGSDIR}/${HSUBDIR}"
+#	chmod ${_DIRMOD} "${LOGSDIR}/${HSUBDIR}"
+#	chown ${_DIROWN} "${LOGSDIR}/${HSUBDIR}"
+fi
+
+if [[ ! -d "${TMPLOGS}" ]]; then
+	mkdir -p "${TMPLOGS}"
+#	chmod ${_DIRMOD} "${TMPLOGS}"
+#	chown ${_DIROWN} "${TMPLOGS}"
+fi
+
+# SIGNATURE -> LOCKKEY
+typeset  LOCKKEY=$(
+	{
+		cat <<-'__PERL__'
+			s{\.[^\s]+ }{ };           # basename
+			s{[^0-9a-zA-Z_\- ]}{@}g;   # exclude meta-char
+			s{ }{-}g;
+			__END__
+		__PERL__
+		echo ${SIGNATURE}
+	} | perl -pl ''
+)
+
+
+readonly LOGFILE="${LOGSDIR}/${CSUBDIR}/${LOCKKEY}.lock"
+
+readonly LOGHIST="${LOGSDIR}/${HSUBDIR}/${LOCKKEY}_$(date '+%Y%m%d_%H%M%S').log"
+readonly TMPFILE="${TMPLOGS}/${APPLNAM}_$(date '+%Y%m%d_%H%M%S')_$$.tmp"
+
+
+######################################################################
+# Logging Function
+######################################################################
+function F_logger () {
+	local    syslog=off
+	if [[ "${1:-}" = "-syslog" ]];then
+		syslog=on
+		shift
+	fi
+	local    applog=off
+	if [[ "${1:-}" = "-applog" ]];then
+		applog=on
+		shift
+	fi
+	local    defmsg='unknown'
+	if [[ "${1:-}" = "-msg" ]];then
+		defmsg=$2
+		shift 2
+	fi
+
+	local    CATGRY=$1
+	local -i LINCNT=$2
+	local    RAWMSG=${3:-$defmsg}
+	local -i EVNTNO=${4:-0}
+	
+	local -i BASEVT
+	local    PREFIX
+	case $CATGRY in
+		'Succ')  BASEVT=0     ; PREFIX='###'  ;;
+		'Info')  BASEVT=1000  ; PREFIX='###'  ;;
+		'Warn')  BASEVT=6000  ; PREFIX='##!'  ;;
+		'Fatal') BASEVT=9000  ; PREFIX='#!!'  ;;
+		*)       BASEVT=7000  ; PREFIX='#??'  ;;
+	esac
+	EVNTNO=BASEVT+EVNTNO
+
+	local MSG=$( F_say $LINCNT "$RAWMSG" "$CATGRY" $EVNTNO )
+	if [[ $syslog = 'on' ]];then
+		#	logger -i -t "$(/usr/bin/id -un)" "${MSG}"
+		printf "%s %s\n" "$( date +'%Y/%m/%d')" "$MSG"  >> "$LOGSDIR/syslog.log"
+	fi
+	if [[ $applog = 'on' ]];then
+		echo "${PREFIX} $MSG"  >> "${LOGFILE}"
+	fi
+	echo "${PREFIX} $MSG"
+	
+	if [[ "$CATGRY" = 'Fatal' ]];then
+		local -i RTNCOD=${4:-99}
+		(( 0 < RTNCOD && RTNCOD < 256 )) || RTNCOD=99
+		exit $RTNCOD
+	fi
+}
+
+# 
+alias Success='F_logger -syslog -applog -msg "success"  "Succ"  $LINENO'
+alias    Info='F_logger                 -msg "unkown"   "Info"  $LINENO'
+alias    Warn='F_logger -syslog         -msg "warnning" "Warn"  $LINENO'
+alias     Die='F_logger -syslog         -msg "Dead"     "Fatal" $LINENO'
+
+alias ERRON=$(
+	cat <<-'_TEXT_'
+		trap 'Die "Unexpected Problem : $?"' ERR
+	_TEXT_
+)
+alias ERROFF='trap "" ERR'
+
+# Handler
+function F_prevproc () {
+	F_logger -syslog -applog -msg "begin: $LOGFILE" "Info" $1;
+}
+function F_postproc () {
+	local _lineno=$1
+	shift
+	local rtns=( "$@" );
+	
+	[ -e "$TMPFILE" ] && rm -f "$TMPFILE"
+	
+	for rtn in ${rtns[@]};do
+	(( rtn == 0 )) || {
+		echo "Error $rtn: ${LOGFILE%%.lock}.err"
+		cp -p $LOGFILE ${LOGHIST%%.log}.err
+		mv $LOGFILE ${LOGFILE%%.lock}.err
+		exit $rtn
+	}
+	done
+	F_logger -syslog -applog -msg "finish: ${LOGFILE%%.lock}.log" "Succ" $_lineno
+	cp -p $LOGFILE $LOGHIST
+	mv $LOGFILE ${LOGFILE%%.lock}.log
+}
+
+# Greeting
+alias Hello='F_prevproc $LINENO'
+alias Bye='F_postproc  $LINENO "${PIPESTATUS[@]}"'
+
+# Error Trap
+trap 'Die "defenv: Unexpected Problem: $?"' ERR
+
+
+######################################################################
+# Lock Management
+######################################################################
+if [[ -e ${LOGFILE} ]];then
+	typeset _lpid=$(  head -1 $LOGFILE )
+	_lpid=${_lpid##*: }
+	typeset _lppi=$( head -2 $LOGFILE | tail -1 )
+	_lppi=${_lppi##*: }
+	
+	typeset _lprc=$( ps -ef | perl -nle "print if /\s+${_lpid}\s+${_lppi}\s+/" )
+	[[ "$_lprc" = "" ]]                || {
+	                                      Warn "defenv: confirm $LOGFILE"
+	                                      Die  "defenv: Locked by $_lprc"
+	                                   }
+	mv $LOGFILE ${LOGFILE%%.lock}.no-unlock \
+		                               || Die "defenv: can not unlock: $LOGFILE"
+	Warn "defenv: Found Un-lock File:${LOGFILE%%.lock}.no-unlock"
+fi
+
+cat <<-__LOGHEADER__ > $LOGFILE
+	##@ PID  : $$
+	##@ PPID : $PPID
+	##@ $( ps -ef | perl -nle "print if /\s+$$\s+ $PPID\s+/" )
+	##@
+	##@ Satrt Time: $( date +'%Y/%m/%d %H:%M:%S' )
+	##@ Command   : $0 $@
+	##@ Appl Name : $APPLNAM
+	##@ Sigature  : $SIGNATURE
+	##@ Lock KEY  : $LOCKKEY
+	##@      File : $LOGFILE
+	##@ Inclue    : $DEFENVS
+	
+__LOGHEADER__
+
+
+######################################################################
+# Include
+######################################################################
+for _inc in ${DEFENVS};do
+	_inc="${_inc}.conf"
+	( . $CONFDIR/${_inc} )             || Die  "can not read ${_inc} in ${CONFDIR}"
+	.   $CONFDIR/${_inc}
+done
+
+trap '' ERR
+
