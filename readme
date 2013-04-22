@@ -1,0 +1,11 @@
+
+cd
+git clone  git clone https://github.com/darong37/_home.git
+
+
+git add $target
+
+git status
+git push
+
+
