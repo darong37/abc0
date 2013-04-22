@@ -1,0 +1,58 @@
+#!/usr/bin/bash -u
+## Required
+typeset APPLDIR=$( cd $(dirname $0) && pwd )
+typeset BASEDIR='..'            # ベースフォルダの  APPLDIRからの相対パス
+typeset CONFDIR='conf'          # 環境設定フォルダのBASEDIRからの相対パス
+## Optional
+typeset DEFENVS='common'        # include設定ファイル名,複数指定可(space区切)
+#typeset ENVOPTS='siglmt:1'     # 環境設定用オプション,複数指定可(space区切)
+#typeset FPATH_B='func'         # Autoload Function Directory
+
+. $APPLDIR/$BASEDIR/$CONFDIR/defenv
+
+#### Main
+Hello
+{
+	ERRON
+	#
+	echo "#"
+	echo '# Usage: chkdefenv [ -$ENVOPTS ] sample-args'
+	echo "#"
+	echo "#    ex. chkdefenv -sigopt:8 a b c"
+	echo "#"
+	echo "APPLDIR  : '$APPLDIR'"
+	echo "BASEDIR  : '$BASEDIR'"
+	echo "CONFDIR  : '$CONFDIR'"
+	echo "DEFENVS  : '$DEFENVS'"
+	echo "ENVOPTS  : '$ENVOPTS'"
+	echo "FPATH_B  : '$FPATH_B'"
+	echo 
+	echo "O_SIGLMT : '$O_SIGLMT'"
+	echo "SIGNATURE: '$SIGNATURE'"
+	echo "LOCKKEY  : '$LOCKKEY'"
+	echo 
+	echo "LOGSDIR  : '$LOGSDIR'"
+	echo "CSUBDIR  : '$CSUBDIR'"
+	echo "HSUBDIR  : '$HSUBDIR'"
+	echo "LOGFILE  : '$LOGFILE'"
+	echo "LOGHIST  : '$LOGHIST'"
+	echo
+	echo "TMPLOGS  : '$TMPLOGS'"
+	echo "TMPFILE  : '$TMPFILE'"
+	echo
+	echo "SRVMODE  : '$SRVMODE'"
+
+	echo 
+	echo "# Alias"
+	alias
+
+	echo 
+	echo "# Functions"
+	typeset -f | grep -i '^F_'
+
+} 2>&1 | tee -a $LOGFILE
+Bye
+
+#### Final
+
+exit
