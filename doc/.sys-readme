@@ -1,0 +1,97 @@
+
+構築手順
+
+バージョン等は適宜読みかえること。できるだけ手動での導入を行う。
+
+0) 準備
+	cd ~.abc    # 相対パスはここをBaseとする
+
+	mkdir .sys
+	cd .sys
+
+1) 7zip インストール
+
+	# コマンドラインバージョンのDownload(.sys/下に配置)
+	#	http://sourceforge.net/projects/sevenzip/files/7-Zip/${version:-9.20}/${archive:-7za920.zip}
+	#	http://sourceforge.net/projects/sevenzip/files/7-Zip/9.20/7za920.zip
+	#
+	# ここに解凍
+	#
+	
+2) msysgit インストール
+
+	# ポータブルバージョンのDownload(.sys/下に配置)
+	#	https://code.google.com/p/msysgit/downloads/list
+	#
+	
+	# バージョン等は適宜読みかえること
+	7za920\7za x PortableGit-1.8.1.2-preview20130201.7z
+
+3) mingw-get インストール
+
+	# zipバージョンのDownload(.sys/下に配置)
+	#	http://sourceforge.net/projects/mingw/files/Installer/mingw-get/${version:-mingw-get-0.5-beta-20120426-1}/${archive:-mingw-get-0.5-mingw32-beta-20120426-1-bin.zip}/download
+	#	http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.5-beta-20120426-1/mingw-get-0.5-mingw32-beta-20120426-1-bin.zip/download
+	#
+	# ここに解凍
+	#
+	# 解凍後の下のフォルダ（bin libexec var）を.sys以下に移動(bin libexec 以下は衝突しないことを確認)
+	#
+
+	## 改案
+	## mkdir mingw
+	## mkdir -p usr/local
+	## zipバージョンのDownload(.sys/mingw/下に配置)
+	## ここに解凍
+	## var/lib/mingw-get/data/defaults.xml の
+	##  	<sysroot subsystem="mingw32" path="%R" />
+	##  	<sysroot subsystem="MSYS" path="%R/msys/1.0" />
+	## を
+	##  	<sysroot subsystem="mingw32" path="%R" />
+	##  	<sysroot subsystem="MSYS" path="%R/../usr/local" />
+	## に変更する
+
+
+	
+	cd bin
+	# パッケージカタログの確認
+	mingw-get list
+	# var\lib\mingw-get\dataを見た方がいいかも
+
+	# パッケージカタログの更新
+	# mingw-get update
+	# 最初の場合は、mingw-get list の時に更新されているようだ
+
+	# mintty のインストール
+	mingw-get install mintty
+
+	# mintty.exe を .sys/bin にコピー
+
+
+4) winpty
+
+	# msysバージョンのDownload(.sys/下に配置)
+	#   	https://github.com/rprichard/winpty/downloads/
+	#
+	# winpty の解凍後のファイル(console.exe winpty.dll winpty-agent.exe)は
+	# 	.sys/bin
+	# に格納
+
+
+
+
+
+
+gitサンプル
+	cd
+	git clone https://github.com/darong37/.abc.git
+
+
+	git status
+
+	git add $target
+	git commit -a -m "hoge"
+	git push origin master
+
+
+
