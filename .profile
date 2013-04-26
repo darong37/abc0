@@ -44,4 +44,4 @@ cd $( f_convpath "${CALLDIR:-.}" )
 #alias irb='console irb.bat'
 #alias pry='console pry.bat'
 #alias gem='console gem.bat'
-#alias git='console git'
+alias git='console git'
