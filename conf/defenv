@@ -19,6 +19,7 @@
 #@(#)                      DEFENVS
 #@(#)                     (ENVOPTS) siglmt: arguments limit for definition of SIGNATURE
 #@(#)                     (FPATH_B)
+#@(#)                     (GBLENTM)
 #@(#)
 #@(#)                  above variables will be preformated(full path),
 #@(#)
@@ -55,7 +56,7 @@ if [[ "${1:-}" = "--xtrace" ]];then
 	shift
 fi
 [[ $( set -o |grep xtrace |perl -ple 's/^xtrace\s+//' ) != "off" ]] \
-&& export PS4='  +$LINENO	' \
+	&& export PS4='  +$LINENO	'
 
 
 ######################################################################
@@ -143,6 +144,27 @@ fi
 
 
 ######################################################################
+# Global Entry Time
+######################################################################
+F_mtime () {
+	local fmt=${1:-"%02d:%02d:%02d.%03d"}
+	perl -e '
+		use strict;
+		use warnings;
+		use Time::HiRes qw/ gettimeofday /;
+
+		my ($epocsec, $microsec) = gettimeofday();
+		my ($sec,$min,$hour) = localtime($epocsec);
+		printf("$ARGV[0]\n",$hour,$min,$sec,$microsec/1000);
+	' "$fmt"
+}
+if [[ "${GBLENTM:-}" = "" ]];then
+	GBLENTM=$( F_mtime )
+	export GBLENTM
+fi
+
+
+######################################################################
 # SIGNATURE
 ######################################################################
 typeset SIGNATURE="$(basename $0)"
@@ -174,11 +196,12 @@ readonly SIGNATURE
 ######################################################################
 # Message Format
 ######################################################################
-### the following is usage for main
 typeset FIXMSGFMT="%s [BASH] [%-5s] [%04d] [%4d,%4d] [${SIGNATURE:-$(basename $0)} #%03d] [%s]"
-F_say () { printf "$FIXMSGFMT" "$(date +'%H:%M:%S')" "${3:-Fatal}" ${4:-9999} $$ $PPID $1 "$2"; }
-# typeset MSG=$( F_say $LINENO 'any message' )
-### period
+F_fixmsg () { 
+	local mtim=$( F_mtime )
+#	printf "$FIXMSGFMT" "$(date +'%H:%M:%S.%N')" "${3:-Fatal}" ${4:-9999} $$ $PPID $1 "$2"; 
+	printf "$FIXMSGFMT" "$mtim" "${3:-Fatal}" ${4:-9999} $$ $PPID $1 "$2"; 
+}
 
 unset _cmdlin
 
@@ -188,35 +211,24 @@ readonly FIXMSGFMT
 ######################################################################
 # Directory/File Policy
 ######################################################################
-if [[ ! -d "${LOGSDIR}" ]]; then
-	mkdir -p "${LOGSDIR}"
-#	chmod ${_DIRMOD} "${LOGSDIR}"
-#	chown ${_DIROWN} "${LOGSDIR}"
-fi
-
-if [[ ! -d "${LOGSDIR}/${CSUBDIR}" ]]; then
-	mkdir -p         "${LOGSDIR}/${CSUBDIR}"
-#	chmod ${_DIRMOD} "${LOGSDIR}/${CSUBDIR}"
-#	chown ${_DIROWN} "${LOGSDIR}/${CSUBDIR}"
-fi
-
-if [[ ! -d "${LOGSDIR}/${HSUBDIR}" ]]; then
-	mkdir -p         "${LOGSDIR}/${HSUBDIR}"
-#	chmod ${_DIRMOD} "${LOGSDIR}/${HSUBDIR}"
-#	chown ${_DIROWN} "${LOGSDIR}/${HSUBDIR}"
-fi
-
-if [[ ! -d "${TMPLOGS}" ]]; then
-	mkdir -p "${TMPLOGS}"
-#	chmod ${_DIRMOD} "${TMPLOGS}"
-#	chown ${_DIROWN} "${TMPLOGS}"
-fi
+function F_mkdir () {
+	local dn=$1
+	if [[ ! -d "${dn}" ]]; then
+		mkdir -p "${dn}"
+	#	chmod ${_DIRMOD} "${dn}"
+	#	chown ${_DIROWN} "${dn}"
+	fi
+}
+F_mkdir  "${LOGSDIR}/${CSUBDIR}"
+F_mkdir  "${LOGSDIR}/${HSUBDIR}"
+F_mkdir  "${LOGSDIR}/${TMPLOGS}"
 
 # SIGNATURE -> LOCKKEY
 typeset  LOCKKEY=$(
 	{
 		cat <<-'__PERL__'
-			s{\.[^\s]+ }{ };           # basename
+			s{\.[^\s]+ }{ };           # .sh
+			s{\.[^\s]+$}{};
 			s{[^0-9a-zA-Z_\- ]}{@}g;   # exclude meta-char
 			s{ }{-}g;
 			__END__
@@ -224,37 +236,28 @@ typeset  LOCKKEY=$(
 		echo ${SIGNATURE}
 	} | perl -pl ''
 )
-
-
 readonly LOGFILE="${LOGSDIR}/${CSUBDIR}/${LOCKKEY}.lock"
 
 readonly LOGHIST="${LOGSDIR}/${HSUBDIR}/${LOCKKEY}_$(date '+%Y%m%d_%H%M%S').log"
 readonly TMPFILE="${TMPLOGS}/${APPLNAM}_$(date '+%Y%m%d_%H%M%S')_$$.tmp"
 
+readonly _SYSLOGF="$LOGSDIR/syslog.log"
+
 
 ######################################################################
 # Logging Function
 ######################################################################
+typeset _ENTKEY=$( echo $GBLENTM | perl -ple 's/[:.]//g;' )
 function F_logger () {
 	local    syslog=off
 	if [[ "${1:-}" = "-syslog" ]];then
 		syslog=on
 		shift
 	fi
-	local    applog=off
-	if [[ "${1:-}" = "-applog" ]];then
-		applog=on
-		shift
-	fi
-	local    defmsg='unknown'
-	if [[ "${1:-}" = "-msg" ]];then
-		defmsg=$2
-		shift 2
-	fi
 
 	local    CATGRY=$1
 	local -i LINCNT=$2
-	local    RAWMSG=${3:-$defmsg}
+	local    RAWMSG=${3:-'unknown'}
 	local -i EVNTNO=${4:-0}
 	
 	local -i BASEVT
@@ -268,13 +271,10 @@ function F_logger () {
 	esac
 	EVNTNO=BASEVT+EVNTNO
 
-	local MSG=$( F_say $LINCNT "$RAWMSG" "$CATGRY" $EVNTNO )
+	local MSG=$( F_fixmsg $LINCNT "$RAWMSG" "$CATGRY" $EVNTNO )
 	if [[ $syslog = 'on' ]];then
 		#	logger -i -t "$(/usr/bin/id -un)" "${MSG}"
-		printf "%s %s\n" "$( date +'%Y/%m/%d')" "$MSG"  >> "$LOGSDIR/syslog.log"
-	fi
-	if [[ $applog = 'on' ]];then
-		echo "${PREFIX} $MSG"  >> "${LOGFILE}"
+		printf "%s %s %s\n" "$(date +'%Y/%m/%d')" "${_ENTKEY}" "$MSG"  >> "$_SYSLOGF"
 	fi
 	echo "${PREFIX} $MSG"
 	
@@ -286,10 +286,9 @@ function F_logger () {
 }
 
 # 
-alias Success='F_logger -syslog -applog -msg "success"  "Succ"  $LINENO'
-alias    Info='F_logger                 -msg "unkown"   "Info"  $LINENO'
-alias    Warn='F_logger -syslog         -msg "warnning" "Warn"  $LINENO'
-alias     Die='F_logger -syslog         -msg "Dead"     "Fatal" $LINENO'
+alias Info='F_logger         "Info"  $LINENO'
+alias Warn='F_logger -syslog "Warn"  $LINENO'
+alias Die='F_logger  -syslog "Fatal" $LINENO'
 
 alias ERRON=$(
 	cat <<-'_TEXT_'
@@ -300,10 +299,26 @@ alias ERROFF='trap "" ERR'
 
 # Handler
 function F_prevproc () {
-	F_logger -syslog -applog -msg "begin: $LOGFILE" "Info" $1;
+	local _lineno=${1:--1}
+	shift
+	cat <<-__LOGHEADER__ > $LOGFILE
+		##@ PID  : $$
+		##@ PPID : $PPID
+		##@ $( ps -ef | perl -nle "print if /\s+$$\s+ $PPID\s+/" )
+		##@
+		##@ Entry Time : $GBLENTM
+		##@ Command    : $0 $*
+		##@ Appl Name  : $APPLNAM
+		##@ Signature  : $SIGNATURE
+		##@ Lock File  : $LOGFILE
+		##@ Inclue     : $DEFENVS
+		
+	__LOGHEADER__
+	F_logger -syslog "Info" "$_lineno" "begin: $LOGFILE" \
+	                                   | tee -a $LOGFILE
 }
 function F_postproc () {
-	local _lineno=$1
+	local _lineno=${1:--1}
 	shift
 	local rtns=( "$@" );
 	
@@ -312,18 +327,36 @@ function F_postproc () {
 	for rtn in ${rtns[@]};do
 	(( rtn == 0 )) || {
 		echo "Error $rtn: ${LOGFILE%%.lock}.err"
+		cat <<-__FOOTER__ >> $LOGFILE
+			
+			##@ Statuses   : ${rtns[@]}
+			##@ End Time   : $( date +'%Y/%m/%d %H:%M:%S' )    ETime : $SECONDS sec.
+			##@ Log File   : ${LOGFILE%%.lock}.err
+			##@ Log Hist   : ${LOGHIST%%.log}.err
+			##@ Forced Exit: $rtn
+		__FOOTER__
 		cp -p $LOGFILE ${LOGHIST%%.log}.err
 		mv $LOGFILE ${LOGFILE%%.lock}.err
 		exit $rtn
 	}
 	done
-	F_logger -syslog -applog -msg "finish: ${LOGFILE%%.lock}.log" "Succ" $_lineno
+	
+	F_logger -syslog "Succ" "$_lineno" "finish: ${LOGFILE%%.lock}.log" \
+	                                   | tee -a $LOGFILE
+	cat <<-__FOOTER__ >> $LOGFILE
+		
+		##@ Statuses   : ${rtns[@]}
+		##@ End Time   : $( date +'%Y/%m/%d %H:%M:%S' )    ETime : $SECONDS sec.
+		##@ Log File   : ${LOGFILE%%.lock}.log
+		##@ Log Hist   : $LOGHIST
+		##@ Normal End
+	__FOOTER__
 	cp -p $LOGFILE $LOGHIST
 	mv $LOGFILE ${LOGFILE%%.lock}.log
 }
 
 # Greeting
-alias Hello='F_prevproc $LINENO'
+alias Hello='F_prevproc $LINENO "$@"'
 alias Bye='F_postproc  $LINENO "${PIPESTATUS[@]}"'
 
 # Error Trap
@@ -348,21 +381,6 @@ if [[ -e ${LOGFILE} ]];then
 		                               || Die "defenv: can not unlock: $LOGFILE"
 	Warn "defenv: Found Un-lock File:${LOGFILE%%.lock}.no-unlock"
 fi
-
-cat <<-__LOGHEADER__ > $LOGFILE
-	##@ PID  : $$
-	##@ PPID : $PPID
-	##@ $( ps -ef | perl -nle "print if /\s+$$\s+ $PPID\s+/" )
-	##@
-	##@ Satrt Time: $( date +'%Y/%m/%d %H:%M:%S' )
-	##@ Command   : $0 $@
-	##@ Appl Name : $APPLNAM
-	##@ Sigature  : $SIGNATURE
-	##@ Lock KEY  : $LOCKKEY
-	##@      File : $LOGFILE
-	##@ Inclue    : $DEFENVS
-	
-__LOGHEADER__
 
 
 ######################################################################

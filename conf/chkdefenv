@@ -26,6 +26,7 @@ Hello
 	echo "DEFENVS  : '$DEFENVS'"
 	echo "ENVOPTS  : '$ENVOPTS'"
 	echo "FPATH_B  : '$FPATH_B'"
+	echo "GBLENTM  : '$GBLENTM'"
 	echo 
 	echo "O_SIGLMT : '$O_SIGLMT'"
 	echo "SIGNATURE: '$SIGNATURE'"

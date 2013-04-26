@@ -18,7 +18,9 @@ Hello
 	echo
 	echo
 
-	hoge
+	bash $APPLDIR/sub_sample.sh
+
+#	hoge
 	echo
 	echo
 } 2>&1 | tee -a $LOGFILE
@@ -27,3 +29,4 @@ Bye
 #### Final
 
 exit
+# cksum: 166084656 340

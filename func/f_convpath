@@ -1,0 +1,26 @@
+#!/usr/bin/bash -u
+
+f_convpath () {
+	if [[ $1 = '-r' ]];then
+		{
+			cat <<-'_PERL_'
+				s{^/([a-zA-Z])/}{$1:\\};   # windows drive
+				s{/}{\\}g;                 # windows path
+				__END__
+			_PERL_
+			echo "$2"
+		} | perl -pl
+	else
+		{
+			cat <<-'_PERL_'
+				$_ = lcfirst;              # windows drive
+				s{^([a-zA-Z]):\\}{/$1/};   # windows drive
+				s{\\}{/}g;                 # windows path
+				__END__
+			_PERL_
+			echo "$1"
+		} | perl -pl
+	fi
+}
+
+
