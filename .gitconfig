@@ -1,0 +1,9 @@
+[user]
+	name = darong37
+	email = darong37@gmail.com
+[http]
+	proxy = http://mec-proxy2.gslb.in.mec.co.jp:8080
+[color]
+	ui = true
+[core]
+	autocrlf = false

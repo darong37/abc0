@@ -4,20 +4,20 @@ rem
 rem dirname : %~dp0
 rem basename: %~nx0
 rem 
-rem %~0     ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½    ï¿½F[test]
-rem %~f0    ï¿½c ï¿½tï¿½ï¿½ï¿½pï¿½X      ï¿½F[C:\home\edu\BAT\expand\test.bat]
-rem %~d0    ï¿½c ï¿½hï¿½ï¿½ï¿½Cï¿½uï¿½ï¿½    ï¿½F[C:]
-rem %~p0    ï¿½c ï¿½pï¿½Xï¿½ï¿½ï¿½Ì‚ï¿½    ï¿½F[\home\edu\BAT\expand\]
-rem %~n0    ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½    ï¿½F[test]ï¿½iï¿½gï¿½ï¿½ï¿½qï¿½ï¿½ï¿½ï¿½ï¿½j
-rem %~x0    ï¿½c ï¿½gï¿½ï¿½ï¿½q        ï¿½F[.bat]
-rem %~s0    ï¿½c ï¿½Zï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½Ì‚ï¿½  ï¿½F[C:\home\edu\BAT\expand\test.bat]
-rem %~a0    ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½F[--a------]
-rem %~t0    ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½t  ï¿½F[2010/02/05 00:45]
-rem %~z0    ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½Tï¿½Cï¿½Yï¿½F[204]
-rem %~dp0   ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ÌêŠï¿½F[C:\home\edu\BAT\expand\]
-rem %~nx0   ï¿½c ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½    ï¿½F[test.bat]ï¿½iï¿½gï¿½ï¿½ï¿½qï¿½tï¿½ï¿½ï¿½j
-rem %~fs0   ï¿½c ï¿½ï¿½ï¿½Sï¿½Èƒpï¿½Xï¿½Æ’Zï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½F[C:\home\edu\BAT\expand\test.bat]
-rem %~ftza0 ï¿½c ï¿½ï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½      ï¿½F[--a------ 2010/02/05 00:45 204 C:\home\edu\BAT\expand\test.bat]
+rem %~0     c ƒtƒ@ƒCƒ‹–¼    F[test]
+rem %~f0    c ƒtƒ‹ƒpƒX      F[C:\home\edu\BAT\expand\test.bat]
+rem %~d0    c ƒhƒ‰ƒCƒu–¼    F[C:]
+rem %~p0    c ƒpƒX–¼‚Ì‚İ    F[\home\edu\BAT\expand\]
+rem %~n0    c ƒtƒ@ƒCƒ‹–¼    F[test]iŠg’£q–³‚µj
+rem %~x0    c Šg’£q        F[.bat]
+rem %~s0    c ’Z‚¢–¼‘O‚Ì‚İ  F[C:\home\edu\BAT\expand\test.bat]
+rem %~a0    c ƒtƒ@ƒCƒ‹‘®«  F[--a------]
+rem %~t0    c ƒtƒ@ƒCƒ‹“ú•t  F[2010/02/05 00:45]
+rem %~z0    c ƒtƒ@ƒCƒ‹ƒTƒCƒYF[204]
+rem %~dp0   c ƒtƒ@ƒCƒ‹‚ÌêŠF[C:\home\edu\BAT\expand\]
+rem %~nx0   c ƒtƒ@ƒCƒ‹–¼    F[test.bat]iŠg’£q•t‚«j
+rem %~fs0   c Š®‘S‚ÈƒpƒX‚Æ’Z‚¢–¼‘OF[C:\home\edu\BAT\expand\test.bat]
+rem %~ftza0 c •¡‡•\¦      F[--a------ 2010/02/05 00:45 204 C:\home\edu\BAT\expand\test.bat]
 rem 
 
 rem 

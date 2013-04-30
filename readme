@@ -17,11 +17,16 @@ git mv old-name new-name
 削除する場合
 git rm $target
 
-add後commit前のファイルをadd前に戻す
-git reset HEAD <file>..
 
+やり直し
+	add後ファイルを戻す
+	git reset HEAD <file>..
 
+	直前にしたコミットをやり直す
+	git commit --amend
 
+	git reset --soft   → ワークディレクトリの内容はそのままでコミットだけを取り消す。
+	git reset --hard   → コミット取り消した上でワークディレクトリの内容も書き換える。
 
 マージする
 git pull
