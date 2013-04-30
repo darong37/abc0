@@ -69,5 +69,5 @@ set tm06=%tm11:~0,2%%tm11:~3,2%%tm11:~6,2%
 rem 
 rem Else
 rem 
-set http_proxy=http://mec-proxy2.gslb.in.mec.co.jp:8080
+set http_proxy=http://xxxx:8080
 
