@@ -23,7 +23,7 @@ git rm $target
 	git reset HEAD <file>..
 
 	直前にしたコミットをやり直す
-	git commit --amend
+	(?) git commit --amend
 
 	git reset --soft   → ワークディレクトリの内容はそのままでコミットだけを取り消す。
 	git reset --hard   → コミット取り消した上でワークディレクトリの内容も書き換える。
