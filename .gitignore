@@ -1,4 +1,5 @@
 .sys
+apps
 logs
 workspace
 .bash_history

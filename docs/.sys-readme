@@ -41,19 +41,25 @@
 	## 改案
 	## mkdir mingw
 	## mkdir -p usr/local
-	## zipバージョンのDownload(.sys/mingw/下に配置)
-	## ここに解凍
-	## var/lib/mingw-get/data/defaults.xml の
+	## zipバージョンのDownload(.sys/下に配置)
+	##
+	## ここに解凍, ディレクトリを変更
+	## mv mingw-get-${version}  mingw
+	##
+	## mingw/var/lib/mingw-get/data/defaults.xml を
+	## mingw/var/lib/mingw-get/data/profile.xml にコピーする
+	##
+	## mingw/var/lib/mingw-get/data/profile.xml の
 	##  	<sysroot subsystem="mingw32" path="%R" />
 	##  	<sysroot subsystem="MSYS" path="%R/msys/1.0" />
 	## を
 	##  	<sysroot subsystem="mingw32" path="%R" />
-	##  	<sysroot subsystem="MSYS" path="%R/../usr/local" />
+	##  	<sysroot subsystem="MSYS" path="%R/.." />
 	## に変更する
 
 
 	
-	cd bin
+	cd mingw/bin
 	# パッケージカタログの確認
 	mingw-get list
 	# var\lib\mingw-get\dataを見た方がいいかも
@@ -65,7 +71,13 @@
 	# mintty のインストール
 	mingw-get install mintty
 
-	# mintty.exe を .sys/bin にコピー
+	## mingw/var/lib/mingw-get/data/profile.xml の
+	##  	<sysroot subsystem="mingw32" path="%R" />
+	##  	<sysroot subsystem="MSYS" path="%R/.." />
+	## を
+	##  	<sysroot subsystem="mingw32" path="%R" />
+	##  	<sysroot subsystem="MSYS" path="%R/../usr/local" />
+	## に変更する
 
 
 4) winpty

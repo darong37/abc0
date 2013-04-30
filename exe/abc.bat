@@ -4,7 +4,7 @@ rem assignToExe options
 rem   Visiblity   : Invisible application
 rem   Working dir : current
 rem 
-call C:\Users\JKK0544\.abc\exe\_init.bat
+call %~dp0\_init.bat
 
 set CALLDIR=%~dp1
 
@@ -18,5 +18,5 @@ IF not EXIST %MINLOGDIR% (
 )
 set MINLOG=%MINLOGDIR%\local_%tm06%_bash.log
 
-%mttyExe% -t local-bash -l %MINLOG% /bin/bash --login -i
+%mttyExe% -t "Another Bash Console"  -l %MINLOG% /bin/bash --login -i
 

@@ -1,6 +1,15 @@
 
+
 cd
 git clone https://github.com/darong37/.abc.git
+
+.gitconfig.samp
+exe/_init.bat.samp
+‚ğC³‚·‚é
+
+
+
+
 
 ó‘ÔŠm”F
 git status
