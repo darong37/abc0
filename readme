@@ -16,3 +16,15 @@ git mv old-name new-name
 
 削除する場合
 git rm $target
+
+add後commit前のファイルをadd前に戻す
+git reset HEAD <file>..
+
+
+
+
+マージする
+git pull
+
+マージする代わりにリベースする(未確認)
+git pull --rebase
