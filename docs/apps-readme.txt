@@ -13,4 +13,8 @@ Sakura Editor (SakuraDown)
 FFFTP
 	Download zip-version 
 		http://sourceforge.jp/projects/ffftp/releases/
-	
+
+
+TeraTermPro
+	download zip-version to ./teratermpro
+		wget http://www.sakurachan.org/soft/teraterm-j/files/ttermp23.zip

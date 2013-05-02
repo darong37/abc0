@@ -1,4 +1,4 @@
-rem @ECHO OFF
+@ECHO OFF
 rem 
 rem 
 rem dirname : %~dp0
@@ -72,7 +72,7 @@ rem Date Time
 rem 
 set _dt08=%date:~-10,4%%date:~-5,2%%date:~-2,2%
 set _tm11=%time: =0%
-set _tm06=%tm11:~0,2%%tm11:~3,2%%tm11:~6,2%
+set _tm06=%_tm11:~0,2%%_tm11:~3,2%%_tm11:~6,2%
 
 
 rem 
