@@ -1,6 +1,10 @@
+.gem
 .sys
+.sys0
 apps
 logs
 workspace
 .bash_history
 .gitconfig
+.lesshst
+.pry_history

@@ -46,7 +46,7 @@ set editExe=%HOME%\AppData\Roaming\sakura\sakura.exe
 set ffftExe=%APPSBASE%\ffftp\FFFTP.exe
 set mttyExe=%BASHBASE%\bin\mintty.exe
 set perlExe=%BASHBASE%\bin\perl.exe
-set rubyExe=%APPSBASE%\ruby\current\bin\ruby.exe
+set rubyExe=%APPSBASE%\ruby\bin\ruby.exe
 
 set cmdWins=c:\Windows\system32\cmd.exe
 set expWins=c:\Windows\explorer.exe

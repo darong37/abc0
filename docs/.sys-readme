@@ -7,7 +7,7 @@
 	cd ~.abc    # 相対パスはここをBaseとする
 
 	mkdir .sys
-	cd .sys
+
 
 1) 7zip インストール
 
@@ -17,93 +17,98 @@
 	#
 	# ここに解凍
 	#
-	
-2) msysgit インストール
+	mv $7zip-folder bin
+	mkdir archive
+	mv $7zip-archive archive
 
-	# ポータブルバージョンのDownload(.sys/下に配置)
-	#	https://code.google.com/p/msysgit/downloads/list
-	#
-	
-	# バージョン等は適宜読みかえること
-	7za920\7za x PortableGit-1.8.1.2-preview20130201.7z
+2) mingw-get インストール
 
-3) mingw-get インストール
-
-	# zipバージョンのDownload(.sys/下に配置)
+	# Download zipバージョン to .sys/
 	#	http://sourceforge.net/projects/mingw/files/Installer/mingw-get/${version:-mingw-get-0.5-beta-20120426-1}/${archive:-mingw-get-0.5-mingw32-beta-20120426-1-bin.zip}/download
 	#	http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.5-beta-20120426-1/mingw-get-0.5-mingw32-beta-20120426-1-bin.zip/download
 	#
 	# ここに解凍
 	#
-	# 解凍後の下のフォルダ（bin libexec var）を.sys以下に移動(bin libexec 以下は衝突しないことを確認)
-	#
 
-	## 改案
-	## mkdir mingw
-	## mkdir -p usr/local
-	## zipバージョンのDownload(.sys/下に配置)
-	##
-	## ここに解凍, ディレクトリを変更
-	## mv mingw-get-${version}  mingw
-	##
-	## mingw/var/lib/mingw-get/data/defaults.xml を
-	## mingw/var/lib/mingw-get/data/profile.xml にコピーする
-	##
-	## mingw/var/lib/mingw-get/data/profile.xml の
-	##  	<sysroot subsystem="mingw32" path="%R" />
-	##  	<sysroot subsystem="MSYS" path="%R/msys/1.0" />
-	## を
-	##  	<sysroot subsystem="mingw32" path="%R" />
-	##  	<sysroot subsystem="MSYS" path="%R/.." />
-	## に変更する
-
-
-	
+	cd ~/.abc/.sys
+	mv $mingw-folder mingw
 	cd mingw/bin
+	
+	# .sys/mingw/var/lib/mingw-get/data/defaults.xml を
+	# .sys/mingw/var/lib/mingw-get/data/profile.xml にコピーする
+	#
+	# .sys/mingw/var/lib/mingw-get/data/profile.xml の
+	#  	<sysroot subsystem="mingw32" path="%R" />
+	#  	<sysroot subsystem="MSYS" path="%R/msys/1.0" />
+	# を
+	#  	<sysroot subsystem="mingw32" path="%R" />
+	#  	<sysroot subsystem="MSYS" path="%R/.." />
+	# に変更する
+
 	# パッケージカタログの確認
 	mingw-get list
-	# var\lib\mingw-get\dataを見た方がいいかも
+	# .sys/mingw/var\lib\mingw-get\dataを見た方がいいかも
 
 	# パッケージカタログの更新
 	# mingw-get update
 	# 最初の場合は、mingw-get list の時に更新されているようだ
 
+
+3) MSYS等 インストール
+	
+	# MSYS のインストール
+	mingw-get install msys-base
+	
+	# perl のインストール
+	mingw-get install msys-perl
+	
 	# mintty のインストール
 	mingw-get install mintty
 
-	## mingw/var/lib/mingw-get/data/profile.xml の
-	##  	<sysroot subsystem="mingw32" path="%R" />
-	##  	<sysroot subsystem="MSYS" path="%R/.." />
-	## を
-	##  	<sysroot subsystem="mingw32" path="%R" />
-	##  	<sysroot subsystem="MSYS" path="%R/../usr/local" />
-	## に変更する
 
 
-4) winpty
+4) minttyの起動
 
-	# msysバージョンのDownload(.sys/下に配置)
+	cd ~/.abc/exe
+	abc
+	
+	(ここからの作業はminttyで行います)
+
+
+
+5) msysgit インストール
+	mkdir git
+
+	# Download ポータブルバージョン to .sys/git
+	#	https://code.google.com/p/msysgit/downloads/list
+	#
+	# ここに解凍
+	#
+	cd git
+	7za x $7zip-file
+	mv $7zip-file ../archive
+
+
+6) winpty
+
+	# Download msysバージョン to .sys/archive
 	#   	https://github.com/rprichard/winpty/downloads/
 	#
-	# winpty の解凍後のファイル(console.exe winpty.dll winpty-agent.exe)は
+	# winpty の解凍後のファイル(console.exe winpty.dll winpty-agent.exe)を
 	# 	.sys/bin
 	# に格納
 
 
+7) Ruby
+	# Download to ./sys
+	#	http://rubyinstaller.org/downloads/archives
+	#	7zip をとる.
+	#
+	cd .sys
+	7za x $ruby-7zip-archive
+	mv $ruby-7zip-archive archive
+	mv $ruby-folder ruby
 
-
-
-
-gitサンプル
-	cd
-	git clone https://github.com/darong37/.abc.git
-
-
-	git status
-
-	git add $target
-	git commit -a -m "hoge"
-	git push origin master
-
-
+	# pryのInstall
+	gem install pry
 

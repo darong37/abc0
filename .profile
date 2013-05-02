@@ -5,7 +5,7 @@ export PS1='
 #
 \$ '
 
-#export PATH=$PATH:~/bin:~/apps/ruby/current/bin:~/apps/msysgit/bin
+export PATH=$PATH:/git/bin:/ruby/bin:~/bin:~/exe
 export FPATH=$HOME/func
 
 export LANG=ja_JP.SJIS
@@ -41,7 +41,7 @@ cd $( f_convpath "${CALLDIR:-.}" )
 #
 # For Ruby
 #
-#alias irb='console irb.bat'
-#alias pry='console pry.bat'
-#alias gem='console gem.bat'
+alias irb='console irb.bat'
+alias pry='console pry.bat'
+alias gem='console gem.bat'
 alias git='console git'
