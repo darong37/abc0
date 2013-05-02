@@ -6,17 +6,17 @@ rem   Working dir : current
 rem 
 call %~dp0\_init.bat
 
-set CALLDIR=%~dp1
+set DIR_CALL=%~dp1
 
 set fn=%~nx1
-"%perlExe%" -e "print '%fn%'" | clip
 
-set MINLOGDIR=%LOGSBASE%\%dt08%
+"%BSH_PERL%" -e "print '%fn%'" | clip
 
-IF not EXIST %MINLOGDIR% (
-  mkdir %MINLOGDIR%
+set _LOGDIR=%DIR_LOGS%\%_dt08%
+IF not EXIST %_LOGDIR% (
+  mkdir %_LOGDIR%
 )
-set MINLOG=%MINLOGDIR%\local_%tm06%_bash.log
+set _LOGFIL=%_LOGDIR%\local_%_tm06%_bash.log
 
-%mttyExe% -t "Another Bash Console"  -l %MINLOG% /bin/bash --login -i
+%BSH_MTTY% -t "Another Bash Console"  -l %_LOGFIL% /bin/bash --login -i
 

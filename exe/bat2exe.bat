@@ -16,13 +16,7 @@ IF EXIST %exenm% (
   del %exenm%
 )
 
-"%asinExe%" -bat %batnm% -save %exenm% -invisible -overwrite
-rem "%asinExe%" -bat %batnm% -save %exenm% -invisible -overwrite
-
-call "%EXECBASE%\ShortCut.bat" /t:"%dn%%nm%.exe" "%dn%%nm%.lnk"
-
-copy "%dn%%nm%.lnk" "%SENDDIR%"
-copy "%dn%%nm%.lnk" "%LAUNDIR%"
+"%EXE_BAT2%" -bat %batnm% -save %exenm% -invisible -overwrite
 
 echo created %exenm%
 set /p INP="Enter return >"

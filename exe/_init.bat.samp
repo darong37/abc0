@@ -25,49 +25,58 @@ rem Folder path
 rem 
 set HOME=C:%HOMEPATH%\.abc
 
-set APPSBASE=%HOME%\apps
-set BASHBASE=%HOME%\.sys
-set EXECBASE=%HOME%\exe
-set LOGSBASE=%HOME%\logs
-set TEMPBASE=%HOME%\tmp
-set WORKSPAC=%HOME%\workspace
+set DIR_APPS=%HOME%\apps
+set DIR_BASH=%HOME%\.sys
+set DIR_CALL=%HOME%
+set DIR_EXEC=%HOME%\exe
+set DIR_LOGS=%HOME%\logs
+set DIR_TEMP=%HOME%\tmp
+set DIR_WKSP=%HOME%\workspace
 
-set LAUNDIR=%APPSBASE%\_LAUNCHER
-set SENDDIR=%HOME%\AppData\Roaming\Microsoft\Windows\SendTo
+set DIR_SEND=%HOMEPATH%\AppData\Roaming\Microsoft\Windows\SendTo
+
+
+rem 
+rem Bash path
+rem 
+set BSH_BASH=%DIR_BASH%\bin\bash.exe
+set BSH_MTTY=%DIR_BASH%\bin\mintty.exe
+set BSH_PERL=%DIR_BASH%\bin\perl.exe
+set BSH_RUBY=%DIR_BASH%\ruby\bin\ruby.exe
+
+
+rem 
+rem Windows Cmd
+rem 
+set CMD_CMD=c:\Windows\system32\cmd.exe
+set CMD_EXP=c:\Windows\explorer.exe
+set CMD_PS1=c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+
 
 rem 
 rem Exe path
 rem 
-set asinExe=%APPSBASE%\assignBat2Exe\assignBat2Exe\Bat_To_Exe_Converter.exe
-set bashExe=%BASHBASE%\bin\bash.exe
-set consExe=%APPSBASE%\console2\Console2\Console.exe
-set diffExe=%APPSBASE%\df\df141\DF.exe
-set editExe=%HOME%\AppData\Roaming\sakura\sakura.exe
-set ffftExe=%APPSBASE%\ffftp\FFFTP.exe
-set mttyExe=%BASHBASE%\bin\mintty.exe
-set perlExe=%BASHBASE%\bin\perl.exe
-set rubyExe=%APPSBASE%\ruby\bin\ruby.exe
+set EXE_BAT2=%DIR_APPS%\Bat_To_Exe_Converter\Bat_To_Exe_Converter.exe
+set EXE_DIFF=%DIR_APPS%\df141\DF.exe
+set EXE_EDIT=%DIR_APPS%\SakuraDown12f-14\sakura.exe
+set EXE_FTPC=%DIR_APPS%\ffftp\FFFTP.exe
 
-set cmdWins=c:\Windows\system32\cmd.exe
-set expWins=c:\Windows\explorer.exe
-set ps1Wins=c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
 
 rem 
 rem Work path
 rem 
-set asinBatD=%EXECBASE%\bat
-set ffftCash=%WORKSPAC%\.ffftp\file
+set _FILECASH=%WORKSPAC%\.ffftp\file
 
 rem 
 rem Date Time
 rem 
-set dt08=%date:~-10,4%%date:~-5,2%%date:~-2,2%
-set tm11=%time: =0%
-set tm06=%tm11:~0,2%%tm11:~3,2%%tm11:~6,2%
+set _dt08=%date:~-10,4%%date:~-5,2%%date:~-2,2%
+set _tm11=%time: =0%
+set _tm06=%tm11:~0,2%%tm11:~3,2%%tm11:~6,2%
 
 
 rem 
 rem Else
 rem 
-set http_proxy=http://xxxx:8080
+rem set http_proxy=http://xxxx:8080
 
