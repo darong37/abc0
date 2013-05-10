@@ -8,7 +8,8 @@ export PS1='
 export PATH=$PATH:/git/bin:/ruby/bin:~/bin:~/exe
 export FPATH_B=~/func
 
-export LANG=ja_JP.SJIS
+#export LANG=ja_JP.SJIS
+export LANG=ja_JP.UTF-8
 export TZ=JST-9
 export OUTPUT_CHARSET=sjis
 export LC_MESSAGES=C
@@ -31,10 +32,11 @@ for _func in $( ls -1 $FPATH_B 2>&- );do
 done
 unset _func
 
-cd $( f_convpath "${CALLDIR:-.}" )
+cd $( f_convpath "${DIR_CALL:-.}" )
 #
 # forign command
 #
+alias es="$( f_convpath "$DIR_APPS" )/Everything/es.exe"
 alias irb='console irb.bat'
 alias pry='console pry.bat'
 alias gem='console gem.bat'

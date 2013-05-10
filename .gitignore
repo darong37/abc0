@@ -1,8 +1,8 @@
 .gem
 .sys
-.sys0
 apps
 logs
+temp
 workspace
 .bash_history
 .gitconfig

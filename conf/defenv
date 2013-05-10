@@ -101,7 +101,7 @@ readonly FPATH_B=${FPATH_B:+$( cd ${BASEDIR} && cd ${FPATH_B:-''} && pwd )}
 #	default value
 #
 readonly LOGSDIR="${BASEDIR}/logs"     # BASEDIR からの相対パス
-readonly TMPLOGS="${BASEDIR}/tmp"      # 一時ファイルフォルダ
+readonly TMPLOGS="${BASEDIR}/temp"     # 一時ファイルフォルダ
 readonly CSUBDIR='current'             # 最新ログサブフォルダ名
 readonly HSUBDIR='history'             # 履歴ログサブフォルダ名
 

@@ -58,12 +58,20 @@
 	
 	# MSYS のインストール
 	mingw-get install msys-base
+	mingw-get install msys-coreutils
 	
 	# perl のインストール
 	mingw-get install msys-perl
 	
 	# mintty のインストール
 	mingw-get install mintty
+
+	#
+	# Optional
+	#
+	 mingw-get install msys-wget
+	 mingw-get install msys-rsync
+
 
 
 
