@@ -1,10 +1,11 @@
-rem @ECHO OFF
+@ECHO OFF
+if not "%DEBUG%" == "" ( @ECHO ON )
 rem 
 rem assignToExe options
 rem   Visiblity   : Invisible application
 rem   Working dir : current
 rem 
-call %~dp0\_init.bat
+call %~dp0%_init.bat
 
 set DIR_CALL=%~dp1
 
@@ -18,5 +19,6 @@ IF not EXIST %_LOGDIR% (
 )
 set _LOGFIL=%_LOGDIR%\local_%_tm06%_bash.log
 
-%BSH_MTTY% -t "Another Bash Console"  -l %_LOGFIL% /bin/bash --login -i
+if not "%DEBUG%" == "" ( set /p INP="Enter return >" )
 
+start %BSH_MTTY% -t "Another Bash Console"  -l %_LOGFIL% /bin/bash --login -i

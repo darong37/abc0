@@ -1,4 +1,5 @@
 @ECHO OFF
+if not "%DEBUG%" == "" ( @ECHO ON )
 rem 
 rem assignToExe options
 rem   Visiblity   : Invisible application
@@ -12,7 +13,6 @@ if NOT "%dn%" == "" (
 	set dn=%dn:~0,-1%
 )
 
+if not "%DEBUG%" == "" ( set /p INP="Enter return >" )
+
 start %EXE_FIND% -path %dn%
-
-rem set /p INP="Enter return >"
-

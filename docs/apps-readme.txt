@@ -1,3 +1,8 @@
+#ArtTip
+#	Download
+#		http://www2s.biglobe.ne.jp/~sahmaro/Download.htm
+#
+
 Bat_To_Exe_Converter
 	Download
 		http://www.f2ko.de/programs.php?lang=en&pid=b2e
@@ -30,4 +35,5 @@ Sakura Editor (SakuraDown)
 
 TeraTermPro
 	download zip-version to ./teratermpro
-		wget http://www.sakurachan.org/soft/teraterm-j/files/ttermp23.zip
+		http://sourceforge.jp/projects/ttssh2/releases/
+		

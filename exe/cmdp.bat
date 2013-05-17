@@ -1,4 +1,5 @@
-rem @ECHO OFF
+@ECHO OFF
+if not "%DEBUG%" == "" ( @ECHO ON )
 rem 
 rem assignToExe options
 rem   Visiblity   : Invisible application
@@ -22,8 +23,6 @@ set _LOGFIL=%_LOGDIR%\local_%_tm06%_cmd.log
 
 cd %dn%
 
-"%BSH_MTTY%" -t local-cmd -l %_LOGFIL%  /bin/console.exe cmd.exe
+if not "%DEBUG%" == "" ( set /p INP="Enter return >" )
 
-rem "%perlExe%" -0777 -pe 's/\r\r\n/\r\n/g' -i %CMDLOG%
-
-rem set /p INP="Enter return >"
+start %BSH_MTTY% -t local-cmd -l %_LOGFIL%  /bin/console.exe cmd.exe
