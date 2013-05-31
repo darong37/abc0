@@ -73,8 +73,6 @@
 	 mingw-get install msys-rsync
 
 
-
-
 4) minttyの起動
 
 	cd ~/.abc/exe
@@ -84,7 +82,17 @@
 
 
 
-5) msysgit インストール
+5) winpty
+
+	# Download msysバージョン to .sys/archive
+	#   	https://github.com/rprichard/winpty/downloads/
+	#
+	# winpty の解凍後のファイル(console.exe winpty.dll winpty-agent.exe)を
+	# 	.sys/bin
+	# に格納
+
+
+6) msysgit インストール
 	mkdir git
 
 	# Download ポータブルバージョン to .sys/git
@@ -96,16 +104,9 @@
 	7za x $7zip-file
 	mv $7zip-file ../archive
 
-
-6) winpty
-
-	# Download msysバージョン to .sys/archive
-	#   	https://github.com/rprichard/winpty/downloads/
-	#
-	# winpty の解凍後のファイル(console.exe winpty.dll winpty-agent.exe)を
-	# 	.sys/bin
-	# に格納
-
+	# .profile の変更
+		alias git='console git'
+		
 
 7) Ruby
 	# Download to ./sys
@@ -120,3 +121,37 @@
 	# pryのInstall
 	gem install pry
 
+	# .profile の変更
+	#	パスの追加
+		alias irb='console irb.bat'
+		alias pry='console pry.bat'
+		alias gem='console gem.bat'
+
+
+8) Node
+	# Download windows binary(node.exe) to ./sys/node
+	#	http://nodejs.org/download/
+	#
+	
+	# npm インストール
+	# Download *.zip to ./sys/node
+	#	 http://nodejs.org/dist/npm/
+	# unzip
+
+	cd .sys/node
+	mv npm-folder/*  ./
+	rmdir npm-folder
+	mv $npm-archive ../archive
+
+
+	# .profile の変更
+	#	パスの追加
+		alias npm='console npm.cmd'
+
+	# Express
+	npm install express
+	
+	# Coffee script
+	npm install coffee-script
+	
+	npm install formidable

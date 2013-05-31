@@ -5,7 +5,7 @@ export PS1='
 #
 \$ '
 
-export PATH=$PATH:/git/bin:/ruby/bin:~/bin:~/exe
+export PATH=$PATH:/git/bin:/ruby/bin:/node:~/bin:~/exe
 export FPATH_B=~/func
 
 #export LANG=ja_JP.SJIS
@@ -41,3 +41,4 @@ alias irb='console irb.bat'
 alias pry='console pry.bat'
 alias gem='console gem.bat'
 alias git='console git'
+alias npm='console npm.cmd'
