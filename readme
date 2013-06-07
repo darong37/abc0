@@ -5,40 +5,40 @@ git clone https://github.com/darong37/.abc.git
 
 .gitconfig.samp
 exe/_init.bat.samp
-‚ğC³‚·‚é
+ã‚’ä¿®æ­£ã™ã‚‹
 
 
 
 
 
-ó‘ÔŠm”F
+çŠ¶æ…‹ç¢ºèª
 git status
 
-Šî–{
+åŸºæœ¬
 git add $target
 git commit -a -m "reorder"
 git push origin master
 
 
-ƒŠƒl[ƒ€‚·‚éê‡
+ãƒªãƒãƒ¼ãƒ ã™ã‚‹å ´åˆ
 git mv old-name new-name
 
-íœ‚·‚éê‡
+å‰Šé™¤ã™ã‚‹å ´åˆ
 git rm $target
 
 
-‚â‚è’¼‚µ
-	addŒãƒtƒ@ƒCƒ‹‚ğ–ß‚·
+ã‚„ã‚Šç›´ã—
+	addå¾Œãƒ•ã‚¡ã‚¤ãƒ«ã‚’æˆ»ã™
 	git reset HEAD <file>..
 
-	’¼‘O‚É‚µ‚½ƒRƒ~ƒbƒg‚ğ‚â‚è’¼‚·
+	ç›´å‰ã«ã—ãŸã‚³ãƒŸãƒƒãƒˆã‚’ã‚„ã‚Šç›´ã™
 	(?) git commit --amend
 
-	git reset --soft   ¨ ƒ[ƒNƒfƒBƒŒƒNƒgƒŠ‚Ì“à—e‚Í‚»‚Ì‚Ü‚Ü‚ÅƒRƒ~ƒbƒg‚¾‚¯‚ğæ‚èÁ‚·B
-	git reset --hard   ¨ ƒRƒ~ƒbƒgæ‚èÁ‚µ‚½ã‚Åƒ[ƒNƒfƒBƒŒƒNƒgƒŠ‚Ì“à—e‚à‘‚«Š·‚¦‚éB
+	git reset --soft   â†’ ãƒ¯ãƒ¼ã‚¯ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å†…å®¹ã¯ãã®ã¾ã¾ã§ã‚³ãƒŸãƒƒãƒˆã ã‘ã‚’å–ã‚Šæ¶ˆã™ã€‚
+	git reset --hard   â†’ ã‚³ãƒŸãƒƒãƒˆå–ã‚Šæ¶ˆã—ãŸä¸Šã§ãƒ¯ãƒ¼ã‚¯ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å†…å®¹ã‚‚æ›¸ãæ›ãˆã‚‹ã€‚
 
-ƒ}[ƒW‚·‚é
+ãƒãƒ¼ã‚¸ã™ã‚‹
 git pull
 
-ƒ}[ƒW‚·‚é‘ã‚í‚è‚ÉƒŠƒx[ƒX‚·‚é(–¢Šm”F)
+ãƒãƒ¼ã‚¸ã™ã‚‹ä»£ã‚ã‚Šã«ãƒªãƒ™ãƒ¼ã‚¹ã™ã‚‹(æœªç¢ºèª)
 git pull --rebase
