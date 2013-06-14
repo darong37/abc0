@@ -22,7 +22,10 @@ export PS1='
 \$ '
 
 #
-export PATH=$( AddPath /git/bin /ruby/bin /node /node/node_modules/coffee-script/bin /node/node_modules/js2coffee/bin ~/bin ~/exe )
+typeset NOM=/node/node_modules
+export PATH=$( AddPath /git/bin /ruby/bin /node )
+export PATH=$( AddPath /node/node_modules/.bin )
+export PATH=$( AddPath ~/bin ~/exe )
 
 #export LANG=ja_JP.SJIS
 export LANG=ja_JP.UTF-8

@@ -1,5 +1,6 @@
 #!/usr/bin/bash -u
 
+alias ShowPath='( IFS=:;for p in $PATH;do echo $p;done )'
 AddPath () {
   local pstr="$PATH"
   for p in "$@";do
