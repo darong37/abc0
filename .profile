@@ -22,9 +22,8 @@ export PS1='
 \$ '
 
 #
-typeset NOM=/node/node_modules
-export PATH=$( AddPath /git/bin /ruby/bin /node )
-export PATH=$( AddPath /node/node_modules/.bin )
+export PATH=$( AddPath /usr/local/git/bin /usr/local/ruby/bin /usr/local/node )
+export PATH=$( AddPath /usr/local/node/node_modules/.bin )
 export PATH=$( AddPath ~/bin ~/exe )
 
 #export LANG=ja_JP.SJIS
@@ -50,4 +49,4 @@ alias pry='console pry.bat'
 alias gem='console gem.bat'
 alias git='console git'
 alias npm='console npm.cmd'
-alias tree='console /c/Windows/System32/tree.com'
+alias tree='/c/Windows/System32/tree.com'

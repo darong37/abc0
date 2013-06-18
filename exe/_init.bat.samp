@@ -23,7 +23,7 @@ rem
 rem 
 rem Folder path
 rem 
-set HOME=C:%HOMEPATH%\.abc
+set HOME=%USERPROFILE%\.abc
 
 set DIR_APPS=%HOME%\apps
 set DIR_BASH=%HOME%\.sys
@@ -33,7 +33,7 @@ set DIR_LOGS=%HOME%\logs
 set DIR_TEMP=%HOME%\tmp
 set DIR_WKSP=%HOME%\workspace
 
-set DIR_SEND=%HOMEPATH%\AppData\Roaming\Microsoft\Windows\SendTo
+set DIR_SEND=%USERPROFILE%\AppData\Roaming\Microsoft\Windows\SendTo
 
 
 rem 

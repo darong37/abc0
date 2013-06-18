@@ -1,0 +1,80 @@
+
+構築手順
+
+バージョン等は適宜読みかえること。できるだけ手動での導入を行う。
+
+0) 準備
+	cd ~.abc    # 相対パスはここをBaseとする
+
+	mkdir .usrlocal
+	cd .usrlocal
+
+
+1) /etc/fstab ( .abc/.sys/etc/fstab ) の編集
+	# 以下のエントリーを追加する
+	C:\????\.abc\.usrlocal 	/usr/local
+
+
+2) msysgit インストール
+	mkdir git
+
+	# Download ポータブルバージョン to .usrlocal/git
+	#	https://code.google.com/p/msysgit/downloads/list
+	#
+	# ここに解凍
+	#
+	cd git
+	7za x $7zip-file
+	mv $7zip-file ../archive
+
+	# .profile の変更
+		alias git='console git'
+		
+
+3) Ruby
+	# Download to ./sys
+	#	http://rubyinstaller.org/downloads/archives
+	#	7zip をとる.
+	#
+	cd .sys
+	7za x $ruby-7zip-archive
+	mv $ruby-7zip-archive archive
+	mv $ruby-folder ruby
+
+	# pryのInstall
+	gem install pry
+
+	# .profile の変更
+	#	パスの追加
+		alias irb='console irb.bat'
+		alias pry='console pry.bat'
+		alias gem='console gem.bat'
+
+
+4) Node
+	# Download windows binary(node.exe) to ./sys/node
+	#	http://nodejs.org/download/
+	#
+	
+	# npm インストール
+	# Download *.zip to ./sys/node
+	#	 http://nodejs.org/dist/npm/
+	# unzip
+
+	cd .sys/node
+	mv npm-folder/*  ./
+	rmdir npm-folder
+	mv $npm-archive ../archive
+
+
+	# .profile の変更
+	#	パスの追加
+		alias npm='console npm.cmd'
+
+	# Express
+	npm install express
+	
+	# Coffee script
+	npm install coffee-script
+	
+	npm install formidable

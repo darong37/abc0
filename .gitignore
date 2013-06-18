@@ -1,10 +1,16 @@
 .gem
 .sys
+.usrlocal
 apps
+gh-pages
 logs
 temp
 workspace
+zip
 .bash_history
 .gitconfig
 .lesshst
 .pry_history
+.coffee_history
+
+*.log

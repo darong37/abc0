@@ -1,0 +1,42 @@
+
+0.設定
+
+	cd
+	git clone https://github.com/darong37/.abc.git
+
+	.gitconfig.samp
+	exe/_init.bat.samp
+	を修正する（.sampを取ってSave）
+
+	状態確認
+	git status
+
+
+1.Gitの基本操作
+	git add $target
+	git commit -a -m "reorder"
+	git push origin master
+
+
+	リネームする場合
+	git mv old-name new-name
+
+	削除する場合
+	git rm $target
+
+
+	やり直し
+		add後ファイルを戻す
+		git reset HEAD <file>..
+
+		直前にしたコミットをやり直す
+		(?) git commit --amend
+
+		git reset --soft   → ワークディレクトリの内容はそのままでコミットだけを取り消す。
+		git reset --hard   → コミット取り消した上でワークディレクトリの内容も書き換える。
+
+	マージする
+	git pull
+
+	マージする代わりにリベースする(未確認)
+	git pull --rebase

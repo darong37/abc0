@@ -1,7 +1,7 @@
 BoldAsFont=no
 Transparency=medium
 Locale=ja_JP
-Charset=UTF-8
+Charset=SJIS
 Columns=144
 Rows=50
 OpaqueWhenFocused=no

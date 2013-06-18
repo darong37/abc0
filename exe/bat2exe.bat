@@ -18,7 +18,7 @@ IF EXIST %exenm% (
 )
 
 rem "%EXE_BAT2%" -bat %batnm% -save %exenm% -include %incfl% -invisible -temp
-"%EXE_BAT2%" -bat %batnm% -save %exenm% -include %incfl% -temp
+"%EXE_BAT2%" -bat %batnm% -save %exenm% -include %incfl% -invisible -temp
 
 echo created %exenm%
 set /p INP="Enter return >"
