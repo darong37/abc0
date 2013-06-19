@@ -1,0 +1,42 @@
+$ #
+$ # 最初の1回
+$ #
+$ cd ~
+$ mkdir gh-pages
+$ cd gh-pages
+$
+$ git clone https://github.com/darong37/.abc.git
+$ #
+$ # gh-pages/.abc が作成される
+$ #
+$ mv .abc/.git .
+$ rm -r .abc
+$ 
+$ git symbolic-ref HEAD refs/heads/gh-pages
+$ rm .git/index
+$ git clean -fdx
+$
+$ # index.html を作成
+$ git add .
+$ git commit -a -m "create"
+$
+$ git branch    # ←確認（コミットすると、作成したブランチが出てくる（コミットしないと出てこない））
+* gh-pages
+  master
+
+$ git push origin gh-pages
+$
+$
+$ #
+$ # 更新
+$ #
+$ cd gh-pages
+$ git branch
+* gh-pages
+  master
+$
+$ git add $target
+$ git commit -a -m "reorder"
+$
+$ git push origin gh-pages
+
