@@ -2,22 +2,27 @@
 ######################################################################
 #@(#) Project        : EBS Version up Project
 #@(#) Team           : Infrastructure
-#@(#) Name           : {(.+)}
-#@(#) Function       : {(.+)}
+#@(#) Name           : {+}
+#@(#) Function       : {+}
 #@(#) Version        : v.{([.0-9]+)}
-#@(#) Usage          : {(.+)}
-{((?:.*\n)*)}
-#@(#) Return code    :{(.*)}
-{((?:.*\n)*)}
+#@(#) Usage          : {+}
+{
+  *Wait Return
+}
+#@(#) Return code    :{*}
+{
+  *Wait Host
+}
 #@(#) Host           : {(AIX|HP-UX)}
-#@(#) ACL            : {(.+)}
-#@(#) Relation file  :{(.*)}
-#@(#) Notes          :{(.*)}
-{((?:.*\n)*)}
+#@(#) ACL            : {+}
+#@(#) Relation file  :{*}
+#@(#) Notes          :{*}
+{
+  *Wait #@(#)
+}
 #@(#)
 ######################################################################
 #@(#) Revision history
 #@(#) Date             Developer/Corrector Description
 #@(#) {([_ ]+)}
-#@(#) {(.+)}
-{((?:.*\n)*)}
+#@(#) {+}
