@@ -1,78 +1,77 @@
 
-æ§‹ç¯‰æ‰‹é †
+\’zè‡
 
-ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç­‰ã¯é©å®œèª­ã¿ã‹ãˆã‚‹ã“ã¨ã€‚ã§ãã‚‹ã ã‘æ‰‹å‹•ã§ã®å°å…¥ã‚’è¡Œã†ã€‚
+ƒo[ƒWƒ‡ƒ““™‚Í“K‹X“Ç‚İ‚©‚¦‚é‚±‚ÆB‚Å‚«‚é‚¾‚¯è“®‚Å‚Ì“±“ü‚ğs‚¤B
 
-0) æº–å‚™
-	cd ~.abc    # ç›¸å¯¾ãƒ‘ã‚¹ã¯ã“ã“ã‚’Baseã¨ã™ã‚‹
+0) €”õ
+	cd ~.abc    # ‘Š‘ÎƒpƒX‚Í‚±‚±‚ğBase‚Æ‚·‚é
 
 	mkdir .usrlocal
 	cd .usrlocal
 
 
-1) /etc/fstab ( .abc/.sys/etc/fstab ) ã®ç·¨é›†
-	# ä»¥ä¸‹ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼ã‚’è¿½åŠ ã™ã‚‹
+1) /etc/fstab ( .abc/.sys/etc/fstab ) ‚Ì•ÒW
+	# ˆÈ‰º‚ÌƒGƒ“ƒgƒŠ[‚ğ’Ç‰Á‚·‚é
 	C:\????\.abc\.usrlocal 	/usr/local
 
 
-2) msysgit ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
+2) msysgit ƒCƒ“ƒXƒg[ƒ‹
 	mkdir git
 
-	# Download ãƒãƒ¼ã‚¿ãƒ–ãƒ«ãƒãƒ¼ã‚¸ãƒ§ãƒ³ to .usrlocal/git
+	# Download ƒ|[ƒ^ƒuƒ‹ƒo[ƒWƒ‡ƒ“ to .usrlocal/git
 	#	https://code.google.com/p/msysgit/downloads/list
 	#
-	# ã“ã“ã«è§£å‡
+	# ‚±‚±‚É‰ğ“€
 	#
 	cd git
 	7za x $7zip-file
 	mv $7zip-file ../archive
 
-	# .profile ã®å¤‰æ›´
+	# .profile ‚Ì•ÏX
 		alias git='console git'
 		
 
 3) Ruby
-	# Download to ./sys
+	# Download to .usrlocal
 	#	http://rubyinstaller.org/downloads/archives
-	#	7zip ã‚’ã¨ã‚‹.
+	#	7zip ‚ğ‚Æ‚é.
 	#
-	cd .sys
 	7za x $ruby-7zip-archive
 	mv $ruby-7zip-archive archive
 	mv $ruby-folder ruby
 
-	# pryã®Install
+	# pry‚ÌInstall
 	gem install pry
 
-	# .profile ã®å¤‰æ›´
-	#	ãƒ‘ã‚¹ã®è¿½åŠ 
+	# .profile ‚Ì•ÏX
+	#	ƒpƒX‚Ì’Ç‰Á
 		alias irb='console irb.bat'
 		alias pry='console pry.bat'
 		alias gem='console gem.bat'
 
 
 4) Node
-	# Download windows binary(node.exe) to ./sys/node
+	# Download windows binary(node.exe) to .usrlocal/node
 	#	http://nodejs.org/download/
 	#
 	
-	# npm ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
+	# npm ƒCƒ“ƒXƒg[ƒ‹
 	# Download *.zip to ./sys/node
 	#	 http://nodejs.org/dist/npm/
 	# unzip
 
-	cd .sys/node
+	cd /usr/local/node
 	mv npm-folder/*  ./
 	rmdir npm-folder
 	mv $npm-archive ../archive
 
 
-	# .profile ã®å¤‰æ›´
-	#	ãƒ‘ã‚¹ã®è¿½åŠ 
+	# .profile ‚Ì•ÏX
+	#	ƒpƒX‚Ì’Ç‰Á
 		alias npm='console npm.cmd'
 
 	# Express
-	npm install express
+	npm install -g express
 	
 	# Coffee script
 	npm install coffee-script

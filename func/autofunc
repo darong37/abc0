@@ -2,10 +2,21 @@
 
 alias ShowPath='( IFS=:;for p in $PATH;do echo $p;done )'
 AddPath () {
+  # option -pre
+  local pre=off
+  if [[ $1 = '-pre' ]];then
+    pre=on
+    shift
+  fi
+  #
   local pstr="$PATH"
   for p in "$@";do
     if [[ ":$pstr:" != *":$p:"* ]];then
-      pstr="${pstr}:${p}"
+      if [[ $pre = 'on' ]];then
+        pstr=".:${p}:${pstr#.:}"
+      else
+        pstr="${pstr}:${p}"
+      fi
     fi
   done
   echo "$pstr"

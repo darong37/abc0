@@ -1,0 +1,103 @@
+#!/usr/bin/ksh
+######################################################################
+#@(#) Project        : EBS Version up Project
+#@(#) Team           : Infrastructure
+#@(#) Name           : fa_calculate_date
+#@(#) Function       : Calculate date
+#@(#) Version        : v.1.0.0
+#@(#) Usage          : fa_calculate_date -d date1 date2
+#@(#)                  fa_calculate_date -o date1 offset
+#@(#)                  fa_calculate_date -w date1
+#@(#)
+#@(#)                  -d date1 date2  : Output the date intervals, between 'date1' and 'date2'.
+#@(#)                                    (calculation: 'date1' - 'date2').
+#@(#)                  -o date1 offset : Output the date, reference based on 'date1'.
+#@(#)                                    'offset' value should be signed number.
+#@(#)                                    eg.
+#@(#)                                       "-o 20070101 -1" -> 20061231
+#@(#)                                       "-o 20071231 +7" -> 20080107
+#@(#)                  -w date1        : Output the day of week of date.
+#@(#)                                    (output value: 0 ... 6, is meant Sun ... Sat).
+#@(#) Return code    :
+#@(#)                  0  : Successful completion.
+#@(#)                  1  : An error condition occurred.
+#@(#)                  2  : Invalid option.
+#@(#) Host           : AIX
+#@(#) ACL            : bin / bin / 0555
+#@(#) Relation file  :
+#@(#) Notes          : Valid value range of date, 1582/10/15 - 9999/12/31.
+#@(#)
+######################################################################
+#@(#) Revision history
+#@(#) Date             Developer/Corrector Description
+#@(#) ________________ ___________________ ___________________________
+#@(#) 2007/07/01       Y.Karasawa          New
+######################################################################
+
+function fa_calculate_date {
+	# ++++++++++++++++++++++++++++++++++++++
+	# Define local vaiable
+	# ++++++++++++++++++++++++++++++++++++++
+	typeset SIGN=
+	[[ "${1:-}" = \-o && "${3:-}" = [0-9]*([0-9]) ]] && SIGN="+"
+
+	# ++++++++++++++++++++++++++++++++++++++
+	# Calculate date
+	# ++++++++++++++++++++++++++++++++++++++
+	awk -v arg1="${2:-}" -v arg2="${SIGN:-}${3:-}" '
+		# --- define function ---
+		function mjd(y, m, d) {
+			return (d+int(1461*(y+4800+int((m-14)/12))/4)+int(367*(m-2-int((m-14)/12)*12)/12)-int(3*(int((y+4900+int((m-14)/12))/100))/4)-2432075)
+		}
+		function ymd(n, y, m, d) { # n : Modified Julian Day / y, m, d : local
+			y = int(2.73791e-3 * n + 1858.878)
+			n -= mjd(y, 1, 0)
+			if (n == -1)
+				return sprintf("%04d1230", y - 1)
+			if (n == 0)
+				return sprintf("%04d1231", y - 1)
+			for (m = 1; m < 12; m++) {
+				d = md[m]
+				if (m == 2 && (y%4 == 0 && y%100 != 0 || y%400 == 0))
+					++d
+				if (n <= d)
+					break
+				n -= d
+			}
+			d = n
+			return sprintf("%04d%02d%02d", y, m, d)
+		}
+		function weekday(y, m, d) {
+			if (m < 3) { y--; m +=12; }
+			return ((y+int(y/4)-int(y/100)+int(y/400)+int((m*2.6)+1.6)+d)%7)
+		}
+		BEGIN {
+			# --- define constant ---
+			split("31 28 31 30 31 30 31 31 30 31 30 31", md)
+			# --- main ---
+			if (arg1 ~ /^[[:digit:]]{8}$/ && arg1 + 0 >= 15821015 && arg1 + 0 <= 99991231) {
+				y1 = substr(arg1, 1, 4) + 0
+				m1 = substr(arg1, 5, 2) + 0
+				d1 = substr(arg1, 7, 2) + 0
+				if        (arg2 ~ /^[[:digit:]]{8}$/ && arg2 + 0 >= 15821015 && arg2 + 0 <= 99991231) {
+					y2 = substr(arg2, 1, 4) + 0
+					m2 = substr(arg2, 5, 2) + 0
+					d2 = substr(arg2, 7, 2) + 0
+					printf "%-d\n", (mjd(y1, m1, d1) - mjd(y2, m2, d2))
+				} else if (arg2 ~ /^[-+][[:digit:]]+$/) {
+					date = ymd(mjd(y1, m1, d1) + arg2) + 0
+					if (date >= 15821015 && date <= 99991231)
+						printf "%08d\n", date
+					else
+						exit 1
+				} else if (arg2 == "") {
+					printf "%-d\n", weekday(y1, m1, d1)
+				} else
+					exit 2
+			} else
+				exit 2
+		}
+	' <&-
+
+	return ${?}
+}
