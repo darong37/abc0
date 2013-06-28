@@ -37,3 +37,6 @@ TeraTermPro
 	download zip-version to ./teratermpro
 		http://sourceforge.jp/projects/ttssh2/releases/
 		
+アタッシェケース
+	download zip-version
+		http://hibara.org/software/attachecase/
