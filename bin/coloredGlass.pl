@@ -7,17 +7,30 @@ $Term::ANSIColor::AUTORESET = 0;
 print RESET;
 
 ### Arguments
-my ( $glsFil, $tgtFil ) = @ARGV;
+my ( $glsFil ) = @ARGV;
 
 ### Glass File
-$/ = undef;
+my $gls;
+my $cmd;
 open GLS,"<$glsFil" or die "not found '$glsFil'";
-my $gls = <GLS>;
+while(<GLS>){
+  chomp;
+  
+  if ( /^\$ #/ ) {
+    print "$_\n";
+  } elsif ( /^\$ / ){
+    print "$_\n";
+    s/^\$ //;
+    $cmd = $_;
+  } else {
+    $gls .= "$_\n";
+  }
+}
 close GLS;
 
 ### Target File
 $/ = undef;
-open  TGT,"<$tgtFil" or die "not found '$tgtFil'";
+open  TGT,"$cmd|" or die "command '$cmd' failed";
 my $tgt = <TGT>;
 close TGT;
 
@@ -77,30 +90,31 @@ sub coloredGlass {
       $template .= $tmp;
       $patterns .= $ptn;
     } else {
-      my @eles = ( eval "\$target =~ m{$patterns((?:.*\\n)+?)\$}" );
+      my @eles = ( eval "\$target =~ m{$patterns((?:.*\\n?)+?.*)\$}" );
       if ( @eles ){
         $target = pop @eles;
       } else {
         $target = '';
-      }
-
-      if ( @eles ){
-        @eles = map{ sprintf "%s%s%s", $warn++ > 0 ? GREEN : YELLOW,$_,BLUE } @eles;
-        printf("%s$template%s", BLUE,@eles,RESET);
-      } else {
         print "  (empty)\n";
       }
 
+      if ( @eles ){
+        @eles = map{ sprintf "%s%s%s", $warn++ > 0 ? GREEN : RED ,$_,BLUE } @eles;
+        printf("%s$template%s", BLUE,@eles,RESET);
+      } else {
+        printf("%s$template%s", BLUE,RESET);
+      }
+
       if ( /### sentinel ###/ ){
-        if ( $target =~ /\n/ ){
+        if ( $target =~ /^\n+$/ ){
           print RESET  "# period\n";
         } else {
           print RESET  "# remainder\n";
-          print "'$target'\n";
+          print "$target\n";
         }
       } else {
-        print RED    "$_\n";
-        print RESET  "# The avove unmatched the following... \n";
+        printf "%s%s%s\n", RED,REVERSE,$_;
+        print RESET  "# The avove pattern unmatched the following... \n";
 
         $template = '%s';
         $patterns = '((?:.*\\n)+?)';
@@ -109,3 +123,6 @@ sub coloredGlass {
     }
   };
 }
+
+
+

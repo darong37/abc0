@@ -5,7 +5,7 @@
 #@(#) Name           : fa_calculate_date
 #@(#) Function       : Calculate date
 #@(#) Version        : v.1.0.0
-#@(#) Usage          : fa_calculate_date -d date1 date2
+#@(#) Usege          : fa_calculate_date -d date1 date2
 #@(#)                  fa_calculate_date -o date1 offset
 #@(#)                  fa_calculate_date -w date1
 #@(#)
