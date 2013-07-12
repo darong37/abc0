@@ -4,14 +4,15 @@ Oracle　11g バージョンアップ・データ移行
 サーバ環境設定
 ----------
 
-| Left align | Right align | Center align |
-|:-----------|------------:|:------------:|
-| This       |        This |     This     |
-| column     |      column |    column    |
-| will       |        will |     will     |
-| be         |          be |      be      |
-| left       |       right |    center    |
-| aligned    |     aligned |   aligned    |
+| No　| 項目 | 値 |　備考　　|
+|:---|:-----------|------------:|:------------:|
+|1      |サーバホスト名     |        This |     This     |
+|2      | This       |        This |     This     |
+|3 |column     |      column |    column    |
+|4 |will       |        will |     will     |
+|5 |be         |          be |      be      |
+|6 |left       |       right |    center    |
+|7 |aligned    |     aligned |   aligned    |
 
 Hello world! 
 

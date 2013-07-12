@@ -1,0 +1,149 @@
+1.バックアップ対象
+
+	バックアップ対象となるデータベース構成ファイル
+		-----------------------+---------------+-------------------+---------------+-------------------+--------------
+		バックアップ方式    	データファイル	テンポラリファイル	制御ファイル	オンラインREDOログ	アーカイブログ
+		-----------------------+---------------+-------------------+---------------+-------------------+--------------
+		一貫性バックアップ  	必要          	任意 (※1)        	必要        	任意 (※1)        	必要 (※2)
+		非一貫性バックアップ	必要          	不要 (※3)        	必要        	不要              	必要
+		-----------------------+---------------+-------------------+---------------+-------------------+--------------
+			※1 リカバリ時に作成することが可能であるため
+			※2 アーカイブモードでの運用の場合には取得
+			※3 データベース復旧後の再作成（ローカル管理一時表領域の場合
+			
+			
+	8GB以上のアーカイブ
+		tar cvf out.tar indir
+		pax -vzx pax -wf out.pax indir
+	
+	
+	backupsetのbackup
+		backup backupset 10 to destination '/oradata/work' ;
+		
+	backupピースの削除
+		delete backuppiece 16,17;
+		
+	backupセットの一時退避(1)
+		backup backupset 10 to destination '/oradata/work' ;
+		list backupset 10;
+		( 退避したバックアップピースを確認 ex.19 )
+		change backuppiece 19 unavailable;
+		( 元のバックアップピースを11とする )
+		delete backuppiece 11;
+		
+		
+		change backupset 10 keep until time '2013/12/31';
+	
+	backupセットの一時退避(2)
+		backup backupset 12 to destination '/oradata/work' delete input;
+		change backupset 12 unavailable;
+		change backupset 12 keep until time '2013/12/31';
+__0001
+
+2.論理ボリューム
+	lsfs
+		Name            Nodename   Mount Pt               VFS   Size    Options    Auto Accounting
+		/dev/hd4        --         /                      jfs2  4194304 --         yes  no
+		/dev/hd1        --         /home                  jfs2  524288  --         yes  no
+		/dev/hd2        --         /usr                   jfs2  20971520 --         yes  no
+		/dev/hd9var     --         /var                   jfs2  4194304 --         yes  no
+		/dev/hd3        --         /tmp                   jfs2  4194304 --         yes  no
+		/dev/hd11admin  --         /admin                 jfs2  524288  --         yes  no
+		/proc           --         /proc                  procfs --      --         yes  no
+		/dev/hd10opt    --         /opt                   jfs2  12582912 --         yes  no
+		/dev/livedump   --         /var/adm/ras/livedump  jfs2  524288  --         yes  no
+		/dev/pre3dlv15  --         /mdis_work             jfs2  2097152 rw         yes  no
+		/dev/pre3dlv01  --         /oraapp                jfs2  75497472 rw         yes  no
+		/dev/pre3dlv02  --         /oradata               jfs2  62914560 rw         yes  no
+		/dev/pre3dlv04  --         /oradata/perf          jfs2  10485760 rw         yes  no
+		/dev/pre3dlv03  --         /oradata/sysf          jfs2  46137344 rw         yes  no
+		/dev/pre3dlv05  --         /oradata/dataf         jfs2  419430400 rw         yes  no
+		/dev/pre3dlv06  --         /oradata/duplf         jfs2  524288  rw         yes  no
+		/dev/pre3dlv07  --         /oradata/arcf          jfs2  50331648 rw         yes  no
+		/dev/pre3dlv08  --         /oradata/sysf/uatcpf   jfs2  46137344 rw         yes  no
+		/dev/pre3dlv09  --         /oradata/perf/uatcpf   jfs2  10485760 rw         yes  no
+		/dev/pre3dlv10  --         /oradata/dataf/uatcpf  jfs2  419430400 rw         yes  no
+		/dev/pre3dlv11  --         /oradata/duplf/uatcpf  jfs2  524288  rw         yes  no
+		/dev/pre3dlv12  --         /oradata/arcf/uatcpf   jfs2  50331648 rw         yes  no
+		/dev/pre3dlv13  --         /storage               jfs2  33554432 rw         yes  no
+		/dev/pre3dlv14  --         /export                jfs2  10485760 rw         yes  no
+		/dev/fslv00     --         /work                  jfs2  41943040 rw         yes  no
+		/dev/pre3dlv16  --         /oradata/sysf/tmpcpf   jfs2  46137344 rw         yes  no
+		/dev/pre3dlv18  --         /oradata/dataf/tmpcpf  jfs2  419430400 rw         yes  no
+		/dev/pre3dlv17  --         /oradata/perf/tmpcpf   jfs2  10485760 rw         yes  no
+		/dev/pre3dlv19  --         /oradata/duplf/tmpcpf  jfs2  524288  rw         yes  no
+		/dev/pre3dlv20  --         /oradata/arcf/tmpcpf   jfs2  50331648 rw         yes  no
+	
+	lsdev -C
+	
+	lspv
+		hdisk1          00f661e0a820f3ec                    datavg          active
+		hdisk0          00f661e0a448354b                    rootvg          active
+		hdisk2          00f661e0d404d6ee                    data02vg        active
+		hdisk3          00f661e0d4050c64                    data03vg        active
+	lspv -l [pysical volume]
+	lspv -p [pysical volume]
+	
+	lsvg
+		rootvg
+		datavg
+		data02vg
+		data03vg
+	lsvg -l [volume group]
+	lsvg -p [volume group]
+	
+	lslv -l [logical volume]
+	
+__0002
+
+3. SYSMAN パスワード変更
+
+	#
+	# How To Change the Password of the Database User Sysman (DB Control Repository Schema) [ID 259379.1]
+	#
+
+	emctl stop dbconsole
+	emctl status dbconsole
+			
+	SQL> alter user sysman identified by <password> ;
+	SQL> connect sysman/[@database_alias]
+
+	emctl setpasswd dbconsole
+	emctl start dbconsole
+
+__0003
+
+4. 一時表領域
+	$ sqlplus / as sysdba
+
+	SQL> # 1．TEMP表領域にファイルを一時的に他の論理ボリューム上に追加します。
+	SQL> alter tablespace TEMP add tempfile '/oradata/arcf/tmpcpf/TEMPTEMP.dbf' size 10M;
+	SQL> 
+
+
+	SQL> # 2．現在の一時表領域に割当てているファイルをオフラインにします。
+	SQL> alter database tempfile '/oradata/sysf/tmpcpf/temp01.dbf' offline;
+
+
+	SQL> # 3.古いTEMP表領域のファイルを削除
+	SQL> alter database tempfile '/oradata/sysf/tmpcpf/temp01.dbf' drop including datafiles;
+
+	SQL> ! df -m /oradata/sysf/tmpcpf		# 確認
+
+
+	SQL> # 4．使用したいTEMP領域を追加します。
+	SQL> CREATE TEMP TABLESPACE "TEMP"
+	>	     TEMPFILE '/oradata/sysf/tmpcpf/temp01.dbf' SIZE 96M
+	>	     AUTOEXTEND ON NEXT 655360 MAXSIZE 2G
+	>	     EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1048576;
+
+	SQL> # 5．TEMP領域を作成したほうに切り替えます。
+	SQL> alter tablespace TEMP add tempfile '/oradata/sysf/tmpcpf/temp01.dbf';
+
+	SQL> # 6．一時的に作成したTEMP領域のファイルをオフラインにします。
+	SQL> alter database tempfile '/oradata/arcf/tmpcpf/TEMPTEMP.dbf' offline;
+
+	SQL> # 7．一時的に作成したTEMP領域のファイルを削除します。
+	SQL> alter database tempfile '/oradata/arcf/tmpcpf/TEMPTEMP.dbf' drop including datafiles;
+__0004
+

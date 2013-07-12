@@ -2,45 +2,31 @@
 use strict;
 use warnings;
 use Term::ANSIColor qw(:constants);
+use Term::ReadLine;
 
-$Term::ANSIColor::AUTORESET = 0;
-print RESET;
-
-### Arguments
-my ( $glsFil ) = @ARGV;
-
-### Glass File
-my $gls;
-my $cmd;
-open GLS,"<$glsFil" or die "not found '$glsFil'";
-while(<GLS>){
-  chomp;
+### openR
+sub openR(&@){
+  my ( $blocks,$rfn,$sen ) = @_;
+  $sen |= '#EOF#';
   
-  if ( /^\$ #/ ) {
-    print "$_\n";
-  } elsif ( /^\$ / ){
-    print "$_\n";
-    s/^\$ //;
-    $cmd = $_;
-  } else {
-    $gls .= "$_\n";
+  our $openRcount = 0;
+  open my $rfh,"< $rfn" or return 0;
+  
+  my $cur=<$rfh> || return 0;
+  while ( our $openRnext=<$rfh> || $sen) {
+    $openRcount++;
+    $_ = $cur;
+    my $rtn = $blocks->();
+    redo if $rtn eq 'redo';
+    last if $rtn eq 'last';
+    last if $openRnext eq $sen;
+    $cur = $openRnext;
+    next if $rtn eq 'next';
   }
+  close $rfh;
 }
-close GLS;
 
-### Target File
-$/ = undef;
-open  TGT,"$cmd|" or die "command '$cmd' failed";
-my $tgt = <TGT>;
-close TGT;
-
-coloredGlass($gls,$tgt);
-
-exit;
-
-#
-# subroutine
-#
+### coloredGlass
 sub coloredGlass {
   my ( $glass, $target ) = @_ ;   # 特殊変数からの引取り
 
@@ -132,4 +118,79 @@ sub printGlass {
 }
 
 
+### termRepl
+sub termRepl {
+  my ( $hkey,$logf ) = @_ ;
+  
+  ### Telnet
+  open my $logh,"> $logf" or die "can not open $logf";
+  my $telnet = new Net::Telnet(
+    Timeout   => 3,
+    Prompt    => '/\S*[\$#>:]\s*$/', # プロンプト(正規表現)
+    Errmode   => "return",
+    Input_log => $logh,
+  );
 
+  ### 接続情報(telnet.hostsに記述)取得
+  my ( $host, $user, $desc, $sharp, $pass );
+  openR{
+    if ( /^$hkey/ ){
+      ( $host, $user, $desc, $sharp, $pass ) = split /\s*\t/;
+    }
+  } "./telnet.hosts";
+
+  ### ホストに接続してログインする
+  $telnet->open($host);
+  my @result = $telnet->login($user, $pass);
+  if ( @result ){
+    $telnet->input_log;
+    close $logh;
+    
+    open $logh,"< $logf" or die "can not open $logf";
+    while(<$logh>){
+      print $_;
+    }
+    close $logh;
+    
+    open my $logh,">> $logf" or die "can not open $logf";
+    $telnet->input_log($logh);
+  }
+
+  ### 初期コマンドの実行
+  my $init = <<'EOS';
+    TERM=vt100
+    stty rows 50 columns 144
+    cd /u00/unyo
+    uname -n
+    whoami
+    pwd
+    date
+    export PS1='$ '
+EOS
+
+  # 実行
+  for ( split /\n/,$init ){
+    s/^\s+//;
+    print "\$ $_\n";
+    @result = $telnet->cmd($_);
+    print @result;
+  }
+  my $last = $telnet->last_prompt;
+  
+  return ( $telnet,$last );
+}
+
+### 補助入力
+sub auxread {
+  my ( $telnet ) = @_ ;
+  my @result;
+  
+  while(my @buff = $telnet->getlines(All => 0) ){
+    push @result,@buff;
+  }
+  my $last = $telnet->get;
+  push @result,$last if $last;
+  return @result;
+}
+
+1;

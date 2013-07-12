@@ -53,6 +53,8 @@
 	# mingw-get update
 	# 最初の場合は、mingw-get list の時に更新されているようだ
 
+	# gcc
+	mingw-get install mingw32-gcc
 
 3) MSYS等 インストール
 	

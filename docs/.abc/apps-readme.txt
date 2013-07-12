@@ -40,3 +40,13 @@ TeraTermPro
 アタッシェケース
 	download zip-version
 		http://hibara.org/software/attachecase/
+		
+		
+downmarker
+	download 
+		https://bitbucket.org/wcoenen/downmarker/downloads
+		
+		
+pandoc
+	download msi
+		https://code.google.com/p/pandoc/downloads/detail?name=pandoc-1.11.1.msi&can=2&q=

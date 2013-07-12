@@ -1,0 +1,201 @@
+1.LoginAccess確認方法
+	静的パラメータ
+	alter system set audit_trail = db scope = spfile
+
+
+	SELECT OS_USERNAME
+	      ,USERNAME
+	      ,TERMINAL
+	      ,TO_CHAR(TIMESTAMP,'YY/MM/DD HH24:MI:SS') LOG_IN
+	      ,ACTION_NAME
+	      ,TO_CHAR(LOGOFF_TIME,'YY/MM/DD HH24:MI:SS') LOG_OFF
+	      ,RETURNCODE
+	FROM   DBA_AUDIT_SESSION
+	WHERE	TIMESTAMP between '2012/12/21' and '2012/12/22'
+	 and	USERNAME IN ('CPF01','CPT01');
+__0001
+
+2.コメントの表示
+	column TABLE_NAME format a25;
+	column COMMENTS format a70;
+	
+	select	TABLE_NAME,COMMENTS 
+	from	all_tab_comments
+	where	owner = 'CMM01'
+	 and 	COMMENTS is not null;
+__0002
+
+3.StatsPackレポート
+	sqlplus perfstat/
+	
+	@?/rdbms/admin/spreport
+	
+__0003
+
+4.フラッシュリカバリ領域移動
+	ALTER SYSTEM SET DB_RECOVERY_FILE_DEST = 'new_path';
+	@?/sqlplus/admin/movelogs
+	
+	
+	サイズ変更
+	ALTER SYSTEM SET DB_RECOVERY_FILE_DEST_SIZE = new_size;
+__0004
+
+
+5.Index 再構築
+	ALTER INDEX my_index REBUILD;
+	
+	例）
+	ALTER INDEX CMM01.CMMPK_ACCOUNT				REBUILD;
+	ALTER INDEX CMM01.CMM_ACCOUNT1_INDX			REBUILD;
+	ALTER INDEX CMM01.CMMPK_ITEM 				REBUILD;
+	ALTER INDEX CMM01.CMM_ITEM1_INDX			REBUILD;
+	ALTER INDEX CMM01.CMMPK_ITEM2				REBUILD;
+	ALTER INDEX CMM01.CMM_ITEM21_INDX			REBUILD;
+	ALTER INDEX CMM01.CMMPK_JOURNAL_PATTERN		REBUILD;
+	ALTER INDEX CMM01.CMMPK_SITE_OBJECT			REBUILD;
+	ALTER INDEX CMM01.CMM_SITE_OBJECT2_INDX		REBUILD;
+	ALTER INDEX CMM01.CMM_SITE_OBJECT_INDX		REBUILD;
+
+	ALTER INDEX CMM01.CMMPK_SUB_ACCOUNT			REBUILD;
+	ALTER INDEX CMM01.CMM_SUB_ACCOUNT1_INDX		REBUILD;
+__0005
+
+6.表の複製
+	6-1.create table dupl as select * from SRCTBL where 1=2;
+	
+	6-2.set echo off
+		set feedback off
+		set heading off
+		set trimspool on
+		set timing off
+		set time off
+		set pages 0
+		set long 2000000000
+		set linesize 50000
+
+		spool スプール・ファイル名
+
+		-- Storage句なしのDDLを取得する場合に実行
+		execute DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM,'STORAGE',false);
+
+		-- テーブルDDL取得例
+		select DBMS_METADATA.GET_DDL('TABLE','TBL1,'TRY')||'/' from dual;
+
+		-- 索引DDL取得例
+		select DBMS_METADATA.GET_DDL('INDEX',INDEX_NAME,'TRY')||'/' from user_indexes where table_name='TBL1;
+
+		spool off
+__0006
+
+7.性能試験の準備
+	7-1.バッファ・キャッシュ上のデータをフラッシュ
+		alter system FLUSH BUFFER_CACHE;
+	
+	7-2.確認
+		col OBJECT_NAME for a36
+		set pagesize 50000
+		set linesize 150
+		
+		select	DO.OWNER, DO.OBJECT_NAME, BH.STATUS, count(*) BLOCKS
+		from	V$BH BH, DBA_OBJECTS DO
+		where	BH.OBJD = DO.DATA_OBJECT_ID
+		  and	BH.TS# > 0
+		  and	BH.STATUS != 'free'
+		group	by DO.OWNER, DO.OBJECT_NAME, BH.STATUS
+		order	by 1, 2, 3;
+	
+	7-3.OSのファイル・システム・キャッシュを使用しない
+		alter system set FILESYSTEMIO_OPTIONS='SETALL' scope=spfile;
+		
+		# OSのファイル・システム・キャッシュから読み込まない、
+		# 直接ハードディスクからデータを読み取るダイレクトI/Oになる
+	
+__0007
+
+8.特定ユーザのSQL
+	8-1.トリガーを用いたSQLトレース
+		-- SQLトレースの設定 (SYSTEMユーザで実行)
+
+		GRANT ALTER SESSION TO [ユーザ名];
+
+		CREATE OR REPLACE TRIGGER [ユーザ名].TRI_SQL_TRACE 
+		AFTER LOGON ON [ユーザ名].SCHEMA
+		    BEGIN
+		        EXECUTE IMMEDIATE 'ALTER SESSION SET SQL_TRACE=TRUE';
+		    END;
+		/
+
+		ex.)
+		grant alter session to cpt01;
+		create or replace trigger cpt01.TRI_SQL_TRACE
+			after logon on cpt01.SCHEMA
+			begin
+				execute immediate 'alter session set SQL_TRACE=TRUE';
+			end;
+			/
+
+		grant alter session to cpf01;
+		create trigger cpf01.TRI_SQL_TRACE
+			after logon on cpf01.SCHEMA
+			begin
+				execute immediate 'alter session set SQL_TRACE=TRUE';
+			end;
+			/
+
+		-- SQLトレースの解除 (SYSTEMユーザで実行)
+
+		REVOKE ALTER SESSION FROM [ユーザ名];
+		DROP TRIGGER [ユーザ名].TRI_SQL_TRACE;
+
+		-- トレースファイルの出力先ディレクトリ
+		show parameter user_dump_dest
+			/oradata/diag/rdbms/tmpcpf/tmpcpf/trace
+			
+			
+		-- 
+		tkprof tmpcpf_ora_17956928.trc 17956928.prf aggregate=no sys=no sort=fchela
+		tkprof tmpcpf_ora_26149088.trc 26149088.prf explain=system/******* aggregate=no sys=no sort=fchela
+
+	8-2.監査
+		ALTER SYSTEM SET AUDIT_TRAIL='DB','EXTENDED' SCOPE=SPFILE;
+		(再起動)
+	
+		AUDIT SELECT TABLE, UPDATE TABLE BY username; 
+		
+		alter session set nls_timestamp_format = 'MM/DD HH24:MI:SS';
+		col NTIMESTAMP# format a15
+		col userid format a8
+		col TERMINAL format a15
+		select NTIMESTAMP#,USERID,ACTION#,TERMINAL from aud$ where userid in ('CPT01','CPF01') and NTIMESTAMP# > TIMESTAMP '2012-12-21 00:00:00';
+		
+		--解除
+		NOAUDIT SELECT TABLE, UPDATE TABLE BY username;
+		
+		-- audit_actions
+		select * from audit_actions where name like '%SELECT%';
+		
+		    ACTION NAME
+		---------- ------------------------------------------------------------------------------------
+		         3 SELECT
+		       131 SELECT MINING MODEL
+
+__0008
+
+9.sqlplus dateフォーマット変更
+	ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD';
+	alter session set nls_timestamp_format = 'MM/DD HH:MI';
+__0009
+
+10.リスナーの動的サービス登録
+	listener.log
+
+
+	show parameter local_listener
+	show parameter service_names
+	show parameter instance_name
+
+	 alter system register;
+	 
+__0010
+

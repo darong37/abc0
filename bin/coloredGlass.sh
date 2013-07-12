@@ -10,46 +10,50 @@ typeset DEFENVS='common'     # include設定ファイル名,複数指定可(space区切)
 . $APPLDIR/$BASEDIR/$CONFDIR/defenv
 
 ##### Init
-typeset target=${1:-};
-
 export PS4='        +$LINENO	'
-cd $BASEDIR
+typeset target=${1:-};
 
 ##### Main
 Hello
 {
   if tty -s;then
+    touch $BASEDIR/temp/$$.gls
+    touch $BASEDIR/temp/$$.log
+    exec 3>&0
+    echo "#"
+    echo "# $( id -un )@$( uname -n )"
+    echo "# $$ ${PWD##$HOME/}"
+    echo "#"
     while read;do
       if [[ $REPLY = '#'* ]];then
-        echo "  $REPLY"
+        echo "$REPLY"
       elif [[ $REPLY = '$ '* ]];then
-        _cmd="$REPLY"
-        echo "$REPLY" >  $$.gls
+        echo "  $REPLY"
       elif [[ $REPLY != '-> '* ]];then
-        echo "$REPLY" >> $$.gls
+        echo "$REPLY" >> $BASEDIR/temp/$$.gls
       else
-        echo "  #"
-        echo "  # $( id -un )@$( uname -n )"
-        echo "  # $$ ${PWD##$HOME/}"
-        echo "  #"
         echo -n "  > "
-        read CMD
+        read CMD <&3
         
-        echo "### $( date +"%H:%M:%S" )"
-        echo "$ $CMD" > $$.log
+        echo "# $( date +"%H:%M:%S" )"
+        echo "$ $CMD"
         if [[ $CMD = '' ]];then
           cnt=cnt+1
         else
           cnt=0
-          eval "$CMD" >> $$.log
+          eval "$CMD" >> $BASEDIR/temp/$$.log
           typeset -i rtn=$?
-          cat $$.log
+          #cat $$.log
+          $APPLDIR/coloredGlass_rc.pl $BASEDIR/temp/$$.gls  $BASEDIR/temp/$$.log
+          rm $BASEDIR/temp/$$.gls
+          rm $BASEDIR/temp/$$.log
           
-          echo "### -> $rtn  $( date +"%H:%M:%S" )"
+          echo "-> $rtn  $( date +"%H:%M:%S" )"
           echo
         fi
       fi
-    done < bin/$target
+    done < $target
+    exec 3>&-
   fi
 } 2>&1 | tee -a $LOGFILE
 Bye

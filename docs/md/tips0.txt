@@ -1,0 +1,962 @@
+ID/PASS　　NITADMIN/p@ssw0rd
+
+alter system set open_cursors=1000 scope=both;
+alter system set audit_file_dest=/oradata/admin/tmpcpf/adump scope=both;
+alter system set db_recovery_file_dest="" scope=both;
+ALTER SYSTEM SET db_recovery_file_dest_size = 12G SCOPE=BOTH;
+ALTER SYSTEM SET local_listener = '' SCOPE=BOTH;
+
+
+
+
+SET
+NUMBER_OF_PROCESSORS
+
+alter system set diagnostic_dest='/oradata' scope=spfile;
+select value from v$system_parameter where name ='spfile';
+
+ALTER PROFILE "DEFAULT" LIMIT PASSWORD_LIFE_TIME UNLIMITED PASSWORD_GRACE_TIME UNLIMITED;
+
+CREATE USER "CMM01" PROFILE "DEFAULT" IDENTIFIED BY "MECpswdDEVCPF_CMM01" DEFAULT TABLESPACE "CMMDATA_TBS" TEMPORARY TABLESPACE "TEMP" ACCOUNT UNLOCK;
+
+GRANT CONNECT TO CMM01;
+GRANT RESOURCE TO CMM01;
+GRANT CREATE VIEW TO CMM01;
+GRANT UNLIMITED TABLESPACE TO CMM01;
+
+
+
+ALTER USER "CPT01" IDENTIFIED BY "MECpswdTMPCPT01" ;
+ALTER USER "CPT02" IDENTIFIED BY "MECpswdTMPCPT02" ;
+
+
+
+[スタート] メニューの [ファイル名を指定して実行] をクリックし、
+[名前] に「inetmgr」と入力して、[OK] をクリック
+
+
+
+[サービス一覧取得コマンド]
+sc query state= all
+
+[スケジューラタスク]
+schtasks
+
+
+[AIX]
+cat /etc/filesystems
+
+
+[ksh]
+set -o vi
+export FCEDIT=/usr/bin/vi
+
+
+
+
+[OracleRemoteSql]
+簡易接続
+o sqlplus sys/MECpswdDEVCPF_SYS@10.1.100.102:1521/devcpf.in.mec.co.jp
+
+ls $ORACLE_HOME/network/admin/tnsnames.ora
+lsnrctl status
+emctl status dbconsole
+
+https://mec-pre3d0111.in.mec.co.jp:1158/em
+
+[tnsnames.ora]
+#v ネットサービス名
+DEVCPF =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = MEC-PRE3D0111)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = devcpf.in.mec.co.jp)
+    )
+  )
+
+
+
+
+select
+  instance_name,
+  host_name,
+  version,
+  to_char(startup_time, 'yyyy/mm/dd hh24:mi:ss') as startup_time
+from
+  v$instance;
+
+
+
+[スキーマから使用する表]
+DBA権限で、
+SELECT TABLESPACE_NAME,OWNER,TABLE_NAME FROM SYS.DBA_TABLES
+WHERE OWNER NOT IN ('SYS','SYSTEM')
+ORDER BY TABLESPACE_NAME,OWNER,TABLE_NAME
+
+
+[Duplicate DB from DataFiles and modified ControlFiles]
+This Oracle clone procedure can be use to quickly migrate a system from one UNIX server to another.  It clones the Oracle database and this Oracle cloning procedures is often the fastest way to copy a Oracle database.
+
+STEP 1: On the old system, go into SQL*Plus, sign on as SYSDBA and issue: “alter database backup controlfile to trace”. This will put the create database syntax in the trace file directory. The trace keyword tells oracle to generate a script containing a create controlfile command and store it in the trace directory identified in the user_dump_dest parameter of the init.ora file. It will look something like this:
+
+STARTUP NOMOUNT
+CREATE CONTROLFILE REUSE DATABASE "OLDLSQ" NORESETLOGS 
+NOARCHIVELOG
+MAXLOGFILES 16
+MAXLOGMEMBERS 2
+MAXDATAFILES 240
+MAXINSTANCES 1
+MAXLOGHISTORY 113
+LOGFILE
+GROUP 1 ('/u03/oradata/oldlsq/log1a.dbf',
+'/u03/oradata/olslsq/log1b.dbf') SIZE 30M,
+GROUP 2 ('/u04/oradata/oldlsq/log2a.dbf',
+'/u04/oradata/oldlsq/log2b.dbf') SIZE 30M
+DATAFILE
+'/u01/oradata/oldlsq/system01.dbf',
+'/u01/oradata/oldlsq/mydatabase.dbf'
+;
+# Recovery is required if any of the datafiles are restored
+# backups, or if the last shutdown was not normal or immediate.
+RECOVER DATABASE
+# Database can now be opened normally.
+ALTER DATABASE OPEN;
+ 
+
+STEP 2: Shutdown the old database
+
+STEP 3: Copy all data files into the new directories on the new server. You may change the file names if you want, but you must edit the controlfile to reflect the new data files names on the new server.
+
+rcp /u01/oradata/oldlsq/* newhost:/u01/oradata/newlsq
+rcp /u01/oradata/oldlsq/* newhost:/u01/oradata/newlsq
+rcp /u03/oradata/oldlsq/* newhost:/u03/oradata/newlsq
+rcp /u04/oradata/oldlsq/* newhost:/u04/oradata/newlsq
+ 
+
+STEP 4: Copy and Edit the Control file ? Using the output syntax from STEP 1, modify the controlfile creation script by changing the following:
+
+Old:
+
+CREATE CONTROLFILE REUSE DATABASE "OLDLSQ" NORESETLOGS 
+
+New:
+
+CREATE CONTROLFILE SET DATABASE "NEWLSQ" RESETLOGS
+
+STEP 5: Remove the “recover database” and “alter database open” syntax
+
+# Recovery is required if any of the datafiles are restored
+# backups, or if the last shutdown was not normal or immediate.
+RECOVER DATABASE
+# Database can now be opened normally.
+ALTER DATABASE OPEN;
+ 
+
+STEP 6: Re-names of the data files names that have changed. 
+
+Save as db_create_controlfile.sql.
+
+Old:
+
+DATAFILE
+'/u01/oradata/oldlsq/system01.dbf',
+'/u01/oradata/oldlsq/mydatabase.dbf'
+
+New:
+
+DATAFILE
+'/u01/oradata/newlsq/system01.dbf',
+'/u01/oradata/newlsq/mydatabase.dbf'
+
+STEP 7: Create the bdump, udump and cdump directories
+
+cd $DBA/admin
+mkdir newlsq
+cd newlsq
+mkdir bdump
+mkdir udump
+mkdir cdump
+mkdir pfile
+
+
+STEP 8: Copy-over the old init.ora file
+
+rcp $DBA/admin/olslsq/pfile/*.ora newhost:/u01/oracle/admin/newlsq/pfile
+
+STEP 9: Start the new database
+
+@db_create_controlfile.sql
+
+STEP 10: Place the new database in archivelog mode
+
+
+
+
+select status from v$instance;
+
+
+select	ddf.TABLESPACE_NAME,
+		ddf.BYTES,
+		ddf.BYTES-DFS.BYTES "BYTES_USED",
+		round(((ddf.BYTES-dfs.BYTES)/ddf.BYTES)*100,2) "PERCENT_USED",
+		dfs.BYTES "BYTES_FREE",
+		round((1-((ddf.BYTES-dfs.BYTES)/ddf.BYTES))*100,2) "PERCENT_FREE"
+from (
+	select	TABLESPACE_NAME,
+			sum(BYTES) bytes
+	from dba_data_files
+	where autoextensible='NO'
+	group by TABLESPACE_NAME) ddf,
+	(	
+		select	TABLESPACE_NAME,
+				sum(BYTES) bytes
+		from	dba_free_space
+		group 	by TABLESPACE_NAME
+	) dfs
+where	ddf.TABLESPACE_NAME=dfs.TABLESPACE_NAME 
+order	by ((ddf.BYTES-dfs.BYTES)/ddf.BYTES) desc
+
+SYSOPER権限で可能
+
+・インスタンスの起動、停止（startup / shutdown）
+・データベースのオープン、マウント（alter database open / mount）
+・制御ファイルのバックアップ（alter database backup controlfile）
+・データベースのリカバリ（recover database　*完全リカバリのみ）
+・アーカイブモードへの変更（alter database archivelog）
+・restricted session権限 
+
+
+SYSDBA権限で可能なこと
+
+・データベースの作成、削除（create database / drop）
+・データベースのリカバリ（recover database until　*不完全リカバリも可能） 
+
+
+
+SYSTEM表領域はオフラインにできないので、
+データファイルを移動させる場合、他のテーブルスペースとは違う手順
+
+
+1.データベースを停止する
+
+SHUTDOWN IMMEDIATE;
+
+2.OSコマンド等でデータファイルを移動
+
+COPY C:\oradata\system.dbf D:\oradata\system.dbf
+
+3.データベースをマウント
+
+CONN / AS SYSDBA
+STARTUP MOUNT
+
+4.データベースへ変更を反映
+
+ALTER DATABASE orcl RENAME FILE 'C:\oradata\system.dbf' TO 'D:\oradata\system.dbf'
+
+
+
+5.データベースをオープン
+
+ALTER DATABASE OPEN
+
+
+
+RMAN Duplicate - case 同じサーバの異なるインスタンスに複製する場合
+
+RUN
+{
+  SET NEWNAME FOR DATAFILE 1 TO /oracle/data/file2.f; # rename df 1 as file2.f
+  SET NEWNAME FOR DATAFILE 2 TO /oracle/data/file1.f; # rename df 2 as file1.f
+  DUPLICATE TARGET DATABASE TO newdb;
+}
+
+
+CREATE SMALLFILE TABLESPACE "CPFDATA_TBS" DATAFILE '/oradata/dataf/tmpcpf/cpfdata01.dbf' SIZE 100M AUTOEXTEND ON NEXT 400M MAXSIZE UNLIMITED LOGGING EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
+
+alter database datafile '/oradata/dataf/tmpcpf/cpfdata01.dbf' resize 10M;
+
+
+CREATE USER "CPF01" PROFILE "DEFAULT" IDENTIFIED BY "DEVPSWDCPF01IM" DEFAULT TABLESPACE "CPFDATA_TBS" TEMPORARY TABLESPACE "TEMP" ACCOUNT UNLOCK;
+
+
+
+GRANT CONNECT TO CPF01;
+GRANT RESOURCE TO CPF01;
+GRANT CREATE VIEW TO CPF01;
+GRANT UNLIMITED TABLESPACE TO CPF01;
+
+
+alter system set open_cursors=1000 scope=both;
+
+select * from role_sys_privs where role = 'RESOURCE';
+
+
+
+CREATE SMALLFILE TABLESPACE "CMMDATA_TBS" DATAFILE '/oradata/dataf/tmpcpf/cmmdata01.dbf' SIZE 10M AUTOEXTEND ON NEXT 100M MAXSIZE UNLIMITED LOGGING EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
+CREATE USER "CMM01" PROFILE "DEFAULT" IDENTIFIED BY "MECpswdDEVCPF_CMM01" DEFAULT TABLESPACE "CMMDATA_TBS" TEMPORARY TABLESPACE "TEMP" ACCOUNT UNLOCK;
+
+GRANT CONNECT TO CMM01;
+GRANT RESOURCE TO CMM01;
+GRANT CREATE VIEW TO CMM01;
+GRANT UNLIMITED TABLESPACE TO CMM01;
+
+CREATE SMALLFILE TABLESPACE "CPTDATA_TBS" DATAFILE '/oradata/dataf/tmpcpf/cptdata01.dbf' SIZE 20M AUTOEXTEND ON NEXT 5M MAXSIZE UNLIMITED LOGGING EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
+
+CREATE USER "CPT01" PROFILE "DEFAULT" IDENTIFIED BY "MECpswdTMPCPF_CPT01" DEFAULT TABLESPACE "CPTDATA_TBS" TEMPORARY TABLESPACE "TEMP" ACCOUNT UNLOCK;
+
+GRANT CONNECT TO CPT01;
+GRANT RESOURCE TO CPT01;
+GRANT CREATE VIEW TO CPT01;
+GRANT UNLIMITED TABLESPACE TO CPT01;
+
+GRANT CREATE OPERATOR TO CPT01;
+GRANT SELECT ANY TABLE TO CPT01;
+SELECT ANY TABLE
+
+
+
+CREATE USER "CPT02" PROFILE "DEFAULT" IDENTIFIED BY "MECpswdTMPCPF_CPT02" DEFAULT TABLESPACE "CPTDATA_TBS" TEMPORARY TABLESPACE "TEMP" ACCOUNT UNLOCK;
+
+GRANT CONNECT TO CPT02;
+GRANT RESOURCE TO CPT02;
+GRANT CREATE VIEW TO CPT02;
+GRANT UNLIMITED TABLESPACE TO CPT02;
+
+
+ALTER DATABASE DATAFILE '/oradata/dataf/tmpcpf/cpfdata01.dbf' AUTOEXTEND OFF;
+ALTER DATABASE DATAFILE '/oradata/dataf/tmpcpf/cmmdata01.dbf' AUTOEXTEND OFF;
+ALTER DATABASE DATAFILE '/oradata/dataf/tmpcpf/cptdata01.dbf' AUTOEXTEND OFF;
+
+
+
+DROP TABLESPACE CPTDATA_TBS INCLUDING CONTENTS AND DATAFILES;
+drop user CPT01 cascade;
+
+ALTER USER "CPT01" IDENTIFIED BY "MECpswdTMPCPT01";
+ALTER USER "CPT02" IDENTIFIED BY "MECpswdTMPCPT02";
+
+
+CREATE USER "CPF01_INTRAMARTSYS" 
+  PROFILE "DEFAULT" 
+  IDENTIFIED BY "DEVPSWDCPF01IM" 
+  DEFAULT TABLESPACE "CPFDATA" 
+  TEMPORARY TABLESPACE "TEMP" 
+  ACCOUNT UNLOCK;
+
+GRANT CREATE VIEW TO "CPF01_INTRAMARTSYS";
+GRANT "CONNECT" TO "CPF01_INTRAMARTSYS";
+GRANT "RESOURCE" TO "CPF01_INTRAMARTSYS";
+
+
+ALTER USER "CPF01" IDENTIFIED BY "MECpswdTMPCPF01";
+
+MECpswdDEVCPF01
+
+rman auxiliary /
+duplicate target devcpf to tmpcpf 
+	backup location /oradata/fast_recovery_area/devcpf
+		noredo
+		parameter_value_convert 
+				'/oradata/sales','/oracle/oradata/test1' 
+		set 
+			log_file_name_convert 
+				'/oracle/oradata/sysf/devcpf','/oracle/oradata/sysf/tmpcpf' 
+				'/oracle/oradata/dataf/devcpf','/oracle/oradata/dataf/tmpcpf' 
+			db_file_name_convert 
+				'/oracle/oradata/dataf/devcpf','/oracle/oradata/dataf/tmpcpf';
+		skip
+			tablespace 
+
+
+DELETE FORCE NOPROMPT BACKUPSET TAG 'weekly_bkup';
+
+DELETE OBSOLETE;
+
+DELETE OBSOLETE REDUNDANCY = 3;
+
+
+
+
+select owner,namespace,object_name,object_type from dba_objects where owner not in ('SYS','SYSTEM','SYSMAN','PUBLIC') and rownum < 101 order by owner,namespace,object_name;
+select distinct owner from dba_objects;
+
+
+select FILE_ID,FILE_NAME from DBA_DATA_FILES order by file_id;
+
+select owner,object_name,object_type from dba_objects where namespace = 4;
+select owner,object_name,object_type from dba_objects where namespace = 5;
+select owner,object_name,object_type from dba_objects where namespace = 6;
+select owner,object_name,object_type from dba_objects where namespace = 7;
+
+
+
+
+expdp ageha/ageha directory=expdp_dir1 
+dumpfile=expdp_dump101.dmp,expdp_dir2:expdp_dump2%U.dmp 
+logfile=expdp_dir2:expdp_ageha.log filesize=20M job_name=job_ageha
+
+
+1. data pump を利用したデータ移行の見積および実行
+1-1.現状調査
+	ON DEVCPF
+	select directory_name, directory_path from dba_directories;
+		DATA_PUMP_DIR
+		/oraapp/oracle/admin/devcpf/dpdump/
+
+		ORACLE_OCM_CONFIG_DIR
+		/oraapp/oracle/product/11.2.0.2/ccr/state
+
+
+1-1-1. 準備
+	create directory DATA_PUMP_DIR as '/oraapp/oracle/admin/tmpcpf/dpdump/';
+	select directory_name, directory_path from dba_directories;
+	grant read, write on directory DATA_PUMP_DIR to system;
+
+
+	select * from dba_directories where directory_name = 'DATA_PUMP_DIR';
+
+1-1-2. 容量見積
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y tablespaces=CPTDATA logfile=DATA_PUMP_DIR:expdp_cptdata.log
+
+		CPTDATA:12.43 MB
+
+1-1-3. 速度サンプル
+	expdp system/MECpswdDEVCPF_SYSTEM directory=DATA_PUMP_DIR dumpfile=expdp_cptdata.dmp tablespaces=CPTDATA logfile=DATA_PUMP_DIR:expdp_cptdata.log
+
+		start	: 13:54:35
+		end		: 13:57:51
+				:     3:16 = 196 sec.
+
+		12.43/196*60 = 3.805 MB/min 
+
+
+1-1-4. 移行元容量見積
+	データベース全体(full=yオプション)
+	ON DEVCPF
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y tablespaces=CPTDATA logfile=DATA_PUMP_DIR:expdp_cptdata.log
+
+		CPTDATA:113.8 MB
+
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y full=y logfile=DATA_PUMP_DIR:expdp_cptdata.log
+
+		Total  :3.614 GB = 3701MB
+		3701 / 3.805 = 972.6 min. = 16.2 hours
+
+
+1-2. 表領域抽出実験
+1-2-1. CMMDATAの場合
+	ON DEVCPF
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y tablespaces=CMMDATA logfile=DATA_PUMP_DIR:expdp_cmmdata.log
+
+		CMMDATA:1.579 GB = 1617 MB
+		1617 / 3.805 = 425 min. = 7,08 hours
+
+1-2-2. GPRDATAの場合
+	ON DEVCPF
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y tablespaces=GPRDATA logfile=DATA_PUMP_DIR:expdp_gprdata.log
+
+		GPRDATA:1.036 GB = 1061 MB
+		1061 / 3.805 = 279 min. = 4.65 hours
+
+
+1-2-3.batch 実行
+	ON DEVCPF
+	expdp system/MECpswdDEVCPF_SYSTEM directory=DATA_PUMP_DIR dumpfile=expdp_gprdata.dmp tablespaces=GPRDATA logfile=DATA_PUMP_DIR:expdp_gprdata.log
+
+------------
+#!/usr/bin/ksh
+
+date
+
+export ORACLE_HOME=/oraapp/oracle/product/11.2.0.2
+export ORACLE_SID=devcpf
+#/oraapp/oracle/product/11.2.0.2/bin/expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y                                    tablespaces=GPRDATA logfile=DATA_PUMP_DIR:expdp_gprdata.log
+/oraapp/oracle/product/11.2.0.2/bin/expdp system/MECpswdDEVCPF_SYSTEM directory=DATA_PUMP_DIR dumpfile=expdp_gprdata.dmp tablespaces=GPRDATA logfile=DATA_PUMP_DIR:expdp_gprdata.log
+
+date
+-------------
+
+	Start : 02:45:00
+	End   : 02:48:24
+			    3:24
+
+	容量に依存しない実行時間が3min. で　事実上、容量はほぼ無視できる
+
+
+1-3.import見積
+
+
+1-4.FULL DUMP
+	ON TMPCPF
+	expdp system/MECpswdDEVCPF_SYSTEM directory=DATA_PUMP_DIR dumpfile=expdp_full.dmp logfile=DATA_PUMP_DIR:expdp_full.log
+#	impdp system/MECpswdDEVCPF_SYSTEM directory=DATA_PUMP_DIR dumpfile=expdp_full.dmp tablespaces=USERS logfile=DATA_PUMP_DIR:impdp_users.log
+
+
+1-5.Disk容量
+	ON DEVCPF
+	expdp system/MECpswdDEVCPF_SYSTEM estimate_only=y full=y logfile=DATA_PUMP_DIR:est_full.log
+
+1-6.Users表領域のexport
+	edp tablespaces=USERS estimate_only=y
+	edp tablespaces=USERS dumpfile=dp_user.dmp
+
+1-7.Full Dumpの取得
+	ON DEVCPF
+	Start	: 12:37:59
+	End		: 13:13:41
+				35:42
+				1.8 GB
+
+1-8.データインポート
+	1-8-1.DDLの作成
+		idp dumpfile=dev_full.dmp sqlfile=all_obj.sql
+
+	1-8-2.tablespace の作成
+		REMAP_SCHEMA オプションがあれば作成できるらしいが...
+
+		CREATE TABLESPACE "BRBDATA" DATAFILE '/oradata/dataf/tmpcpf/brbdata01.dbf' SIZE 1024M REUSE AUTOEXTEND ON NEXT 100M MAXSIZE UNLIMITED;
+		idp dumpfile=dev_full.dmp schemas=BRB01
+			GrantUser,Index表領域が無いので一部エラー
+			table_exists_action オプションで再初期化できそう
+
+		idp dumpfile=dev_full.dmp schemas=CPF98
+			OK
+
+		idp dumpfile=dev_full.dmp schemas=BRB01 table_exists_action=skip
+		idp dumpfile=dev_full.dmp schemas=BRB01 table_exists_action=truncate
+			OK
+
+	1-8-3.CPF98が与えられたオブジェクト権限を表示する
+		SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = 'CPF98';
+
+
+
+
+	ON TMPCPF
+	
+
+
+__0001
+
+
+2.障害 Oracle初期化ファイルの変更によるStartupできない状況
+	1.SQLPLUSにてSYSDBA権限でログイン
+
+	2.create pfile ='/oraapp/oracle/product/11.2.0.2/dbs/inittmpcpf_createBySpfile.ora' from SPFILE ='/oradata/admin/tmpcpf/spfile/spfiletmpcpf.ora';
+
+	3.PFILEを修正
+
+		pfileでOpenする場合
+		startup pfile ='/oraapp/oracle/product/11.2.0.2/dbs/inittmpcpf_createBySpfile.ora';
+		select value from v$system_parameter where name ='spfile';
+		空欄
+
+	4.create spfile='/oradata/admin/tmpcpf/spfile/spfiletmpcpf_new.ora' from pfile='/oraapp/oracle/product/11.2.0.2/dbs/inittmpcpf_createBySpfile.ora';
+
+	5.新しいSPFILEを有効にする（名前をかえる）
+
+	6.startup;
+
+
+3.Directory Object作成
+	create directory GCV_LOG_DIR  as '/storage/tmpcpf/cpf/ftp';
+	create directory GCV_FILE_DIR as '/storage/tmpcpf/cpf/ftp';
+
+__0003
+
+
+4.Oracle ディレクトリの整理
+	------------	---------------------	--------------------------------------------
+	ORACLE_BASE 	環境変数             	
+	ORACLE_HOME 	環境変数             	/oraapp/oracle/product/11.2.0.2
+	------------	---------------------	--------------------------------------------
+	Recover Area	db_recovery_file_dest	/oraapp/oracle/fast_recovery_area
+
+	------------	---------------------	--------------------------------------------
+	PFile
+	SPFile      	v$system_parameter   	/oradata/admin/$ORACLE_SID/spfile/spfile${ORACLE_SID}.ora
+
+	------------	---------------------	--------------------------------------------
+	ControlFile 	db_create_file_dest  	N/A
+	            	control_files        	/oradata/sysf/$ORACLE_SID
+	            	                     	/oraapp/oracle/fast_recovery_area/$ORACLE_SID/
+	REDO ログ   	db_create_file_dest  	N/A
+	            	                     	/oradata/sysf/$ORACLE_SID
+
+	DataFile    	直接指定             	/oradata/dataf/%server%	
+	------------	---------------------	--------------------------------------------
+	ARCHIVELOG  	
+
+	
+
+
+
+	Backup Area : /oraapp/oracle/fast_recovery_area/TMPCPF
+
+
+5.EMが表示しない
+	5-1.状況
+		DB Serever	起動している
+		Listener	異常なし
+		DB Console
+			emcntl status dbconsole
+				Oracle Enterprise Manager 11g is not running.
+
+		ps -ef | grep dbconsole
+			  oracle 25952304        1   0   Nov 26      -  1:55 
+			-	/oraapp/oracle/product/11.2.0.2/perl/bin/perl
+			-	 /oraapp/oracle/product/11.2.0.2/bin/emwd.pl dbconsole
+			-	 /oraapp/oracle/product/11.2.0.2/mec-pre3d0111.in.mec.co.jp_tmpcpf/sysman/log/emdb.nohup
+
+	5-2.ログ
+		EMのLog Location
+			/oraapp/oracle/product/11.2.0.2/mec-pre3d0111.in.mec.co.jp_tmpcpf/sysman/log
+
+	5-3.停止・再起動
+		正常化
+
+	5-4.結論
+		DBServerを止める前にDBConsoleを止めたほうがいいかも
+
+__0005
+
+
+6.Restore from cold backup
+	6-1. 準備
+		DBID
+			TMPCPF : 1808260712
+
+		List Backup
+------------
+			バックアップ・セットのリスト
+			===================
+			
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			1       Full    14.85M     DISK        00:00:01     12-11-20
+			        BPキー: 1   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121120T193932
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/backupset/2012_11_20/o1_mf_nnndf_TAG20121120T193932_8bpqh5ty_.bkp
+			  バックアップ・セット1のデータファイルのリスト
+			  File LV Type Ckp SCN    Ckp時間  Name
+			  ---- -- ---- ---------- -------- ----
+			  7       Full 1229597    12-11-20 /oradata/dataf/tmpcpf/cptdata01.dbf
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			2       Full    7.42M      DISK        00:00:01     12-11-20
+			        BPキー: 2   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121120T193934
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/autobackup/2012_11_20/o1_mf_s_799875574_8bpqh75t_.bkp
+			  SPFILEも含まれます: 修正時間: 12-11-20
+			  SPFILE db_unique_name: TMPCPF
+			  含まれている制御ファイル: Ckp SCN: 1229866      Ckp時間: 12-11-20
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			3       Full    21.31M     DISK        00:00:00     12-11-22
+			        BPキー: 3   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121122T173113
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/backupset/2012_11_22/o1_mf_nnndf_TAG20121122T173113_8bvrplbw_.bkp
+			  バックアップ・セット3のデータファイルのリスト
+			  File LV Type Ckp SCN    Ckp時間  Name
+			  ---- -- ---- ---------- -------- ----
+			  7       Full 1347102    12-11-22 /oradata/dataf/tmpcpf/cptdata01.dbf
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			4       Full    7.42M      DISK        00:00:02     12-11-22
+			        BPキー: 4   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121122T173115
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/autobackup/2012_11_22/o1_mf_s_800040675_8bvrpnqb_.bkp
+			  SPFILEも含まれます: 修正時間: 12-11-22
+			  SPFILE db_unique_name: TMPCPF
+			  含まれている制御ファイル: Ckp SCN: 1347276      Ckp時間: 12-11-22
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			5       Full    1.07G      DISK        00:00:36     12-11-27
+			        BPキー: 5   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121127T193119
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/backupset/2012_11_27/o1_mf_nnndf_TAG20121127T193119_8c95mtgy_.bkp
+			  バックアップ・セット5のデータファイルのリスト
+			  File LV Type Ckp SCN    Ckp時間  Name
+			  ---- -- ---- ---------- -------- ----
+			  1       Full 1584576    12-11-27 /oradata/sysf/tmpcpf/system01.dbf
+			  2       Full 1584576    12-11-27 /oradata/sysf/tmpcpf/sysaux01.dbf
+			  3       Full 1584576    12-11-27 /oradata/sysf/tmpcpf/undotbs01.dbf
+			  4       Full 1584576    12-11-27 /oradata/sysf/tmpcpf/users01.dbf
+			  5       Full 1584576    12-11-27 /oradata/dataf/tmpcpf/cpfdata01.dbf
+			  6       Full 1584576    12-11-27 /oradata/dataf/tmpcpf/cmmdata01.dbf
+			  7       Full 1584576    12-11-27 /oradata/dataf/tmpcpf/cptdata01.dbf
+			  8       Full 1584576    12-11-27 /oradata/perf/tmpcpf/stats01.dbf
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			6       Full    7.42M      DISK        00:00:01     12-11-27
+			        BPキー: 6   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121127T193207
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/autobackup/2012_11_27/o1_mf_s_800479317_8c95o8ch_.bkp
+			  SPFILEも含まれます: 修正時間: 12-11-27
+			  SPFILE db_unique_name: TMPCPF
+			  含まれている制御ファイル: Ckp SCN: 1584576      Ckp時間: 12-11-27
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			7       Full    1.12G      DISK        00:00:37     12-11-29
+			        BPキー: 7   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121129T202330
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/backupset/2012_11_29/o1_mf_nnndf_TAG20121129T202330_8cgkfmqz_.bkp
+			  バックアップ・セット7のデータファイルのリスト
+			  File LV Type Ckp SCN    Ckp時間  Name
+			  ---- -- ---- ---------- -------- ----
+			  1       Full 1833107    12-11-29 /oradata/sysf/tmpcpf/system01.dbf
+			  2       Full 1833107    12-11-29 /oradata/sysf/tmpcpf/sysaux01.dbf
+			  3       Full 1833107    12-11-29 /oradata/sysf/tmpcpf/undotbs01.dbf
+			  4       Full 1833107    12-11-29 /oradata/sysf/tmpcpf/users01.dbf
+			  5       Full 1833107    12-11-29 /oradata/dataf/tmpcpf/cpfdata01.dbf
+			  6       Full 1833107    12-11-29 /oradata/dataf/tmpcpf/cmmdata01.dbf
+			  7       Full 1833107    12-11-29 /oradata/dataf/tmpcpf/cptdata01.dbf
+			  8       Full 1833107    12-11-29 /oradata/perf/tmpcpf/stats01.dbf
+			
+			BS Key  Type LV Size       Device Type Elapsed Time 終了時間
+			------- ---- -- ---------- ----------- ------------ --------
+			8       Full    7.42M      DISK        00:00:01     12-11-29
+			        BPキー: 8   ステータス: AVAILABLE  圧縮: NO  タグ: TAG20121129T202417
+			        ピース名: /oraapp/oracle/fast_recovery_area/TMPCPF/autobackup/2012_11_29/o1_mf_s_800655726_8cgkh1xb_.bkp
+			  SPFILEも含まれます: 修正時間: 12-11-29
+			  SPFILE db_unique_name: TMPCPF
+			  含まれている制御ファイル: Ckp SCN: 1833107      Ckp時間: 12-11-29
+------------
+	6-1-1. startup nomount
+
+	6-2.restore controlfile from autobackup;
+
+	6-3.alter database mount;
+
+	6-4.restore database;
+
+		SELECT SID, SERIAL#, CONTEXT, SOFAR, TOTALWORK,
+			ROUND(SOFAR/TOTALWORK*100,2) "% COMPLETE"
+			FROM V$SESSION_LONGOPS
+			WHERE OPNAME LIKE 'RMAN%' AND OPNAME NOT LIKE '%aggregate%'
+			 AND TOTALWORK != 0 AND SOFAR <> TOTALWORK;
+
+	6-5.alter database open resetlogs;
+
+__0006
+
+
+7.TableSpace 再作成
+	7-1. dbf削除
+		rm /oradata/dataf/tmpcpf/cmmindx01.dbf
+
+		rm /oradata/dataf/tmpcpf/gprdata01.dbf
+		rm /oradata/dataf/tmpcpf/gprdata02.dbf
+		rm /oradata/dataf/tmpcpf/gprdata03.dbf
+		rm /oradata/dataf/tmpcpf/gprdata04.dbf
+		rm /oradata/dataf/tmpcpf/gprdata05.dbf
+		rm /oradata/dataf/tmpcpf/gprdata06.dbf
+		
+		rm /oradata/dataf/tmpcpf/gprindx01.dbf
+		
+		rm /oradata/dataf/tmpcpf/gordata01.dbf
+		rm /oradata/dataf/tmpcpf/gordata02.dbf
+		
+		rm /oradata/dataf/tmpcpf/gorindx01.dbf
+		
+		rm /oradata/dataf/tmpcpf/rcodata01.dbf
+		rm /oradata/dataf/tmpcpf/rcodata02.dbf
+		
+		rm /oradata/dataf/tmpcpf/rcoindx01.dbf
+		
+		rm /oradata/dataf/tmpcpf/roadata01.dbf
+		
+		rm /oradata/dataf/tmpcpf/roaindx01.dbf
+		
+		rm /oradata/dataf/tmpcpf/brbdata01.dbf
+		
+		rm /oradata/dataf/tmpcpf/brbindx01.dbf
+		
+		rm /oradata/dataf/tmpcpf/bredata01.dbf
+		
+		rm /oradata/dataf/tmpcpf/breindx01.dbf
+
+	7-2. TableSpace作成
+		--------------
+		-- 0.CMMINDX
+		CREATE TABLESPACE "CMMINDX" DATAFILE 
+		   '/oradata/dataf/tmpcpf/cmmindx01.dbf' SIZE 209715200
+		   AUTOEXTEND ON NEXT 20971520 MAXSIZE 32767M
+		   LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		   EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS SEGMENT SPACE MANAGEMENT AUTO;
+
+
+		-- 1.GPR01
+		CREATE TABLESPACE "GPRDATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/gprdata01.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gprdata02.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gprdata03.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gprdata04.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gprdata05.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gprdata06.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "GPRINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/gprindx01.dbf' SIZE 1656750080
+		  AUTOEXTEND ON NEXT 20971520 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		
+		
+		-- 2.GOR01
+		CREATE TABLESPACE "GORDATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/gordata01.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/gordata02.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "GORINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/gorindx01.dbf' SIZE 209715200
+		  AUTOEXTEND ON NEXT 20971520 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+
+
+		-- 3.RCO01
+		CREATE TABLESPACE "RCODATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/rcodata01.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M,
+		  '/oradata/dataf/tmpcpf/rcodata02.dbf' SIZE 10737418240
+		  AUTOEXTEND ON NEXT 1073741824 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "RCOINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/rcoindx01.dbf' SIZE 209715200
+		  AUTOEXTEND ON NEXT 20971520 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+
+
+		-- 4.ROA01
+		CREATE TABLESPACE "ROADATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/roadata01.dbf' SIZE 897581056
+		  AUTOEXTEND ON NEXT 104857600 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "ROAINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/roaindx01.dbf' SIZE 155189248
+		  AUTOEXTEND ON NEXT 10485760 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+
+
+		-- 5.BRB01
+		CREATE TABLESPACE "BRBDATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/brbdata01.dbf' SIZE 1073741824
+		  AUTOEXTEND ON NEXT 104857600 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "BRBINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/brbindx01.dbf' SIZE 268435456
+		  AUTOEXTEND ON NEXT 26214400 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+
+
+		-- 6.BRE01
+		CREATE TABLESPACE "BREDATA" DATAFILE 
+		  '/oradata/dataf/tmpcpf/bredata01.dbf' SIZE 4294967296
+		  AUTOEXTEND ON NEXT 419430400 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+		CREATE TABLESPACE "BREINDX" DATAFILE 
+		  '/oradata/dataf/tmpcpf/breindx01.dbf' SIZE 134217728
+		  AUTOEXTEND ON NEXT 12582912 MAXSIZE 32767M
+		  LOGGING ONLINE PERMANENT BLOCKSIZE 8192
+		  EXTENT MANAGEMENT LOCAL AUTOALLOCATE DEFAULT NOCOMPRESS  SEGMENT SPACE MANAGEMENT AUTO;
+
+
+--------------
+__0007
+
+8.圧縮バックアップ
+	backup as compressed backupset database;
+	alter database open;
+__0008
+
+
+
+9.SYSTEM Schema関連
+	GRANT READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "GPR01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "GOR01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "RCO01";
+	-- CONNECT CPF01
+	GRANT READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "CPF98";
+	-- CONNECT SYSTEM
+	GRANT READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "CPF01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "GPR01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "CPF98";
+	GRANT READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "GOR01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "RCO01";
+	
+	GRANT EXECUTE, READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "SYSTEM" WITH GRANT OPTION;
+	GRANT EXECUTE, READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "CPF01" WITH GRANT OPTION;
+	GRANT WRITE ON DIRECTORY "GCV_LOG_DIR" TO "GPR01";
+	GRANT READ, WRITE ON DIRECTORY "GCV_LOG_DIR" TO "CPF98";
+	GRANT EXECUTE, READ, WRITE ON DIRECTORY "GCV_FILE_DIR" TO "SYSTEM" WITH GRANT OPTION;
+	
+	ALTER PROFILE "DEFAULT" LIMIT PASSWORD_LIFE_TIME UNLIMITED PASSWORD_GRACE_TIME UNLIMITED;
+
+	GRANT ALTER, SELECT ON "GPR01"."GPA_PAYMENT_BATCH_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPA_PAYMENT_BATCH_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_COMMENT_LINE_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_COMMENT_LINE_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_LINE_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_LINE_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_NUMBER_SUFFIX_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_CONTRACT_NUMBER_SUFFIX_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_INVOICE_NUMBER_SUFFIX_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_INVOICE_NUMBER_SUFFIX_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_IP_INVOICE_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_IP_INVOICE_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_PREPAY_BATCH_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_PREPAY_BATCH_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_PREPAY_LINE_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_PREPAY_LINE_ID_SEQ" TO "CPF98";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_SEARCH_PATTERN_ID_SEQ" TO "CPF01";
+	GRANT ALTER, SELECT ON "GPR01"."GPR_SEARCH_PATTERN_ID_SEQ" TO "CPF98";
+
+	drop user CPF01_INTRAMARTSYS;
+
+	CREATE  PUBLIC SYNONYM "HR_ALL_ORGANIZATION_UNITS" FOR "PUBLIC"."HR_ALL_ORGANIZATION_UNITS"@"GPR_EBS_JISHO_LNK.IN.MEC.CO.JP";
+	CREATE  PUBLIC SYNONYM "PO_VENDOR_SITES_ALL" FOR "PUBLIC"."PO_VENDOR_SITES_ALL"@"GPR_EBS_JISHO_LNK.IN.MEC.CO.JP";
+
+__0009
+
+10.表と行数の一覧
+	spool cpf01_tables_devcpf.txt
+
+	column table_name format a35
+
+	select
+	   table_name,
+	   to_number(
+	     extractvalue(
+	       xmltype(
+	    dbms_xmlgen.getxml('select count(*) c from '||table_name))
+	       ,'/ROWSET/ROW/C')) count
+	 from user_tables
+	 WHERE TABLE_NAME NOT LIKE 'BIN$%'
+	   and (iot_type != 'IOT_OVERFLOW' or iot_type is null)
+	order by table_name;
+	
+	spool off
+__0010
+
+
