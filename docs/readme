@@ -7,6 +7,9 @@
 	.gitconfig.samp
 	exe/_init.bat.samp
 	を修正する（.sampを取ってSave）
+	
+	git config --bool core.quotepath false
+	
 
 	状態確認
 	git status

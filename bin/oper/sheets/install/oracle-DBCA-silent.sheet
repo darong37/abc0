@@ -1,0 +1,32 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=$( Input 'Orcale SID' )
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cd
+$ pwd
+
+$ ls -l dbca-${sid}.rsp
+$ ls -l $sid.dbc
+
+$ df -k .
+
+$ which dbca
+
+$ export ORACLE_SID=$sid
+
+$ dbca -silent -createDatabase
+_ -responseFile ~/dbca-$sid.rsp
+_ -templateName ~/$sid.dbc
+_ -recoveryAreaDestination NO_VALUE
+
+$ df -k .
+
+EOF

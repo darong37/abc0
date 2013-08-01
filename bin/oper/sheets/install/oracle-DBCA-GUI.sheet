@@ -1,0 +1,43 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cd $ORACLE_HOME
+$ pwd
+
+$ df -k
+
+$ which dbca
+
+$ dbca
+# RESPONSEFILE_VERSION: 	"11.2.0"
+# OPERATIONAL_TYPE:     	"createDatabase"
+# [CREATEDATABASE]:     	-
+# GDBNAME:              	"e001.in.mec.co.jp"
+# SID:                  	"e001"
+# SYSPASSWORD:          	"*****"
+# SYSTEMPASSWORD:       	"*****"
+# SYSMANPASSWORD:       	"*****"
+# DBSNMPPASSWORD:       	"*****"
+# CHARACTERSET:         	"JA16SJIS"
+# NATIONALCHARACTERSET: 	"AL16UTF16"
+# EMCONFIGURATION:      	"LOCAL"
+# DISABLESECURITYCONFIGURATION:    	"NONE"
+# DATAFILEDESTINATION:  	"/u43/e001/oracle/db/apps_st/data"
+# RECOVERYAREADESTINATION:	
+# STORAGETYPE:          	FS
+# LISTENERS:            	"e001"
+# DATABASETYPE:         	"MULTIPURPOSE"
+# AUTOMATICMEMORYMANAGEMENT:    	"TRUE"
+# TOTALMEMORY:          	"800"
+
+$ df -k
+
+EOF

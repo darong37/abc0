@@ -1,0 +1,40 @@
+#!/bin/sh -u
+
+### Local Parameter
+lsnr=${lsnr:-$( Input 'Listener name' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ which lsnrctl
+
+$ lsnrctl status $lsnr
+
+	LSNRCTL for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production on {*} {tim}
+
+	Copyright (c) 1991, 2011, Oracle.  All rights reserved.
+
+	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=mecerp3x0111.in.mec.co.jp)(PORT={num})))
+	STATUS of the LISTENER
+	------------------------
+	Alias                     ${lsnr}
+	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production
+	Start Date                {*} {tim}
+	Uptime                    {num} days {num} hr. {num} min. {num} sec
+	Trace Level               off
+	Security                  ON: Local OS Authentication
+	SNMP                      ON
+	Listener Parameter File   {*}
+	Listener Log File         {*}
+	Listening Endpoints Summary...
+	{:}
+	The command completed successfully
+
+$ ps -ef | grep $user | grep tnslsnr
+	 ${user} {num}        1   0 15:13:48      -  0:00 /u43/e001/oracle/db/tech_st/11.2.0/bin/tnslsnr E001 -inherit
+
+EOF

@@ -1,0 +1,28 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=$(  Input 'oracle SID' )
+
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ sqlplus /nolog
+
+> conn / as sysdba
+
+> SELECT PARAMETER, VALUE
+_ FROM NLS_DATABASE_PARAMETERS
+_ WHERE PARAMETER IN ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');
+
+
+> exit
+
+EOF

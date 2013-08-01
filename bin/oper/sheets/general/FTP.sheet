@@ -1,0 +1,42 @@
+#!/bin/sh -u
+
+### Local Parameter
+ousr="ora${user}"
+pswd=${pswd:-$(       Input 'FTP password' )}
+rmtHost=${rmtHost:-$( Input 'FTP Remote-Host-Name(or IP)' )}
+work=${work:-$(       Input 'FTP Local Directory' )}
+rmtDir=${rmtDir:-$(   Input 'FTP Remote Directory' )}
+ftpFile=${ftpFile:-$( Input 'Send File-Name' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ cd $work
+$ pwd
+	$work
+
+$ ls -l ${ftpFile}
+
+$ cksum ${ftpFile}
+
+$ date
+$ ftp -niv ${rmtHost} 
+> user root ${pswd}
+	331 Password required for root.
+	230-Last unsuccessful login: {*} JST 2013 on /dev/pts/2 from j1107a4-nn017.in.mec.co.jp
+	230-Last login: {*} JST 2013 on /dev/pts/2 from j1107a4-nn017.in.mec.co.jp
+	230 User root logged in.
+> cd ${rmtDir}
+> pwd
+> bin
+> !date
+> put ${ftpFile}
+> bye
+
+$ date
+
+EOF

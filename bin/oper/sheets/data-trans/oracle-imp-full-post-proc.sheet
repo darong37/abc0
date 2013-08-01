@@ -1,0 +1,30 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset pswd=${pswd:-$(   Input 'Oracle common password' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ # Password‚ðŒ³‚É–ß‚·
+$ sqlplus / as sysdba
+> alter user sys    identified by "${pswd}***";
+> alter user system identified by "${pswd}***";
+> alter user sysman identified by "${pswd}***";
+> alter user dbsnmp identified by "${pswd}***";
+
+
+
+
+> exit
+
+$
+
+EOF

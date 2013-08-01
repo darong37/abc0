@@ -1,0 +1,87 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(   Input 'oracle SID' )}
+area=${area:-$( Input 'rman backup-file area' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ rman target /
+
+	Recovery Manager: Release 11.2.0.3.0 - Production on Wed Jul 24 17:02:55 2013
+
+	Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+	connected to target database: E058 (DBID=344106916)
+
+> show all;
+
+	using target database control file instead of recovery catalog
+	RMAN configuration parameters for database with db_unique_name E058 are:
+	CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+	CONFIGURE BACKUP OPTIMIZATION OFF; # default
+	CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+	CONFIGURE CONTROLFILE AUTOBACKUP ON;
+	CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+	CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+	CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+	CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+	CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/dev_db/wksp/e058/rman/%d_%U_%T.bak' MAXPIECESIZE 1 G;
+	CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+	CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+	CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+	CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+	CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+	CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/u45/e058/oracle/db/tech_st/11.2.0/dbs/snapcf_e058.f'; # default
+
+> configure controlfile autobackup on;
+
+	specification does not match any backup in the repository
+
+	RMAN> configure controlfile autobackup on;
+
+	new RMAN configuration parameters:
+	CONFIGURE CONTROLFILE AUTOBACKUP ON;
+	new RMAN configuration parameters are successfully stored
+
+> configure retention policy to redundancy 2;
+>
+# リカバリ領域を使用していないい場合
+> configure channel device type disk format='/dev_db/wksp/e001/rman/rman/%d_%U_%T.bak' maxpiecesize=1G;
+
+
+> show all;
+
+	RMAN configuration parameters for database with db_unique_name E058 are:
+	CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+	CONFIGURE BACKUP OPTIMIZATION OFF; # default
+	CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+	CONFIGURE CONTROLFILE AUTOBACKUP ON;
+	CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+	CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+	CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+	CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+	CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/dev_db/wksp/e058/rman/%d_%U_%T.bak' MAXPIECESIZE 1 G;
+	CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+	CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+	CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+	CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+	CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+	CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/u45/e058/oracle/db/tech_st/11.2.0/dbs/snapcf_e058.f'; # default
+
+> list backup summary;
+
+	specification does not match any backup in the repository
+
+> exit
+
+$
+EOF

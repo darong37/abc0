@@ -1,0 +1,58 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(     Input  'Oracle SID' )}
+bkObj=${bkObj:-$( Input  'Backup-Object Directory' )}
+
+bkLoc=${bkLoc:-$( Select 'Save Location' $( cat <<-DIRS
+	/dev_db/wksp/userbackup
+DIRS
+))}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+
+$ cd
+$ pwd
+	${bkObj%/*}/$user
+
+$ sqlplus / as sysdba
+> select     ddf.TABLESPACE_NAME,
+_            ddf.BYTES,
+_            ddf.BYTES-DFS.BYTES "BYTES_USED",
+_            round(((ddf.BYTES-dfs.BYTES)/ddf.BYTES)*100,2) "PERCENT_USED",
+_            dfs.BYTES "BYTES_FREE",
+_            round((1-((ddf.BYTES-dfs.BYTES)/ddf.BYTES))*100,2) "PERCENT_FREE"
+_ from (
+_    select  TABLESPACE_NAME,
+_                    sum(BYTES) bytes
+_    from dba_data_files
+_    group by TABLESPACE_NAME) ddf,
+_    (       
+_            select  TABLESPACE_NAME,
+_                            sum(BYTES) bytes
+_            from    dba_free_space
+_            group   by TABLESPACE_NAME
+_    ) dfs
+_ where      ddf.TABLESPACE_NAME=dfs.TABLESPACE_NAME 
+_ order      by ((ddf.BYTES-dfs.BYTES)/ddf.BYTES) desc;
+
+
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_DATA_FILES where TABLESPACE_NAME = 'XXWK';
+
+
+> ALTER DATABASE DATAFILE '/u45/e058/oracle/db/apps_st/data/e058/xxwk02.dbf' RESIZE 500M;
+
+> exit
+
+$ 
+
+EOF

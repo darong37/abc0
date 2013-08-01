@@ -1,0 +1,34 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# %02d. ${title}
+######################################################################
+$ cd \$ORACLE_HOME/bin
+$ pwd
+
+$ ls -l netca
+
+$ ./netca
+# GUI‚É‚æ‚é“ü—Í
+
+$ cd ../network/admin
+$ pwd
+
+
+$ ls -l listener.ora
+$ cat listener.ora
+
+
+$ cd $ORACLE_HOME/assistants/netca
+$ ls -l netca.rsp
+
+$ cat netca.rsp
+$ cp -p netca.rsp ~/
+
+EOF

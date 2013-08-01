@@ -1,0 +1,39 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=${sid:-$(     Input 'Oracle SID' )}
+typeset pswd=${pswd:-$(   Input 'Oracle system password' )}
+typeset work=${work:-$(   Input 'Dump-File Location Directory' )}
+typeset dmpfn=${dmpfn:-$( Input 'Dump-File Name' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ which imp
+	/u45/e058/oracle/db/tech_st/11.2.0/bin/imp
+
+$
+$ cd $work
+$ pwd
+	$work
+
+$ ls -l $dmpfn
+
+$ cd
+$ pwd
+$ df -m .
+
+$ date
+$ imp system/${pswd} file=$work/$dmpfn log=$work/${sid}_full.log full=y ; date
+
+$ df -m .
+
+
+EOF

@@ -1,0 +1,40 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=$( Input 'Oracle SID' )
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cd ../oracle/admin/${sid}/scripts
+$ pwd
+
+$ ls -l
+
+$ cd \$ORACLE_HOME/assistants/dbca
+$ ls -l dbca.rsp
+
+$ cd templates/
+$ ls -l
+
+$ cd
+$ pwd
+$ ls -l ../oracle/cfgtoollogs/dbca/e058/e058.log
+$ cat ../oracle/cfgtoollogs/dbca/e058/e058.log
+
+$ ps -ef | grep $user | grep ora
+
+$ echo \$ORACLE_HOME
+$ echo \$ORACLE_SID
+$ sqlplus / as sysdba
+> spool ${today}.params
+> show parameters
+> spool off
+> exit
+
+$
+
+EOF

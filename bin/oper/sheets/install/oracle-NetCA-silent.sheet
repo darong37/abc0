@@ -1,0 +1,81 @@
+#!/bin/sh -u
+
+### Local Parameter
+lsnrnm=$( Input 'Listener Name' )
+lsnrpo=$( Input 'Listener Port No.' )
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# %02d. ${title}
+######################################################################
+$ cd
+$ pwd
+
+$ echo ":\$PATH:" | if grep "\${ORACLE_HOME:-hogehoge}/bin";then echo "OK";fi
+	OK
+$ which netca
+
+$ ls -l netca.rsp
+$ diff \$ORACLE_HOME/assistants/netca/netca.rsp ./netca.rsp
+	71c71
+	< INSTALL_TYPE=""typical""
+	---
+	> INSTALL_TYPE=""custom""
+	< LISTENER_NAMES={"LISTENER"}
+	---
+	> LISTENER_NAMES={"$lsnrnm"}
+	87c87
+	< LISTENER_PROTOCOLS={"TCP;1521"}
+	---
+	> LISTENER_PROTOCOLS={"TCP;$lsnrpo"}
+	90c90
+	< LISTENER_START=""LISTENER""
+	---
+	> LISTENER_START=""$lsnrnm""
+	127c127
+	< NSN_PROTOCOLS={"TCP;HOSTNAME;1521"}
+	---
+	> NSN_PROTOCOLS={"TCP;HOSTNAME;$lsnrpo"}
+
+$ netca -silent -responseFile ~/netca.rsp
+
+	コマンドライン引数の解析:
+	    パラメータ "silent" = true
+	    パラメータ "responsefile" = /u45/e058/orae058/netca.rsp
+	コマンドライン引数の解析が終了しました。
+	Oracle Net Servicesの構成:
+	次のリスナーを構成中:$lsnrnm
+	リスナーの構成が完了しました。
+	Oracle Net Listenerの起動:
+	    リスナーの制御の実行:
+	      /u45/e058/oracle/db/tech_st/11.2.0/bin/lsnrctl start $lsnrnm
+	    リスナーの制御が完了しました。
+	    リスナーの起動に成功しました。
+	プロファイルの構成が完了しました。
+	Oracle Net Servicesの構成に成功しました。終了コードは次のとおりです。0
+
+$ which lsnrctl
+
+$ lsnrctl status $lsnrnm
+
+$ ps -ef | grep $user | grep tnslsnr
+
+
+
+$ cd \$ORACLE_HOME/network/admin
+$ pwd
+
+
+$ ls -l listener.ora
+$ cat listener.ora
+
+
+$ cd \$ORACLE_HOME/assistants/netca
+$ ls -l netca.rsp
+
+$ diff netca.rsp  ~/netca.rsp
+
+EOF

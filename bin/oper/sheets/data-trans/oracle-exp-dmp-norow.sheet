@@ -1,0 +1,66 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=$(  Input 'oracle db sid' )
+typeset pswd=$( Input 'oracle system password' )
+typeset work=$( Input 'work directory' )
+
+
+
+### Sheet
+cat >> ${sheet} <<EOF
+######################################################################
+## ${host} ‚É ${user} ‚ÅƒƒOƒCƒ“
+######################################################################
+$ $( if [[ $user != 'root' ]];then echo "su - ora${user}"; fi )
+
+
+
+######################################################################
+# 01.‚¨–ñ‘©
+######################################################################
+$ whoami ; id ; hostname 
+	ora${sid}
+	uid=1008(${user}) gid=105(dba) groups=1(staff)
+	${host}
+$
+$ date
+$
+
+
+######################################################################
+# 02.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ which exp
+	/u10/u058/oracle/u058db/9.2.0/bin/exp
+
+$
+$ cd $work
+$ pwd
+	$work
+
+$ bdf .
+$ exp system/${pswd} file=$work/${user}_norow.dmp log=$work/${user}_norow.log rows=n full=y ; date
+
+$ ls -l ${user}_norow.log
+$ cksum ${user}_norow.log
+$ bdf .
+
+
+
+######################################################################
+# 99.‚¨–ñ‘©
+######################################################################
+$ whoami ; id ; hostname 
+	ora${user}
+	uid=1008(${user}) gid=105(dba) groups=1(staff)
+	${host}
+$
+$ date
+$
+
+$ exit
+EOF

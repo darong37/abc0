@@ -1,0 +1,19 @@
+#!/bin/sh -u
+
+### Local Parameter
+lsnr=$( Input 'lisnner name' )
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ which lsnrctl
+
+$ lsnrctl status $lsnr
+
+$ ps -ef | grep orae001 | grep tnslsnr
+
+EOF

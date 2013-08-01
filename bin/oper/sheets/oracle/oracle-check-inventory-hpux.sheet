@@ -1,0 +1,33 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset ousr="ora${user}"
+typeset pswd=$( Input 'oracle system password' )
+typeset work=$( Input 'work directory' )
+
+
+
+### Sheet
+cat >> ${sheet} <<EOF
+######################################################################
+# 01.${title}
+######################################################################
+$ pwd
+	/u10/u058/oracle
+$ find . -type d -name oraInventory
+	./u058db/oraInventory
+	./u058ora/iAS/appsutil/template/oui21/oraInventory
+
+$ cd u058ora/iAS/appsutil/template/oui21/oraInventory
+$ ls -l ContentsXML/
+total 10
+drwxrwxr-x   2 orau058    dba             96 Apr 15  2003 ./
+drwxrwxr-x   4 orau058    dba           1024 Apr 15  2003 ../
+-rw-rw-r--   1 orau058    dba           3047 Oct 21  2003 comps.xml
+-rw-rw-r--   1 orau058    dba            397 Oct 21  2003 inventory.xml
+
+$ cat ContentsXML/inventory.xml
+
+
+
+EOF

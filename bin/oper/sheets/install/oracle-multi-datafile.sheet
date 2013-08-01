@@ -1,0 +1,43 @@
+#!/bin/sh -u
+
+### Local Parameter
+#sid=$( Input 'Oracle SID' )
+cnt1=${cnt1:-$( Input 'Control File-1 Path' )}
+cnt2=${cnt2:-$( Input 'Control File-2 Path' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cd
+$ pwd
+
+$ sqlplus / as sysdba
+> show parameters control_files
+
+	NAME                                 TYPE        VALUE
+	------------------------------------ ----------- ------------------------------
+	control_files                        string      /u43/e001/oracle/db/apps_st/da
+	                                                 ta/e001/control01.ctl, /u43/e0
+	                                                 01/oracle/db/apps_st/data/e001
+	                                                 /control02.ctl
+
+> alter system set control_files='$cnt1','$cnt2' scope=spfile;
+> shutdown immediate
+
+> exit
+
+$
+# OSにてファイルの二重化
+$ cp -p  $cnt1 $cnt2 
+
+$ sqlplus / as sysdba
+> startup
+
+> exit
+
+$
+
+EOF

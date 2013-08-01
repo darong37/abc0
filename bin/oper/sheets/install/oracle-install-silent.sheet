@@ -1,0 +1,57 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cd \$ORACLE_BASE
+$ pwd
+$ cd ..
+$ pwd
+$
+$ ls -ld oraInventory
+	drwxrwxr-x    2 orae058  dba             256 Jul 12 12:03 /u45/e058/oraInventory
+$
+$ ls -l oraInventory/oraInst.loc
+	-rw-r--r--    1 orae058  dba              52 Jul 12 12:03 /u45/e058/oraInventory/oraInst.loc
+$ cat oraInventory/oraInst.loc
+
+$
+$
+$ cd \$ORACLE_HOME
+$ pwd
+
+$ df -k
+
+$ ls -l runInstaller
+	-rwxr-xr-x    1 orac301  dba           10005 Oct 21 2011  runInstaller
+$
+
+$ ls -l runInstaller
+	-rwxr-xr-x    1 orac301  dba           10005 Oct 21 2011  runInstaller
+$ runInstaller -silent -noconfig -ignoreSysPrereqs  \
+> -invPtrLoc /u45/e058/oraInventory/oraInst.loc     \
+> -ignorePrereq -debug -responseFile /u45/e058/orae058/db_install.rsp
+
+	Has 'rootpre.sh' been run by root? [y/n] (n)
+> y
+
+	Oracle Database 11gのインストールが成功しました。
+	詳細は'/u45/e058/oraInventory/logs/silentInstall2013-07-12_02-07-45PM.log'を確認してください。
+
+	rootユーザーとして次のスクリプトを実行します:
+	        1. /u45/e058/oracle/db/tech_st/11.2.0/root.sh
+
+
+	Successfully Setup Software.
+
+$
+
+$ df -k
+
+EOF

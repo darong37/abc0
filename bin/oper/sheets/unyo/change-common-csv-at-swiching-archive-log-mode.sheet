@@ -1,0 +1,46 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ cd scripts/LIST/
+$ pwd
+	/u00/unyo/scripts/LIST
+$
+
+$ ls -l common.csv*
+	-rw-r--r--    1 root     sys            8726 Jun 18 14:06 common.csv
+	-rw-r--r--    1 root     sys            8726 Jun 18 14:06 common.csv.no-archivelog-mode
+	-rw-r--r--    1 root     sys            8116 Jun 18 14:06 common.csv.ordinary-archivelog-mode
+$
+$ # 現在のモード,変更内容を確認
+$ diff common.csv common.csv.no-archivelog-mode
+
+$ diff common.csv common.csv.ordinary-archivelog-mode
+53,57c53,54
+	< #PRO,mecerpd0111,EBS_DB,DB,p301,001,p301,11.2.0,1,p301,ora_ckpt_p301,ora_dbrm_p301,ora_dbw0_p301,ora_dia0_p301,ora_diag_p301,ora_gen0_p301,ora_lgwr_p301,ora_mman_p301,ora_mmnl_p301,ora_mmon_p301,ora_pmon_p301,ora_psp0_p301,ora_qmnc_p301,ora_reco_p301,ora_smco_p301,ora_smon_p301,ora_vktm_p301,ora_arc0_p301,ora_arc1_p301,ora_arc2_p301,ora_arc3_p301
+	< #PRO,mecerpd0111,EBS_DB,DB,p358,004,p358,11.2.0,1,p358,ora_ckpt_p358,ora_dbrm_p358,ora_dbw0_p358,ora_dia0_p358,ora_diag_p358,ora_gen0_p358,ora_lgwr_p358,ora_mman_p358,ora_mmnl_p358,ora_mmon_p358,ora_pmon_p358,ora_psp0_p358,ora_qmnc_p358,ora_reco_p358,ora_smco_p358,ora_smon_p358,ora_vktm_p358,ora_arc0_p358,ora_arc1_p358,ora_arc2_p358,ora_arc3_p358
+	< #One-shot 2013/06/04 EY
+	< PRO,mecerpd0111,EBS_DB,DB,p301,001,p301,11.2.0,1,p301,ora_ckpt_p301,ora_dbrm_p301,ora_dbw0_p301,ora_dia0_p301,ora_diag_p301,ora_gen0_p301,ora_lgwr_p301,ora_mman_p301,ora_mmnl_p301,ora_mmon_p301,ora_pmon_p301,ora_psp0_p301,ora_qmnc_p301,ora_reco_p301,ora_smco_p301,ora_smon_p301,ora_vktm_p301
+	< PRO,mecerpd0111,EBS_DB,DB,p358,004,p358,11.2.0,1,p358,ora_ckpt_p358,ora_dbrm_p358,ora_dbw0_p358,ora_dia0_p358,ora_diag_p358,ora_gen0_p358,ora_lgwr_p358,ora_mman_p358,ora_mmnl_p358,ora_mmon_p358,ora_pmon_p358,ora_psp0_p358,ora_qmnc_p358,ora_reco_p358,ora_smco_p358,ora_smon_p358,ora_vktm_p358
+	---
+	> PRO,mecerpd0111,EBS_DB,DB,p301,001,p301,11.2.0,1,p301,ora_ckpt_p301,ora_dbrm_p301,ora_dbw0_p301,ora_dia0_p301,ora_diag_p301,ora_gen0_p301,ora_lgwr_p301,ora_mman_p301,ora_mmnl_p301,ora_mmon_p301,ora_pmon_p301,ora_psp0_p301,ora_qmnc_p301,ora_reco_p301,ora_smco_p301,ora_smon_p301,ora_vktm_p301,ora_arc0_p301,ora_arc1_p301,ora_arc2_p301,ora_arc3_p301
+	> PRO,mecerpd0111,EBS_DB,DB,p358,004,p358,11.2.0,1,p358,ora_ckpt_p358,ora_dbrm_p358,ora_dbw0_p358,ora_dia0_p358,ora_diag_p358,ora_gen0_p358,ora_lgwr_p358,ora_mman_p358,ora_mmnl_p358,ora_mmon_p358,ora_pmon_p358,ora_psp0_p358,ora_qmnc_p358,ora_reco_p358,ora_smco_p358,ora_smon_p358,ora_vktm_p358,ora_arc0_p358,ora_arc1_p358,ora_arc2_p358,ora_arc3_p358
+
+$ # ArchiveLog Modeに変更
+$ cp -p common.csv.ordinary-archivelog-mode common.csv
+
+$ ls -l common.csv*
+	-rw-r--r--    1 root     sys            8116 Jun 18 14:06 common.csv
+	-rw-r--r--    1 root     sys            8726 Jun 18 14:06 common.csv.no-archivelog-mode
+	-rw-r--r--    1 root     sys            8116 Jun 18 14:06 common.csv.ordinary-archivelog-mode
+
+$
+
+EOF

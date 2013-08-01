@@ -1,0 +1,100 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=$(  Input 'oracle SID' )
+typeset pswd=$( Input 'oracle system password' )
+typeset work=$( Input 'work directory' )
+
+
+
+### Sheet
+cat >> ${sheet} <<EOF
+######################################################################
+# 00.${host} に ${user} でログイン
+######################################################################
+$ $( if [[ $user != 'root' ]];then echo "su - ${user}"; fi )
+
+$ whoami ; id ; hostname 
+	${user}
+	uid=1008(${user}) gid=105(dba) groups=1(staff)
+	${host}
+$
+$ date
+$
+
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ which imp
+	/u10/u058/oracle/u058db/9.2.0/bin/imp
+
+$
+$ cd $work
+$ pwd
+	$work
+
+$ imp system/${pswd} file=$work/${sid}_norow.dmp log=$work/${sid}_show.log full=y show=y ; date
+
+
+
+######################################################################
+# 99.お約束
+######################################################################
+$ whoami ; id ; hostname 
+	${user}
+	uid=1008(${user}) gid=105(dba) groups=1(staff)
+	${host}
+$
+$ date
+$
+
+$ exit
+EOF
+######################################################################
+# 00.MECERP3D に orau001 でログイン
+######################################################################
+$ su - orau001
+
+$ whoami ; id ; hostname 
+	orau001
+	uid=1008(orau001) gid=105(dba) groups=1(staff)
+	MECERP3D
+$
+$ date
+$
+
+
+######################################################################
+# 01.オラクル-インポート-showY
+######################################################################
+$ . .env
+> 1
+
+$ which imp
+	/u10/u058/oracle/u058db/9.2.0/bin/imp
+
+$
+$ cd 
+$ pwd
+	
+
+$ imp system/ file=/_norow.dmp log=/_show.log full=y show=y ; date
+
+
+
+######################################################################
+# 99.お約束
+######################################################################
+$ whoami ; id ; hostname 
+	orau001
+	uid=1008(orau001) gid=105(dba) groups=1(staff)
+	MECERP3D
+$
+$ date
+$
+
+$ exit

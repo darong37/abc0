@@ -482,7 +482,9 @@ if  tty -s;then
     while(( cnt < 5 ));do
       _prompt=${PWD#$BASEDIR/}
       _prompt=${_prompt#$BASEDIR}
-      read SUB?"$_prompt> "
+#     read SUB?"$_prompt> "
+      echo -n "$_prompt> "
+      read SUB
       if [[ $SUB = '' ]];then
         cnt=cnt+1
       else

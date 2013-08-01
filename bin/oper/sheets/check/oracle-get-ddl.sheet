@@ -1,0 +1,28 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$( Input 'DB SID' )}
+oty=${oty:-$( Input 'Object Type' )}
+onm=${onm:-$( Input 'Object Name' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ./${sid}.env
+$ 
+
+$ sqlplus / as sysdba
+> select object_name,owner,object_type
+> from all_objects
+> where object_name='${onm}';
+
+> select DBMS_METADATA.GET_DDL( '${oty}' ,'${onm}' ) from dual;
+
+> exit
+
+$
+
+EOF

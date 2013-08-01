@@ -1,0 +1,20 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$( Input 'DB SID' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ./${sid}.env
+$ 
+
+$ sqlplus / as sysdba
+> SELECT DBMS_METADATA.GET_DDL('DB_LINK',db_link,owner) FROM dba_db_links;
+
+$
+
+EOF

@@ -3,67 +3,85 @@ use strict;
 use warnings;
 use Term::ANSIColor qw(:constants);
 
+use FindBin;
+use lib "$FindBin::Bin";
+use eyos;
+####
+
 $Term::ANSIColor::AUTORESET = 0;
 print RESET;
 
-my $target = adjust('  ',<<'EOS','off');
+my $target = adjust('	',<<'EOS','off');
 
-  **********************************************************
-   Welcome to Oracle $EBS 11.5.10
-                  @environment (u001)
-  **********************************************************
-  
-  
-  Select your favorite enviroment: 
-  1) Oracle9i
-  2) Oracle8-based
-  3) Applications
-  Which environment would you like to maintenance?
+	LSNRCTL for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production on 30-JUL-2013 15:31:29
+
+	Copyright (c) 1991, 2011, Oracle.  All rights reserved.
+
+	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1576)))
+	STATUS of the LISTENER
+	------------------------
+	Alias                     e058
+	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production
+	Start Date                26-JUL-2013 15:21:07
+	Uptime                    4 days 0 hr. 10 min. 21 sec
+	Trace Level               off
+	Security                  ON: Local OS Authentication
+	SNMP                      ON
+	Listener Parameter File   /u45/e058/oracle/db/tech_st/11.2.0/network/admin/listener.ora
+	Listener Log File         /u45/e058/oracle/db/tech_st/11.2.0/network/log/e058.log
+	Listening Endpoints Summary...
+	  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1576)))
+	  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=mecerp3x0111.in.mec.co.jp)(PORT=1576)))
+	Services Summary...
+	Service "e058.in.mec.co.jp" has 2 instance(s).
+	  Instance "e058", status UNKNOWN, has 1 handler(s) for this service...
+	  Instance "e058", status READY, has 1 handler(s) for this service...
+	Service "e058XDB.in.mec.co.jp" has 1 instance(s).
+	  Instance "e058", status READY, has 1 handler(s) for this service...
+	The command completed successfully
 EOS
 
-my $srcptn = adjust('  ',<<'EOS','off');
+my $pattern = adjust('	',<<'EOS','off');
 
-  **********************************************************
-   Welcome to Oracle $EBS {*}
-                  @environment (u001)
-  **********************************************************
-  
-  
-  
-  Select your favorite enviroment: 
-  1) Oracle9i
-  2) Oracle8-based
-  3) Applications
-  Which environment would you like to maintenance?
+	LSNRCTL for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production on 18-JUL-2013 16:08:18
+
+	Copyright (c) 1991, 2011, Oracle.  All rights reserved.
+
+	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=mecerp3x0111.in.mec.co.jp)(PORT=1572)))
+	STATUS of the LISTENER
+	------------------------
+	Alias                     E001
+	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production
+	Start Date                18-JUL-2013 15:13:48
+	Uptime                    0 days 0 hr. 54 min. 30 sec
+	Trace Level               off
+	Security                  ON: Local OS Authentication
+	SNMP                      ON
+	Listener Parameter File   /u43/e001/oracle/db/tech_st/11.2.0/network/admin/listener.ora
+	Listener Log File         /u43/e001/oracle/diag/tnslsnr/mecerp3x0111/e001/alert/log.xml
+	Listening Endpoints Summary...
+	  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=mecerp3x0111.in.mec.co.jp)(PORT=1572)))
+	  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1572)))
+	Services Summary...
+	Service "e058.in.mec.co.jp" has 2 instance(s).
+	{:}
+	The command completed successfully
+
 EOS
 
 print "\n\n-- target   --\n";
 print "'$target'";
 print "\n--";
 
-print "\n\n-- pattern0 --\n";
-print "'$srcptn'";
+print "\n\n-- pattern --\n";
+print "'$pattern'";
 print "\n--";
 
-my $intermediate = exregex_1($srcptn);
-print "\n\n-- pattern1 --\n";
-print "'$intermediate'";
-print "\n--";
-
-my $patterns = exregex($srcptn);
-print "\n\n-- patterns --\n";
-print "'$patterns'";
-print "\n--";
-
+my $result = exregex($pattern,$target,1);
 
 print "\n\n-- results  --\n";
 
-if ( eval '$target =~ /^'.$patterns.'/x' ){
-  print BLUE "Match\n";
-} else {
-  print RED  "Unmatch\n";
-}
-print RESET;
+print "'$result'";
 
 exit;
 
@@ -78,73 +96,3 @@ sub adjust {
   }
   return $doc;
 }
-
-### exregex
-sub exregex_1{
-  my ( $src ) = @_;
-  #
-  # 行またぎ{}
-  #
-  $src =~ s/\n[ \t]+\n/\n\n/g;  # 空行
-  $src =~ s/\n\n+/\n\n/g;       # 複数空行
-  $src =~ s/\{[ \t\n]+/{/g;     # '{'
-  $src =~ s/[ \t\n]+\}/}/g;     # '}'
-
-  $src =~ s/(?:^|\n)(?:\n|$)/{:}/g;
-  return $src;
-}
-sub exregex_2{
-  my ( $src ) = @_;
-  #
-  # 行またぎ{}
-  #
-  $src =~ s/\n[ \t]+\n/\n\n/g;  # 空行
-  $src =~ s/\n\n+/\n\n/g;       # 複数空行
-  $src =~ s/\{[ \t\n]+/{/g;     # '{'
-  $src =~ s/[ \t\n]+\}/}/g;     # '}'
-
-  return $src;
-}
-
-
-sub exregex{
-  my ( $src ) = @_;
-  #
-  # 行またぎ{}
-  #
-  $src =~ s/\n[ \t]+\n/\n\n/g;  # 空行
-  $src =~ s/\n\n+/\n\n/g;       # 複数空行
-  $src =~ s/\{[ \t\n]+/{/g;     # '{'
-  $src =~ s/[ \t\n]+\}/}/g;     # '}'
-  
-  #
-  my $dest='';
-  my $cnt=0;
-  for ( split /\n/,$src ){
-    if (/^\{.+\}$/){
-      #
-      # {正規表現} 行
-      #
-      s/^\{(.+)\}$/  $1/;
-    } elsif (/^\s*$/) {
-      # 空行
-      $_ = '  ((?:\s*\n)+)';
-    } else {
-      #
-      # 一般行
-      #
-      s/\$/\\E \\\$ \\Q/g;  # '$'処理
-      s/\@/\\E \\\@ \\Q/g;  # '@'処理
-      
-      $_ = '\Q'.$_.'\E'." \t".'\n';
-    }
-#   print "$_\n";
-    $dest .= "$_\n";
-
-    #
-    #last if $cnt++ > 6;
-  }
-  $dest .= '?';
-  return $dest;
-}
-

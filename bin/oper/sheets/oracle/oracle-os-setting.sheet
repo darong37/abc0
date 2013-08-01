@@ -1,0 +1,25 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=${sid:-$(   Input 'oracle SID' )}
+typeset area=${area:-$( Input 'Backup Store Area' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ cat .profile
+
+	PATH=/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin:/usr/java5/jre/bin:/usr/java5/bin:/usr/local/bin:/u43/e001/orae001/bin:.
+	umask 022
+	export ORACLE_HOME=/u43/e001/oracle/db/tech_st/11.2.0
+	export ORACLE_SID=e001
+	PATH=$PATH:$ORACLE_HOME/bin
+	export NLS_LANG=American_America.JA16SJIS
+
+$
+
+EOF

@@ -1,0 +1,34 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset ousr="ora${user}"
+typeset pswd=${pswd:-$( Input 'oracle system password' )}
+typeset work=${work:-$( Input 'work directory' )}
+
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${user#ora}.env
+> 1
+
+$ which exp
+	/u02/u001/oracle/u001db/9.2.0/bin/exp
+
+$
+$ cd $work
+$ pwd
+	$work
+
+$ bdf .
+$ exp system/${pswd} file=$work/${user}_full.dmp log=$work/${user}_full.log full=y ; date
+
+$ ls -l ${user}_full.*
+$ cksum ${user}_full.dmp
+$ bdf .
+
+EOF

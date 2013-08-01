@@ -44,6 +44,7 @@ cd $( ConvPath "${DIR_CALL:-.}" )
 #
 # forign command
 #
+alias edit=/c/Users/JKK0544/.abc/apps/SakuraDown12f-14/sakura.exe
 alias es="$( ConvPath "$DIR_APPS" )/Everything/es.exe"
 alias irb='console irb.bat'
 alias pry='console pry.bat'

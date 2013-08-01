@@ -1,0 +1,28 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$( Input 'DB SID' )}
+oty=${oty:-$( Input 'Object Type' )}
+onm=${onm:-$( Input 'Object Name' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ./${sid}.env
+$ 
+
+$ sqlplus / as sysdba
+> set line  200
+> set pages 50000
+> set long  2000000000
+> select dbms_metadata.get_ddl('TABLESPACE',TABLESPACE_NAME) from dba_tablespaces;
+
+
+> exit
+
+$
+
+EOF
