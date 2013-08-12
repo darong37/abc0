@@ -1,0 +1,44 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(     Input  'Oracle SID' )}
+reDir=${reDir:-$( Input  'Restore Directory' )}
+retz=${retz:-$(   Input  'Restore Backup TarZ' )}
+
+bkLoc=${bkLoc:-$( Select 'Save Location' $( cat <<-DIRS
+	/dev_db/wksp/userbackup
+DIRS
+))}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ id
+	uid=0(root) gid=0(system) groups=2(bin),3(sys),7(security),8(cron),10(audit),11(lp)
+
+# Confirm Restore Backup-Object Directory
+$ cd $reDir
+$ pwd
+	$reDir
+$ cd ..
+$ pwd
+$ ls -l
+
+
+
+# Confirm Save Localtion
+$ ls -d $bkLoc
+	$bkLoc
+$ ls -l $bkLoc
+	{*} {num} {*} $retz
+
+$ 
+$ date
+$ zcat $bkLoc/$retz | tar tvf -
+
+
+EOF

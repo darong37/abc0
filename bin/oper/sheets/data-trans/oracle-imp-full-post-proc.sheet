@@ -1,7 +1,11 @@
 #!/bin/sh -u
 
 ### Local Parameter
-typeset pswd=${pswd:-$(   Input 'Oracle common password' )}
+typeset sid=${sid:-$(               Input 'Oracle SID' )}
+typeset pswdsys=${pswdsys:-$(       Input 'Oracle SYS password' )}
+typeset pswdsystem=${pswdsystem:-$( Input 'Oracle SYSTEM password' )}
+typeset pswdsysman=${pswdsysman:-$( Input 'Oracle SYSMAN password' )}
+typeset pswddbsnmp=${pswddbsnmp:-$( Input 'Oracle DNSNMP password' )}
 
 
 ### Sheet
@@ -15,10 +19,10 @@ $ . ${sid}.env
 
 $ # Password‚ðŒ³‚É–ß‚·
 $ sqlplus / as sysdba
-> alter user sys    identified by "${pswd}***";
-> alter user system identified by "${pswd}***";
-> alter user sysman identified by "${pswd}***";
-> alter user dbsnmp identified by "${pswd}***";
+> alter user sys    identified by "${pswdsys}";
+> alter user system identified by "${pswdsystem}";
+> alter user sysman identified by "${pswdsysman}";
+> alter user dbsnmp identified by "${pswddbsnmp}";
 
 
 

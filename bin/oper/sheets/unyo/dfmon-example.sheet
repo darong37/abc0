@@ -1,16 +1,16 @@
 #!/bin/sh -u
 
+### Local Parameter
+
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 00. ${host} ‚É ${user} ‚ÅƒƒOƒCƒ“
+# 01. ${title}
 ######################################################################
-$ $( if [[ $user != 'root' ]];then echo "su - ${user}"; fi )
-$ whoami ; id ; uname -n 
-	${user}
-	uid=0(${user}) {*}
-	${host}
+$ cd /u00/infra_release
+
+$ tools/dfmon.sh
 $
 
 EOF

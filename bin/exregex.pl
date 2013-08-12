@@ -18,7 +18,7 @@ my $target = adjust('	',<<'EOS','off');
 	Copyright (c) 1991, 2011, Oracle.  All rights reserved.
 
 	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1576)))
-	STATUS of the LISTENER
+	STATUS of the $LISTENER
 	------------------------
 	Alias                     e058
 	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production
@@ -41,17 +41,18 @@ my $target = adjust('	',<<'EOS','off');
 	The command completed successfully
 EOS
 
-my $pattern = adjust('	',<<'EOS','off');
+my $pattern = adjust('	',<<EOS,'off');
 
-	LSNRCTL for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production on 18-JUL-2013 16:08:18
+	LSNRCTL for IBM/AIX RISC System/6000: Version {([0-9.]+)} - Production on 18-JUL-2013 {tim}
 
 	Copyright (c) 1991, 2011, Oracle.  All rights reserved.
 
+
 	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=mecerp3x0111.in.mec.co.jp)(PORT=1572)))
-	STATUS of the LISTENER
+	STATUS of the \$LISTENER
 	------------------------
 	Alias                     E001
-	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version 11.2.0.3.0 - Production
+	Version                   TNSLSNR for IBM/AIX RISC System/6000: Version {([0-9.]+)} - Production
 	Start Date                18-JUL-2013 15:13:48
 	Uptime                    0 days 0 hr. 54 min. 30 sec
 	Trace Level               off
@@ -77,11 +78,8 @@ print "\n\n-- pattern --\n";
 print "'$pattern'";
 print "\n--";
 
-my $result = exregex($pattern,$target,1);
-
 print "\n\n-- results  --\n";
-
-print "'$result'";
+exregex($pattern,$target,1);
 
 exit;
 

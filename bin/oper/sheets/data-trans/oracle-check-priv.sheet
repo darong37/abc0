@@ -1,0 +1,35 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=${sid:-$(       Input 'Oracle SID' )}
+typeset objnam=${objnam:-$( Input 'Objects name' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ sqlplus / as sysdba
+
+> col GRANTEE for a10
+> col OWNER        for a10
+> col TABLE_NAME   for a15
+> col GRANTOR      for a10
+> col PRIVILEGE    for a10
+> col GRANTABLE    for a10
+> col HIERARCHY    for a10
+> select * from USER_TAB_PRIVS where TABLE_NAME = '${objnam}';
+
+> GRANT EXECUTE ON SYS.${objnam} TO
+> GRANT EXECUTE ON SYS.${objnam} TO "SYSTEM" WITH GRANT OPTION;
+
+> exit
+
+$
+
+EOF

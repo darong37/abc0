@@ -187,6 +187,11 @@ Filer () {
       target="${target%/}/$( Select "$prompt" -c Lsf -u $target )"
       target="${target%/*/..}"
     fi
+    if [ ! -e $target ];then
+      cp $APPLDIR/sheets/tmpl.sheet $APPLDIR/$target
+      Echo "Create $target" >&2
+      edit $APPLDIR/$target
+    fi
   done
 
   if [ -f "$target" ];then
@@ -228,7 +233,7 @@ Create () {
   
   typeset stxt="$LOGSDIR/oper/${today}/${hdr}_${title}${desc}_${user}@${host}.txt"
   ###
-  
+  (
   while (( 1==1 ));do
     Echo
     cat > ${stxt} <<-EOF
@@ -241,13 +246,29 @@ Create () {
     . sheets/00.sheet
     . ${sheet}
     . sheets/99.sheet
-    
+
+    cat ${stxt}
     Echo
     Echo "### created ${stxt}"
     Echo
-    cat ${stxt}
     
-    act=$( Select 'action' 're-create' 'rm' 'N/A' )
+    act=''
+    while [[ $act = '' ]];do
+      act=$( Select 'action' 're-create' 'rm' 'edit-sheet' 'edit-stxt' 'telnet' 'N/A' )
+      if [[ "$act" = 'telnet' ]];then
+        ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt )&
+        act=''
+      fi
+      if [[ "$act" = 'edit-sheet' ]];then
+        ( edit $APPLDIR/${sheet} )&
+        act=''
+      fi
+      if [[ "$act" = 'edit-stxt' ]];then
+        ( edit ${stxt} )&
+        act=''
+      fi
+    done
+    
     if [[ "$act" = 'N/A' ]];then
       eval ls -l '$stxt'
       break
@@ -257,6 +278,12 @@ Create () {
       break
     fi
   done
+  )
+}
+
+Find () {
+  local keyword=$1
+  find $LOGSDIR/oper -type f -name '*.log' -print | xargs -n1 -I{} egrep -n "$keyword" {}
 }
 
 List () {
@@ -274,11 +301,18 @@ List () {
 #     Echo "not found $target"
 #     break
 #   fi
-  target = $( Filer 'file/folder' $target )
+  target=$( Filer 'file/folder' $target )
     Echo "### $target"
 # done
   if [ -f "$target" ];then
-    act=$( Select 'action' 'cat' 'rm' 'ls -l' 'noop' )
+    act=''
+    while [[ $act = '' ]];do
+      act=$( Select 'action' 'cat' 'rm' 'ls -l' 'telnet' 'noop' )
+      if [[ "$act" = 'telnet' ]];then
+        ( /bin/mintty -t "${target##*/}"  telnet.pl $target )&
+        act=''
+      fi
+    done
     if [[ $act = 'noop' ]];then
       mv $target "${target%%_*}_noop.txt"
       echo "no operation" > "${target%%_*}_noop.txt"

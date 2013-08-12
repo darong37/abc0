@@ -47,7 +47,7 @@
 
 	# パッケージカタログの確認
 	mingw-get list
-	# .sys/mingw/var\lib\mingw-get\dataを見た方がいいかも
+	# .sys/mingw/var/lib/mingw-get/dataを見た方がいいかも
 
 	# パッケージカタログの更新
 	# mingw-get update
@@ -55,6 +55,9 @@
 
 	# gcc
 	mingw-get install mingw32-gcc
+
+	# gcc++ ?
+	mingw-get install mingw32-gcc-v3-g++
 
 3) MSYS等 インストール
 	

@@ -1,0 +1,26 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input 'Oracle SID' )}
+schema=${schema:-$( Input 'Target Schema' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${orasid}.env
+
+$ sqlplus / as sysdba
+> set line 200
+> set pagesize 1000
+
+> select count(*) from dba_views where OWNER='$schema';
+
+> select VIEW_NAME from dba_views where OWNER='$schema' order by VIEW_NAME;
+
+> exit
+$
+
+EOF

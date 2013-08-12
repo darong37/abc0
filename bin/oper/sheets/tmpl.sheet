@@ -1,16 +1,20 @@
 #!/bin/sh -u
 
+### Local Parameter
+sid=${sid:-$(         Input 'Oracle SID' )}
+
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 00. ${host} ‚É ${user} ‚ÅƒƒOƒCƒ“
+# 01. ${title}
 ######################################################################
-$ $( if [[ $user != 'root' ]];then echo "su - ${user}"; fi )
-$ whoami ; id ; uname -n 
-	${user}
-	uid=0(${user}) {*}
-	${host}
+$ . ${sid}.env
+
+$ sqlplus / as sysdba
+> 
+
+> exit
 $
 
 EOF

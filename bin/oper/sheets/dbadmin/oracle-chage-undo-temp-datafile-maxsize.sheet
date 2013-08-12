@@ -1,0 +1,58 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(     Input 'Oracle SID' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+
+$ sqlplus / as sysdba
+> set line 1000
+> col TABLESPACE_NAME format a20
+> col FILE_NAME format a60
+> col BYTES for 999,999,999,999
+> col USER_BYTES for 999,999,999,999
+> col MAXBYTES for 999,999,999,999
+> 
+# 1.UNDO表領域データファイル
+
+##  ・UNDOデータファイルの設定確認（事前）
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_DATA_FILES where TABLESPACE_NAME = 'UNDOTBS1';
+
+#=> 'AUTOEXTENSIBLE'が'YES'であることを確認
+
+
+
+## ・UNDO表領域データファイルの最大サイズ変更
+> ALTER DATABASE DATAFILE '上記のデータファイルパス' AUTOEXTEND ON MAXSIZE 16G;
+
+#=> 注）'AUTOEXTEND ON' は'MAXSIZE'を指定するために必須指定
+
+
+
+## ・UNDOデータファイルの設定確認（事前）
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_DATA_FILES where TABLESPACE_NAME = 'UNDOTBS1';
+
+
+# 2.一時表領域データファイル
+
+## ・データファイルの設定確認（事後）
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_TEMP_FILES;
+
+#=> ・一時表領域データファイルの最大サイズ変更
+> ALTER DATABASE TEMPFILE '上記のデータファイルパス' AUTOEXTEND ON MAXSIZE 16G;
+
+#=> 注）'AUTOEXTEND ON' は'MAXSIZE'を指定するために必須指定
+
+
+## ・データファイルの設定確認（事後）
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_TEMP_FILES;
+
+
+
+EOF

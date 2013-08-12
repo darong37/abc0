@@ -5,6 +5,80 @@ use Term::ANSIColor qw(:constants);
 use Term::ReadLine;
 
 
+###
+sub stock {
+  my ( $n,@src ) = @_;
+  my @rtn;
+  if ( $n < $#src ){
+    for( my $idx=$n;$idx<$n+3;$idx++ ){
+      if ( $idx < 0 ){
+        push @rtn,'';
+      } elsif ( $idx > $#src){
+        push @rtn,'';
+      } else {
+        push @rtn,$src[$idx];
+      }
+    }
+    return @rtn;
+  } else {
+    return ();
+  }
+}
+{
+  package Stock;
+  
+  sub new {
+    my $pkg = shift;
+    bless {
+      count => -1,
+      stock => [ '','' ],
+      eof   => 0,
+    },$pkg;
+  }
+  
+  sub file {
+    my $self = shift;
+    my $filehandle = shift;
+    
+    if ( $self->{eof} == 1 ) { return () };
+    shift @{$self->{stock}};
+    for (my $idx=$self->{count}; $#{$self->{stock}} < 2; $idx++){
+      my $lin;
+      if ( $lin = <$filehandle> ){
+        chomp $lin;
+        push @{$self->{stock}},$lin;
+        $self->{count}++;
+      } else {
+        push @{$self->{stock}},'';
+        $self->{eof} = 1;
+      }
+    }
+    if ( $self->{eof} == 1 ) { $self->{count}++; };
+    return @{$self->{stock}};
+  }
+  
+  sub array {
+    my $self = shift;
+    my @eles = @_;
+    
+    if ( $self->{eof} == 1 ) { return () };
+    shift @{$self->{stock}};
+    for (my $idx=$self->{count}+1; $#{$self->{stock}} < 2; $idx++){
+      my $ele;
+      if ( $idx <= $#eles ){
+        $ele = $eles[$idx];
+        push @{$self->{stock}},$ele;
+        $self->{count}++;
+      } else {
+        push @{$self->{stock}},'';
+        $self->{eof} = 1;
+      }
+    }
+    if ( $self->{eof} == 1 ) { $self->{count}++; };
+    return @{$self->{stock}};
+  }
+  1;
+}
 ### exregex
 sub exregex{
   my ( $srcptn,$target,$dbg ) = @_;
@@ -26,243 +100,217 @@ sub exregex{
   $srcptn =~ s/\}[ \t]*\n/}\n/g;   #  '} '$
   $srcptn =~ s/[ \t\n]+\}/}/g;     #  ' }'
 
-# $srcptn =~ s/\{:\}\n/{:}/g;      #  ' }'
+# $srcptn .= "\n";
 
   if ( $dbg ){
     print "\n-- interim-1 --\n";
     print "'$srcptn'";
     print "\n--\n";
   }
-
-  my @eles;
-  my $ele = '';
+  #
+  # 分解
+  #
+  my @orgs;
+  my $org='';
   my $flg=0;
   for ( split //,$srcptn ){
+# my $n=-1;
+# while ( my ($prev,$cur,$next) = stock( $n++,split //,$srcptn ) ){
+    #
     if(/\n/) {
-      if ( $ele eq '' ){
-        my $last = $eles[-1] || '';
-        if ( $last =~ /^\{.+\}$/ ){
-          push @eles,'\n';
-        } else {
-          push @eles,'{_}';
-          push @eles,'\n';
-        }
-      } else {
-        push @eles,$ele;
-        push @eles,'\n';
+      push @orgs,$org if $org ne '';
+      my $last = $orgs[-1] || '';
+      if ( $last eq '\n' ){
+        push @orgs,'{_}';
+      } elsif ( $last ne '{:}' && $last ne '{_}' ){
+        push @orgs,'\n';
       }
-      $ele='';
+      $org='';
     } elsif(/\{/){
-      push @eles,$ele if $ele ne '';
-      $ele = $_;
+      push @orgs,$org if $org ne '';
+      $org = $_;
       $flg = 1;
     } elsif(/\}/){
-      $ele .= $_;
-      push @eles,$ele if $ele ne '';
-      $ele = '';
+      $org .= $_;
+      push @orgs,$org if $org ne '';
+      $org = '';
       $flg = 0;
     } elsif($flg==1){
-      $ele .= $_;
+      $org .= $_;
     } elsif(/[\$\@]/){
-      push @eles,$ele if $ele ne '';
-      push @eles,$_;
-      $ele = '';
+      push @orgs,$org if $org ne '';
+      push @orgs,$_;
+      $org = '';
     } elsif(/\s/){
-      if ( $ele =~ /^\s*$/ ){
-        $ele .= $_;
+      if ( $org =~ /^\s*$/ ){
+        $org .= $_;
       } else {
-        push @eles,$ele if $ele ne '';
-        $ele = $_;
+        push @orgs,$org if $org ne '';
+        $org = $_;
       }
     } else {
-      if ( $ele =~ /^\s+$/ ){
-        push @eles,$ele if $ele ne '';
-        $ele = $_;
+      if ( $org =~ /^\s+$/ ){
+        push @orgs,$org if $org ne '';
+        $org = $_;
       } else {
-        $ele .= $_;
+        $org .= $_;
       }
     }
   }
-  push @eles,$ele if $ele ne '';
-  #
-  
+  push @orgs,$org if $org ne '';
   my $cnt=0;
   if ( $dbg ){
     print "\n-- interim-2 --\n";
-    map { printf "%03d:'%s'\n",$cnt++,$_ } @eles;
-    print "\ntotal $#eles +1 elements\n";
+    map { printf "%03d:'%s'\n",$cnt++,$_ } @orgs;
+    print "\ntotal $#orgs +1 elements\n";
     print "\n--\n";
   }
-  
-  $cnt=0;
-  my $nmatched=0;
-  my $nunmatch=0;
-  # 未評価（前）
-  my @patterns=( '((?:.*\n)*)' );
-  my @formats =( YELLOW.'%s'.RESET );
-  my @orgs;
-  for ( @eles ){
-    my ( $p,$f,$wp,$wf );
-    if      ( $_ eq '{*}'){
-      $p  = '(.*)';
-      $f  = '%s';
-      $wp = '(.*)';
-      $wf = '%s';
+  #
+  # 再結合
+  #
+  my @patterns;
+  my @formats;
+  for ( @orgs ){
+    if ( $_ eq '\n' ){
+      push @patterns,' \n';
+      push @formats ,"\n";
     } elsif ( $_ eq '{:}'){
-      $p  = '((?:.|\n)*)';
-      $f  = '%s';
-      $wp = '((?:.|\n)*)';
-      $wf = '%s';
+      push @patterns,'((?:.|\n)*)';
+      push @formats,'%s';
+    } elsif ( $_ eq '{*}'){
+      push @patterns,'(.*)';
+      push @formats,'%s';
     } elsif ( $_ eq '{_}'){
-      $p  = '([ \t\n]*)';
-      $f  = '%s';
-      $wp = '([ \t\n]*)';
-      $wf = '%s';
+      push @patterns,'([ \t\n]*)'."\n  ";
+      push @formats,'%s';
     } elsif ( $_ eq '{num}'){
-      $p  = '([0-9]*)';
-      $f  = '%s';
-      $wp = '(.*)';
-      $wf = '%s';
+      push @patterns,'([0-9]+)';
+      push @formats,'%s';
+    } elsif ( $_ eq '{dat}'){
+      push @patterns,'([0-3 ][0-9]-(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20[01][0-9])';
+      push @formats,'%s';
     } elsif ( $_ eq '{tim}'){
-      $p  = '([0-2 ][0-9]:[0-5][0-9]:[0-5][0-9])';
-      $f  = '%s';
-      $wp = '(.*)';
-      $wf = '%s';
-    } elsif ( $_ eq '\n' ){
-      $p  = '\n{1}';
-      $f  = "\n";
-      $wp = '(\n?)';
-      $wf = '%s';
+      push @patterns,'([0-2 ][0-9]:[0-5][0-9]:[0-5][0-9])';
+      push @formats,'%s';
     } elsif ( /^[\$\@]$/ ){
-      $p  = '\\'.$_;
-      $f  = $_;
-      $wp = '(.*)';
-      $wf = '%s';
+      push @patterns,'\\'.$_;
+      push @formats,$_;
     } elsif ( /^\{.+\}$/ ){
       s/[{}]//g;
-      $p  = $_;
-      $f  = '%s';
-      $wp = '(.*\n?)';
-      $wf = '%s';
+#     if ( /\(.+\)/ ){
+        push @patterns,$_;
+        push @formats,'%s';
+#     } else {
+#       push @patterns,'('.$_.')';
+#       push @formats,'%s';
+#     }
     } elsif ( /^\s+$/ ){
-      $p  = '\Q'.$_.'\E';
-      $f  = $_;
-      $wp = '(\s*)';
-      $wf = '%s';
-    } else {
-      $p  = '\Q'.$_.'\E';
-      $f  = $_;
-      $wp = '(.*)';
-      $wf = '%s';
-    }
-    my $o = $_;
-    #
-    my $ptn = join('',@patterns);
-    if ( eval '$target =~ m{^'.$ptn.$p.'}x' ){
-      $nmatched++;
-      if ( $p =~ /^\\Q/ && $patterns[-1] =~ /\\E$/ ){
-        my $pp = pop @patterns;
-        my $po = pop @orgs;
-        my $pf = pop @formats;
-        $p = "$pp$p";
-        $p =~ s/\\E\\Q//g;
-        $f = "$po$f";
-        $o = "$po$o";
-        $nmatched--;
-      }
-      push @patterns,$p;
-      if ( $f eq '%s' ){
-        push @formats ,GREEN.$f.RESET;
+      if ( $#patterns < 0 ){
+        push @patterns,'\s+';
+        push @formats,$_;
       } else {
-        push @formats ,BLUE.$f.RESET;
-      }
-      if ( $dbg ){
-        printf "matched(%03d): '$p'\n",$nmatched;
+        $patterns[-1] .= '\s+';
+        $formats[-1]  .= $_;
       }
     } else {
-      $nunmatch++;
-      if ( $nunmatch > $nmatched+10 ){
-        last 
-      }
-      
-      if ( $patterns[-1] eq '(.*)' || $patterns[-1] eq '(,*)' ){
-        
-
-      }
-      unless ( eval '$target =~ m{^'.$ptn.$wp.'}x' ){
-        print "\n-- unkown --\n";
-        print "'$ptn'";
-        print "\n--\n";
-        my $format = join '',@formats;
-        print "\n-- format --\n";
-        print "'$format'";
-        print "\n--\n";
-        die "sanna baka na";
-      }
-      push @patterns,$wp;
-      push @formats ,RED.$wf.RESET;
-      if ( $dbg ){
-        printf "unmatch(%03d): '$p' -> '$wp'\n",$nunmatch;
-      }
+      push @patterns,'\Q'.$_.'\E';
+      push @formats,$_;
     }
-    push @orgs,$o;
   }
-  # 未評価（後）
-  push @patterns,'((?:.|\n)*)';
-  push @formats ,YELLOW.'%s'.RESET;
-
-  #
-  my $ptn = join('',@patterns);
-  unless ( eval '$target =~ m{^'.$ptn.'$}x' ){
-    print "\n-- unknown --\n";
-    print "'$ptn'";
+  if ( $dbg ){
+    print "\n-- interim-3 --\n";
+    $cnt=0;
+    map { printf "%03d:'%s'\n",$cnt++,$_ } @patterns;
+    print "\npatterns total $#patterns +1 elements\n";
     print "\n--\n";
-    my $format = join '',@formats;
-    print "\n-- format --\n";
-    print "'$format'";
+    printf "'%s'",join('',@formats);
+    print "\nformats total $#formats +1 elements\n";
     print "\n--\n";
-    die "arienai";
   }
-  @eles = ( eval '$target =~ m{^'.$ptn.'$}x' );
-  my $format = join '',@formats;
-# my $fc = ( $format =~ s/%s/%s/g );
-# for( my $c=0; $c < $fc; $c++){
-#   $eles[$c] = '' unless defined $eles[$c];
-# }
-  my $result = sprintf($format, @eles);
-
-if ( $dbg ){
-  print "\n-- format --\n";
-  print "'$format'";
-  print "\n--\n";
-  $ptn =~ s/\\n\{1\}/\n/g;
-  $ptn =~ s/\)\\Q/)\n\\Q/;
-  $ptn =~ s/\\(Q|E)/'/g; # '
-  print "\n-- pattern --\n";
-  print "$ptn";
-  print "\n--\n";
-  print "\n-- elements --\n";
-  $cnt=0;
-  map { printf "%03d:'%s'\n",$cnt++,$_ } @eles;
-  print "\ntotal $#eles elements\n";
-  print "\n--\n";
-  print "\n-- result --\n";
-  print "'$result'";
-  print "\n--\n";
-}
   
-  return $result;
+  #
+  # 評価
+  #
+  my @plin;
+  my @fmts;
+  $cnt=0;
+  for ( @patterns ){
+#   $DB::single = 1 if $cnt > 20;
+
+    push @plin,$_;
+    push @fmts,shift(@formats);
+    if ( $_ eq ' \n' || $cnt == $#patterns ){
+      my $ptn  = join '',@plin;
+      my $fmt  = join '',@fmts;
+      my @eles = ();
+      if ( eval '$target =~ m{'.$ptn.'}x' ){
+         $target = colorprint($target,$fmt,$ptn);
+      } else {
+        for $ptn (@plin){
+          if ( eval '$target =~ m{'.$ptn.'}x' ){
+            $fmt = shift @fmts;
+            $target = colorprint($target,$fmt,$ptn);
+          } else {
+            shift @fmts;
+          }
+        }
+      }
+      @plin = ();
+      @fmts = ();
+    }
+    $cnt++;
+  }
+  $target =~ s/\n$//;
+  if ( $target ne '' ){
+    print YELLOW;
+    print $target;
+  }
+  print RESET."\n";
+  $DB::single = 1; # 
+  return;
+}
+
+sub colorprint {
+  my ( $target,$fmt,$ptn ) = @_;
+
+  my @eles;
+  if        ( eval '$target =~ m{^'.$ptn.'}x' ){
+    @eles = ( eval '$target =~ m{^'.$ptn.'((?:.|\n)*)'.'$}x' );
+    $target = pop @eles;
+    @eles = map { sprintf "%s%s%s",GREEN,$_,BLUE } @eles;
+    
+    print BLUE;
+    printf $fmt,@eles;
+    printf RESET;
+  } else {
+    @eles = ( eval '$target =~ m{^'.'((?:.|\n)*?)'.$ptn.'((?:.|\n)*)'.'$}x' );
+    
+    my $prev = shift @eles;
+    $target  = pop @eles;
+    unless ( @eles ){ @eles = ( '' ) }
+    
+    print RED;
+    printf '%s',$prev;
+    print RESET;
+
+    @eles = map { sprintf "%s%s%s",GREEN,$_,BLUE } @eles;
+    print BLUE;
+    printf $fmt,@eles;
+    printf RESET;
+  }
+  return $target;
 }
 
 ### termRepl
+my $timout = 2;
 sub termRepl {
   my ( $host, $user, $pass, $logf ) = @_ ;
   
   ### Telnet
   open my $logh,"> $logf" or die "can not open $logf";
   my $telnet = new Net::Telnet(
-    Timeout   => 3,
-    Prompt    => '/\S*[\$#>:]\s*$/', # プロンプト(正規表現)
+    Timeout   => $timout,
+    Prompt    => '/\S*[\$>] $/', # プロンプト(正規表現)
     Errmode   => "return",
     Input_log => $logh,
   );
@@ -270,36 +318,35 @@ sub termRepl {
   ### ホストに接続してログインする
   $telnet->open($host);
   my @result = $telnet->login($user, $pass);
-  if ( @result ){
-    $telnet->input_log;
-    close $logh;
-    
-    open $logh,"< $logf" or die "can not open $logf";
-    while(<$logh>){
-      print $_;
-    }
-    close $logh;
-    
-    open my $logh,">> $logf" or die "can not open $logf";
-    $telnet->input_log($logh);
-  }
+  print @result;
+#  if ( @result ){
+#    $telnet->input_log;
+#    close $logh;
+#    
+#    open $logh,"< $logf" or die "can not open $logf";
+#    while(<$logh>){
+#      print $_;
+#    }
+#    close $logh;
+#    
+#    open my $logh,">> $logf" or die "can not open $logf";
+#    $telnet->input_log($logh);
+#  }
 
   ### 初期コマンドの実行
   my $init = <<'EOS';
+    export PS1='$ '
     TERM=vt100
     stty rows 50 columns 144
     cd /u00/unyo
-    uname -n
-    whoami
     pwd
     date
-    export PS1='$ '
 EOS
 
   # 実行
   for ( split /\n/,$init ){
     s/^\s+//;
-    print "\$ $_\n";
+#   print "\$ $_\n";
     @result = $telnet->cmd($_);
     print @result;
   }
@@ -312,10 +359,24 @@ EOS
 sub auxread {
   my ( $telnet ) = @_ ;
   my @result;
+
+  my @buffer=();
+  my $ans='';
+  do{
+    print STDERR "\n-- aux --\n";
+
+    while(my @buffer = $telnet->getlines(All => 0) ){
+      print STDERR @buffer if @buffer;
+      sleep $timout;
+    }
+    
+    print STDERR "\n-- STDOUT Time out!,   <enter>:repeat else:exit-aux  :";
+    $/ = "\n";
+    $ans = <STDIN>;  # 標準入力から１行分のデータを受け取る
+    chomp $ans;         # $in の末尾にある改行文字を削除
+  } while($ans eq '');
   
-  while(my @buff = $telnet->getlines(All => 0) ){
-    push @result,@buff;
-  }
+  push @result,@buffer;
   my $last = $telnet->get;
   push @result,$last if $last;
   return @result;

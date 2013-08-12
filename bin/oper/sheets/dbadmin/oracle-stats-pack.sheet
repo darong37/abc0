@@ -1,0 +1,22 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(         Input 'Oracle SID' )}
+pswd=${pswd:-$(       Input 'PERFSTAT password' )}
+perftbl=${perftbl:-$( Input 'PERFSTAT table' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+
+$ sqlplus / as sysdba
+> @$ORACLE_HOME/rdbms/admin/spcreate.sql
+> ${pswd}
+> ${perftbl}
+
+
+EOF

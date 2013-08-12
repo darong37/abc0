@@ -1,0 +1,104 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(     Input 'Oracle SID' )}
+lsnr=${lsnr:-$(   Input 'Listener Name' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ . ${sid}.env
+
+$ ps -ef | grep $user | grep ora
+
+$ lsnrctl status ${lsnr}
+
+	LSNRCTL for {*}: Version {([0-9.]+)} - Production on {*} {tim}
+
+	{(.)}Copyright (c) 1991, 2011, Oracle.  All rights reserved.
+
+	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1576)))
+	STATUS of the LISTENER
+	------------------------
+	Alias                     {*}
+	Version                   TNSLSNR for {*} - Production
+	Start Date                {*} {tim}
+	Uptime                    {num} days {num} hr. {num} min. {num} sec
+
+	race Level               off
+	Security                  ON: Local OS Authentication
+	SNMP                      ON
+	Listener Parameter File   {*}/listener.ora
+	Listener Log File         {*}
+	Listening Endpoints Summary...
+	  {:}
+	Services Summary...
+	  {:}
+	The command completed successfully
+                                                                                                                                                
+$ emctl status dbconsole
+	emctl status dbconsole
+	Oracle Enterprise Manager {*} Database Control Release {([0-9.]+)}
+	{(.)}Copyright (c) 1996, 2011 Oracle Corporation.  All rights reserved.
+	https://{*}/em/console/aboutApplication
+	Oracle Enterprise Manager {*} is running.
+	------------------------------------------------------------------
+	Logs are generated in directory {*}
+
+$ ls -l ${sid}_stop_db.sh
+
+$ cat ${sid}_stop_db.sh
+	#!/usr/bin/ksh
+
+	APPLNAM=\$( basename \$0 .sh )
+	BASEDIR=\$( cd dirname \$0;pwd )
+
+	mkdir -p \$BASEDIR/logs
+	now=\$( date +'%Y%m%d_%H%M%S' )
+
+	LOGFILE=\$BASEDIR/logs/\${APPLNAM}_\${now}.log
+	LISTENER=${lsnr}
+
+	cd \$APPLNAM
+	(
+	echo "##############################################"
+	echo "# Start Script "`date`
+	echo "##############################################"
+
+	echo "### \$ORACLE_SID: Stopping Enterprise Manager "`date`
+	\$ORACLE_HOME/bin/emctl stop dbconsole
+
+	echo "### \$ORACLE_SID: Stopping Oracle Net Listener "`date`
+	\$ORACLE_HOME/bin/lsnrctl stop \${LISTENER}
+
+	time sqlplus -S /nolog <<-EOF
+		set echo off
+		!echo "### Stopping Oracle database "`date`
+		connect / as SYSDBA
+		shutdown immediate
+		exit
+		EOF
+
+	echo "##############################################"
+	echo "# End Script "`date`
+	echo "# Log File: \$BASEDIR/logs/\${APPLNAM}_\${now}.log"
+	echo "##############################################"
+	) 2>&1 | tee -a \$LOGFILE
+
+
+$ ./${sid}_stop_db.sh
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+
+$ ps -ef | grep $user | grep ora
+$ ps -ef | grep $user | grep ora | wc -l
+	0
+
+$
+
+EOF

@@ -47,10 +47,11 @@ cd $( ConvPath "${DIR_CALL:-.}" )
 alias edit=/c/Users/JKK0544/.abc/apps/SakuraDown12f-14/sakura.exe
 alias es="$( ConvPath "$DIR_APPS" )/Everything/es.exe"
 alias irb='console irb.bat'
-alias pry='console pry.bat'
 alias gem='console gem.bat'
 alias git='console git'
-alias npm='console npm.cmd'
-alias tree='/c/Windows/System32/tree.com'
-alias pandoc='/c/Users/JKK0544/AppData/Local/Pandoc/pandoc.exe'
 alias m2h='/c/Users/JKK0544/AppData/Local/Pandoc/pandoc.exe -f markdown -t html5'
+alias npm='console npm.cmd'
+alias ruby='console ruby'
+alias pandoc='/c/Users/JKK0544/AppData/Local/Pandoc/pandoc.exe'
+alias pry='console pry.bat'
+alias tree='/c/Windows/System32/tree.com'

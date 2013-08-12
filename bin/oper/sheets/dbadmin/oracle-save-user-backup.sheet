@@ -1,0 +1,59 @@
+#!/bin/sh -u
+
+### Local Parameter
+sid=${sid:-$(     Input  'Oracle SID' )}
+bkObj=${bkObj:-$( Input  'Backup-Object Directory' )}
+
+bkLoc=${bkLoc:-$( Select 'Save Location' $( cat <<-DIRS
+	/dev_db/wksp/userbackup
+DIRS
+))}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ id
+	uid=0(root) gid=0(system) groups=2(bin),3(sys),7(security),8(cron),10(audit),11(lp)
+
+$ ps -ef | grep $user | grep ora
+
+$ sqlplus / as sysdba
+> shutdown immediate
+
+> exit
+
+# Backup-Object-Directory
+$ cd ../oracle
+$ pwd
+	$bkObj
+
+
+$ exit
+$ id
+	uid=0(root) {*}
+
+# ‰‰ñ‚Ì‚Ý
+$ mkdir -p $bkLoc
+
+$ ls -l $bkLoc
+$ df -m $bkLoc
+
+$ cd ${bkObj%/*}
+$ pwd
+	${bkObj%/*}
+
+$ date
+$ tar cf - ${bkObj##*/} | 
+_ compress > $bkLoc/${sid}_${today}.tar.Z; date
+
+$ ls -l  $bkLoc
+$ df -m  $bkLoc
+
+$ du -sg $bkLoc
+
+
+EOF

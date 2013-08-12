@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Cwd;
+use File::Basename;
 
 use Net::Telnet;
 use Term::ANSIColor qw(:constants);
@@ -96,62 +97,68 @@ for my $blk (split /\n\n/,$stxt){
 
 ### TermREPL
 my $pass = `sh /c/Users/JKK0544/.abc/bin/spass $host $user`;
-my ( $telnet,$last ) = termRepl($host,$user,$pass,"$wd/$log");
+my ( $telnet,$last ) = termRepl($host,$user,$pass,"$log");
 
 ### シグナル制御
 $SIG{'INT'}  = 'Inthandler';
 sub Inthandler {
-  my $ok = $telnet->break;
-  print STDERR "you hit break($ok)!\n";
+  print STDERR "you hit break!,   do you want to\n";
+  print STDERR "  1) Send BREAK \n";
+  print STDERR "  2) forced exit\n";
+
+  $/ = "\n";
+  my $ans = <STDIN>;  # 標準入力から１行分のデータを受け取る
+  chomp $ans;         # $in の末尾にある改行文字を削除
+  if ( $ans == 1 ){
+    my $ok = $telnet->break;
+    print STDERR "send break($ok)!\n";
+  } else {
+    die "Forced Exit";
+  }
 }
 
 my $keyboad = new Term::ReadLine 'my_term';
+
 my $cnt=0;
-my $cmd = $cmds[$cnt];
-my $rtn = $rtns[$cnt];
-$keyboad->addhistory($cmd);
+$keyboad->addhistory($cmds[$cnt]);
 
 my $target;
-my $prvrtn;
-my $prvtar;
-while ( defined($_ = $keyboad->readline($last)) ) {
-  if ( $_ eq '!prev' ){
-    $target = exregex($prvrtn,$prvtar,1);
-    print $target;
-    print RESET;
-    next;
-  }
-  my @result = $telnet->cmd($_);
-  if ( @result ){
-    $last = $telnet->last_prompt;
-  } else {
-    @result = auxread($telnet);
-    $last = '> ';
-  }
-  
-  # valuation
-  $target = join '',@result;
-
-  # 
-  chomp;
-  if ( $_ eq $cmd ){
-    if ( $rtn ne '' ){
-      $prvrtn = $rtn;
-      $prvtar = $target;
-      $target = exregex($rtn,$target);
+while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
+  if ( /^\!\!/ ){
+    if ( $_ eq '!!prev' ){
+      exregex($rtns[$cnt-1],$target,1);
+    } elsif( /^\!\![0-9]+/ ) {
+      s/^\!\!//;
+      $cnt = $_;
+      $keyboad->addhistory($cmds[$cnt]);
     }
-    $cnt++;
-    $cmd = $cmds[$cnt];
-    $rtn = $rtns[$cnt];
-    $keyboad->addhistory($cmd);
-  } elsif( $_ eq '' ) {
-    $cnt++;
-    $cmd = $cmds[$cnt];
-    $rtn = $rtns[$cnt];
-    $keyboad->addhistory($cmd);
+  } else {
+    my @result = $telnet->cmd($_);
+    if ( @result ){
+      $last = $telnet->last_prompt;
+    } else {
+      last if $_ eq 'exit';
+      @result = auxread($telnet);
+      $last = '> ';
+    }
+    $target = join '',@result;
+
+    # 
+    chomp;
+    if ( $_ eq $cmds[$cnt] ){
+      if ( $rtns[$cnt] ne '' ){
+        exregex($rtns[$cnt],$target);
+      } else {
+        print $target;
+      }
+      if ( $cnt <= $#cmds ){
+        $cnt++;
+        $keyboad->addhistory($cmds[$cnt]);
+      }
+    } else {
+      print $target;
+    }
   }
-  print $target;
-  print RESET;
 }
 
 ### 接続の切断

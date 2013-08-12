@@ -1,0 +1,61 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset sid=${sid:-$(       Input 'Oracle SID' )}
+typeset schema=${schema:-$( Input 'Schema for Invalid Objects' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ . ${sid}.env
+> 1
+
+$ # Passwordを元に戻す
+$ sqlplus / as sysdba
+
+# 無効な オブジェクトを確認する
+> select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
+> set line 200
+> set pazesize 100
+> col object_name FOR A30
+> select OBJECT_TYPE,OWNER,OBJECT_NAME,STATUS from all_objects where status <> 'VALID' order by OBJECT_TYPE,OWNER,OBJECT_NAME;
+
+
+# 無効な PL/SQL オブジェクトをコンパイルする
+> EXECUTE UTL_RECOMP.RECOMP_SERIAL('${schema}');
+#> EXECUTE UTL_RECOMP.RECOMP_PARALLEL(NULL, 'SYSTEM');
+> select object_name,status from dba_objects where owner = '${schema}' and status <> 'VALID';
+#> select object_name,status from dba_objects where owner = 'SYSTEM' and status <> 'VALID';
+
+# 無効なインデックスを再構築する
+> @rebuild_unusable_indexes.sql
+> Enter value for owner_name: ${schema}
+
+# 無効な PL/SQL オブジェクトがないことを確認する
+> select object_name,status from dba_objects where owner = '${schema}' and status <> 'VALID';
+
+#無効なインデックスがないことを確認する
+> select i.index_name, i.status, p.partition_name, p.status, s.subpartition_name, s.status
+	from dba_indexes i 
+		left outer join dba_ind_partitions p
+			on i.index_name = p.index_name
+				left outer join dba_ind_subpartitions s
+					on i.index_name = s.index_name
+	where i.owner in ('$schema')
+		and i.owner = p.index_owner
+		and i.status <> 'VALID'
+		and p.status <> 'USABLE'
+		and s.status <> 'USABLE';
+
+> EXECUTE UTL_RECOMP.RECOMP_PARALLEL();
+#> EXECUTE UTL_RECOMP.RECOMP_PARALLEL(NULL, 'SYSTEM');
+
+> exit
+
+$
+
+EOF

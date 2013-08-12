@@ -28,12 +28,12 @@ $ ls -l $dmpfn
 
 $ cd
 $ pwd
-$ df -m .
+$ df -g .
 
 $ date
 $ imp system/${pswd} file=$work/$dmpfn log=$work/${sid}_full.log full=y ; date
 
-$ df -m .
+$ df -g .
 
 
 EOF
