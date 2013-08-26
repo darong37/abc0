@@ -1,0 +1,63 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input 'Oracle SID' )}
+lsnr=${lsnr:-$(     Input 'Listener Name' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ ps -ef | grep $user | grep ora
+
+$ lsnrctl status ${lsnr}
+
+	LSNRCTL for {*}: Version {([0-9.]+)} - Production on {*} {tim}
+
+	{(.)}Copyright (c) 1991, 2011, Oracle.  All rights reserved.
+
+	Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1576)))
+	STATUS of the LISTENER
+	------------------------
+	Alias                     {*}
+	Version                   TNSLSNR for {*} - Production
+	Start Date                {*} {tim}
+	Uptime                    {num} days {num} hr. {num} min. {num} sec
+
+	race Level               off
+	Security                  ON: Local OS Authentication
+	SNMP                      ON
+	Listener Parameter File   {*}/listener.ora
+	Listener Log File         {*}
+	Listening Endpoints Summary...
+	  {:}
+	Services Summary...
+	  {:}
+	The command completed successfully
+                                                                                                                                                
+$ emctl status dbconsole
+	emctl status dbconsole
+	Oracle Enterprise Manager {*} Database Control Release {([0-9.]+)}
+	{(.)}Copyright (c) 1996, 2011 Oracle Corporation.  All rights reserved.
+	https://{*}/em/console/aboutApplication
+	Oracle Enterprise Manager {*} is running.
+	------------------------------------------------------------------
+	Logs are generated in directory {*}
+
+$ ls -l ${orasid}_stop_db.sh
+
+$ ./${orasid}_stop_db.sh
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	0
+
+$
+
+EOF

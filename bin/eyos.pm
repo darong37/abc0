@@ -197,13 +197,8 @@ sub exregex{
       push @formats,$_;
     } elsif ( /^\{.+\}$/ ){
       s/[{}]//g;
-#     if ( /\(.+\)/ ){
-        push @patterns,$_;
-        push @formats,'%s';
-#     } else {
-#       push @patterns,'('.$_.')';
-#       push @formats,'%s';
-#     }
+      push @patterns,$_;
+      push @formats,'%s';
     } elsif ( /^\s+$/ ){
       if ( $#patterns < 0 ){
         push @patterns,'\s+';
@@ -236,7 +231,6 @@ sub exregex{
   $cnt=0;
   for ( @patterns ){
 #   $DB::single = 1 if $cnt > 20;
-
     push @plin,$_;
     push @fmts,shift(@formats);
     if ( $_ eq ' \n' || $cnt == $#patterns ){
@@ -319,6 +313,7 @@ sub termRepl {
   $telnet->open($host);
   my @result = $telnet->login($user, $pass);
   print @result;
+  print "\n";
 #  if ( @result ){
 #    $telnet->input_log;
 #    close $logh;
@@ -338,15 +333,13 @@ sub termRepl {
     export PS1='$ '
     TERM=vt100
     stty rows 50 columns 144
-    cd /u00/unyo
-    pwd
     date
 EOS
 
   # 実行
   for ( split /\n/,$init ){
     s/^\s+//;
-#   print "\$ $_\n";
+    print "\$ $_\n";
     @result = $telnet->cmd($_);
     print @result;
   }
@@ -363,18 +356,28 @@ sub auxread {
   my @buffer=();
   my $ans='';
   do{
-    print STDERR "\n-- aux --\n";
+#   print STDERR "\n-- aux --\n";
+    $ans = 0 unless $ans =~ /^[0-9]+$/;
 
-    while(my @buffer = $telnet->getlines(All => 0) ){
-      print STDERR @buffer if @buffer;
+    my $n=0;
+    while( $n < $ans+2 ){
+      while(my @buffer = $telnet->getlines(All => 0) ){
+        print STDERR @buffer if @buffer;
+        $n=0;
+      }
       sleep $timout;
+      $n++;
     }
-    
-    print STDERR "\n-- STDOUT Time out!,   <enter>:repeat else:exit-aux  :";
+    print STDERR "\n-- Time out!, <enter|integer>:repeat else:exit-aux  :";
     $/ = "\n";
-    $ans = <STDIN>;  # 標準入力から１行分のデータを受け取る
-    chomp $ans;         # $in の末尾にある改行文字を削除
-  } while($ans eq '');
+    $ans = <STDIN>;          # 標準入力から１行分のデータを受け取る
+    $ans =~ s/[\r\n]//g;     # $in の末尾にある改行文字を削除
+    if ( $ans =~ /^[0-9]*$/ ){
+       printf("\033[%dA",2) ;    # カーソルを1行だけ上に移動
+       printf("\033[s");
+       printf("\033[u");
+    }
+  } while($ans =~ /^[0-9]*$/ );
   
   push @result,@buffer;
   my $last = $telnet->get;

@@ -1,14 +1,14 @@
 #!/bin/sh -u
 
 ### Local Parameter
-sid=${sid:-$(     Input  'Oracle SID' )}
-reDir=${reDir:-$( Input  'Restore Directory' )}
+orasid=${orasid:-$( Input  'Oracle SID' )}
+reDir=${reDir:-$(   Input  'Restore Directory' )}
 
-bkLoc=${bkLoc:-$( Select 'Save Location' $( cat <<-DIRS
+bkLoc=${bkLoc:-$(   Select 'Save Location' $( cat <<-DIRS
 	/dev_db/wksp/userbackup
 DIRS
 ))}
-retz=${retz:-$(   Input  'Restore Backup TarZ' )}
+retz=${retz:-$(     Input  'Restore Backup TarZ' )}
 
 
 ### Sheet
@@ -20,7 +20,7 @@ cat >> ${stxt} <<EOF
 $ id
 	uid=0(root) gid=0(system) groups=2(bin),3(sys),7(security),8(cron),10(audit),11(lp)
 
-$ ps -ef | grep ora$sid | grep ora
+$ ps -ef | grep ora$orasid | grep ora
 	root {num} {num}   0 {tim}  pts/2  0:00 grep orae058
 
 # Confirm Restore Backup-Object Directory
@@ -31,11 +31,10 @@ $ pwd
 # ƒtƒHƒ‹ƒ_íœ
 $ df -g ./
 $
-$ rm -r *
 $ cd ..
 $ pwd
 $ ls -l
-$ rmdir ${reDir##*/}
+$ rm -ri ${reDir##*/}
 $ ls -l
 
 

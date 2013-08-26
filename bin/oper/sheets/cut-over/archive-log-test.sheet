@@ -1,0 +1,104 @@
+#!/bin/sh -u
+
+### Local Parameter
+#rcyc=${rcyc:-$( Input 'Recycle Folder' )}
+
+rehost=mecerp3x0111
+recycle=/dev_db/wksp/arch_test_bk
+
+sid1=e001
+rcyc1=${recycle}/${sid1}
+target1=/u43/${sid1}/arch_test
+arclst1=/tmp/${sid1}_${rehost}.lst
+
+sid2=e058
+rcyc2=${recycle}/${sid2}
+target2=/u45/${sid2}/arch_test
+arclst2=/tmp/${sid2}_${rehost}.lst
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title} - ${sid1}
+######################################################################
+# 最初だけ(2度しても問題なし)
+$ mkdir -p ${rcyc1}
+$ ls -ld ${rcyc1}
+
+$ cd ${rcyc1}
+$ pwd
+	${rcyc1}
+
+$ df -g .
+$ ls -l
+
+#=> 何もないことを確認
+
+# ${target1} 確認
+$ cd ${target1}
+
+$ ls -ltr
+$ remsh ${rehost} ls -ltr ${target1}
+
+$ ls -ltr | cksum
+$ remsh ${rehost} ls -ltr ${target1} | cksum
+
+$ remsh ${rehost} ls -1   ${target1} > ${arclst1}
+$ cat ${arclst1}
+
+
+# 移動
+$ cat ${arclst1} | xargs -n 1 -I{} ls -l {}
+$ cat ${arclst1} | xargs -n 1 -I{} echo mv {} ${rcyc1}
+$ cat ${arclst1} | xargs -n 1 -I{} mv {} ${rcyc1}
+
+
+$ cd ${rcyc1}
+$ pwd
+$ ls -l
+$ ls -l | cksum
+
+
+######################################################################
+# 02. ${title} - ${sid2}
+######################################################################
+# 最初だけ(2度しても問題なし)
+$ mkdir -p ${rcyc2}
+$ ls -ld ${rcyc2}
+
+$ cd ${rcyc2}
+$ pwd
+	${rcyc2}
+
+$ df -g .
+$ ls -l
+
+#=> 何もないことを確認
+
+# ${target2} 確認
+$ cd ${target2}
+
+$ ls -ltr
+$ remsh ${rehost} ls -ltr ${target2}
+
+$ ls -ltr | cksum
+$ remsh ${rehost} ls -ltr ${target2} | cksum
+
+$ remsh ${rehost} ls -1   ${target2} > ${arclst2}
+$ cat ${arclst2}
+
+
+# 移動
+$ cat ${arclst2} | xargs -n 1 -I{} ls -l {}
+$ cat ${arclst2} | xargs -n 1 -I{} echo mv {} ${rcyc2}
+$ cat ${arclst2} | xargs -n 1 -I{} mv {} ${rcyc2}
+
+
+$ cd ${rcyc2}
+$ pwd
+$ ls -l
+$ ls -l | cksum
+
+
+EOF

@@ -1,0 +1,19 @@
+#!/bin/sh -u
+typeset APPLDIR=$( cd $(dirname $0) && pwd )
+typeset BASEDIR='..'      # ベースフォルダの  APPLDIRからの相対パス
+typeset CONFDIR='conf'    # 環境設定フォルダのBASEDIRからの相対パス
+. $APPLDIR/oper/sheet.fnc
+#
+typeset category='OS'
+typeset group=''
+if [[ ${1:-} = '-db' ]];then
+  category='DB'
+  group=$2
+  shift 2
+fi
+
+typeset host=$1
+typeset user=$2
+
+typeset eles=( $( SelTbl $APPLDIR/$BASEDIR/$CONFDIR/abc.hosts "$category" "$group" "$host" "$user" ) )
+echo "${eles[4]}"

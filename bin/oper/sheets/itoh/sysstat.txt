@@ -1,0 +1,25 @@
+set feed off
+set linesize 120
+set pagesize 9999
+set trimout on
+set trimspool on
+
+col date_time for a20
+col statistic# for 999999999
+col name for a64
+col value for 9999999999999
+col class for 999
+
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') date_time,
+    a.statistic#,
+    a.name,
+    a.class,
+    a.value
+from
+    v$sysstat a
+where
+    a.value > 0
+order by
+    a.statistic#
+/

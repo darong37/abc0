@@ -1,0 +1,35 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set sqln off
+> set line 200
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+> select prv.TABLE_NAME
+> ,      prv.GRANTEE
+> ,      prv.PRIVILEGE
+> from   ALL_OBJECTS obj
+> ,      ALL_TAB_PRIVS_MADE prv
+> where  obj.OWNER = 'SYS' 
+> and    obj.OBJECT_TYPE = 'PACKAGE'
+> and    obj.OWNER       = prv.OWNER
+> and    obj.OBJECT_NAME = prv.TABLE_NAME
+> order  by prv.TABLE_NAME,prv.GRANTEE,prv.PRIVILEGE;
+
+> exit
+
+
+EOF

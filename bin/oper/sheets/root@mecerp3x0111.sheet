@@ -1,0 +1,28 @@
+#!/bin/sh -u
+
+homedr='/'
+
+useback=${useback:-$( Ask 'Do you want to Backup/Restore DB ?' )}
+if [[ useback = 'y' ]];then
+  bkRepo=/dev_db/wksp/userbackup
+  Echo "Backup Repository:'${bkRepo}'"
+
+  orasid=${orasid:-$( Select  'Oracle SID' 'e001' 'e058' )}
+
+  if [[ $orasid = 'e001' ]];then
+    bkDir='/u43/e001/oracle'
+  elif [[ $orasid = 'e058' ]];then
+    bkDir='/u45/e058/oracle'
+  else
+    Echo 'Invalid SID' >&2
+    exit 1
+  fi
+  Echo "Backup/Restore Target Directory:'${bkDir}'"
+
+  bkFil=${bkFil:-$( Input 'Backup/Restore File Name' )}
+fi
+
+### Sheet
+. $APPLDIR/sheets/00.sheet
+
+

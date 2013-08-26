@@ -1,0 +1,34 @@
+#!/bin/sh -u
+
+### Local Parameter
+package=${package:-$( Input  'Package Name'  'STATSPACK' )}
+owner=${owner:-$(     Input  'Package Owner' 'PERFSTAT' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set line 1000
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+> select OWNER,OBJECT_TYPE,count(*) from all_objects where status <> 'VALID' group by OWNER,OBJECT_TYPE order by OWNER,OBJECT_TYPE;
+
+> drop package body $owner.$package;
+
+> drop package $owner.$package;
+
+> select OWNER,OBJECT_TYPE,count(*) from all_objects where status <> 'VALID' group by OWNER,OBJECT_TYPE order by OWNER,OBJECT_TYPE;
+
+> exit
+
+$ exit
+
+
+EOF

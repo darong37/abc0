@@ -1,0 +1,41 @@
+#!/bin/sh -u
+
+### Local Parameter
+#rcyc=${rcyc:-$( Input 'Recycle Folder' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title} - p301
+######################################################################
+$ cd /u00/unyo/scripts/dr
+$ pwd
+	/u00/unyo/scripts/dr
+
+$ ls -l pro_dr_alt_attach_archlog.sh
+
+# p301 archlog “¯Šú
+## recover
+$ sh pro_dr_alt_attach_archlog.sh p301
+$ echo \$?
+	0
+$
+
+$ remsh mecerp2d0111 tail -1000 /u02/p301/oracle/db/tech_st/11.2.0/admin/p301_mecerp2d0111/diag/rdbms/p301/p301/trace/alert_p301.log
+
+
+######################################################################
+# 02. ${title} - p358
+######################################################################
+# p358 archlog “¯Šú
+## recover
+$ sh pro_dr_alt_attach_archlog.sh p358
+$ echo \$?
+	0
+$
+
+$ remsh mecerp2d0111 tail -1000 /u04/p358/oracle/db/tech_st/11.2.0/admin/p358_mecerp2d0111/diag/rdbms/p358/p358/trace/alert_p358.log
+
+
+EOF

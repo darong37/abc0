@@ -1,0 +1,82 @@
+set pages 9999
+set lines 140
+
+col tablespace for a40
+col "NON-USED(%)" for 990.9
+col "USE(%)" for 990.9
+col "USE-SIZE(Mbyte)" for 9999990.9
+col "NON-USE-SIZE(Mbyte)" for 9999990.9
+
+select
+    substr(a.tablespace_name,1,20) tablespace,
+    round(sum(a.total1)/1024/1024,1) "ALOCATE-SIZE(Mbyte)",
+    round(sum(a.total1)/1024/1024,1) - round(sum(a.sum1)/1024/1024,1) "USE-SIZE(Mbyte)",
+    round(sum(a.sum1)/1024/1024,1) "NON-USE-SIZE(Mbyte)",
+    100 - (round(sum(a.sum1)/1024/1024,1) * 100 / round(sum(a.total1)/1024/1024,1)) "USE(%)",
+    round(sum(a.maxb)/1024/1024,1) largest,
+    max(a.cnt) fragment
+from
+    (
+    select
+         tablespace_name,
+         0 total1,
+         sum(bytes) sum1,
+         max(bytes) maxb,
+         count(bytes) cnt
+     from
+         dba_free_space
+     group by
+         tablespace_name
+     union
+     select
+         tablespace_name,
+         sum(bytes) total1,
+         0,
+         0,
+         0
+     from
+         dba_data_files
+     group by
+         tablespace_name
+     ) a
+group by
+    a.tablespace_name
+-- GET TEMP TABLESPACE USAGE
+union
+select
+    substr(d.tablespace_name,1,20) tablespace,
+    nvl(u.bytes, 0)/1024/1024 "ALOCATE-SIZE(Mbyte)",
+    nvl(f.bytes, 0)/1024/1024 "USE-SIZE(Mbyte)",
+    (nvl(u.bytes, 0)/1024/1024) - (nvl(f.bytes, 0)/1024/1024) "NON-USE-SIZE(Mbyte)",
+    trunc(nvl(f.bytes, 0)/nvl(u.bytes, 0)*100) "USE(%)",
+    nvl(u.maxbytes, 0)/1024/1024 largest,
+    f.cnt fragment
+from
+dba_tablespaces d,
+(
+    select
+        tablespace_name,
+        sum(bytes) as bytes,
+        maxbytes, -- if autoextend is off, this column is zero evreytime!
+        count(bytes) as cnt
+    from
+        dba_temp_files
+    group by
+        tablespace_name,maxbytes
+) u,
+(
+    select
+        tablespace_name,
+        sum(bytes_cached) as bytes,
+        count(bytes_cached) as cnt
+    from
+        v$temp_extent_pool
+    group by
+        tablespace_name
+) f
+where
+d.extent_management = 'LOCAL'
+and d.contents = 'TEMPORARY'
+and d.tablespace_name = u.tablespace_name(+)
+and d.tablespace_name = f.tablespace_name(+)
+/

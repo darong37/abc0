@@ -1,9 +1,9 @@
 #!/bin/sh -u
 
 ### Local Parameter
-sid=${sid:-$( Input 'DB SID' )}
-oty=${oty:-$( Input 'Object Type' )}
-onm=${onm:-$( Input 'Object Name' )}
+orasid=${orasid:-$( Input 'Orcale DB SID' )}
+objtyp=${objtyp:-$( Input 'Object Type' )}
+objnam=${objnam:-$( Input 'Object Name' )}
 
 ### Sheet
 cat >> ${stxt} <<EOF
@@ -11,7 +11,7 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ . ./${sid}.env
+$ . ./${orasid}.env
 $ 
 
 $ sqlplus / as sysdba

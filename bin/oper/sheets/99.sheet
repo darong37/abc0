@@ -8,7 +8,7 @@ cat >> ${stxt} <<EOF
 ######################################################################
 $ whoami ; id ; uname -n
 	${user}
-	uid=1008(${user}) gid=105(dba) groups=1(staff)
+	{*}(${user}) {*}
 	${host}
 $
 $ exit

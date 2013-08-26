@@ -1,0 +1,20 @@
+set feed off
+set pause off
+set linesize 200
+set pagesize 9999
+set trimout on
+set trimspool on
+set arraysize 100
+set tab off
+
+select 
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') date_time,
+    concurrent_queue_name name,
+    sum(decode(phase_code,'R',1,0)) RUNNING,
+    sum(decode(phase_code,'P',1,0)) PENDING,
+    sum(decode(phase_code,'I',1,0)) INACTIVE
+from
+    apps.fnd_concurrent_worker_requests
+group by
+    concurrent_queue_name
+/

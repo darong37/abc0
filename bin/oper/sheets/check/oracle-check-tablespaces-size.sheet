@@ -1,7 +1,7 @@
 #!/bin/sh -u
 
 ### Local Parameter
-sid=${sid:-$(     Input  'Oracle SID' )}
+orasid=${orasid:-$(     Input  'Oracle SID' )}
 
 
 ### Sheet
@@ -10,14 +10,11 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ . ${sid}.env
-> 1
-
-
-$ cd
-$ pwd
-
 $ sqlplus / as sysdba
+> set line 300
+_ set pagesize 1000
+
+
 > select     ddf.TABLESPACE_NAME,
 _            ddf.BYTES,
 _            ddf.BYTES-DFS.BYTES "BYTES_USED",

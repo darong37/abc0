@@ -1,0 +1,63 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID' )}
+bkDir=${bkDir:-$(   Input  'Restore Target Directory' )}
+
+bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
+	/dev_db/wksp/userbackup
+DIRS
+))}
+bkFil=${bkFil:-$(   Input  'Restore File Name' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ ps -ef | grep ora$orasid | grep ora
+	root {num} {num}   0 {tim}  pts/2  0:00 grep orae058
+
+$ ps -ef | grep ora$orasid | grep ora | grep -v '-ksh' | wc -l
+	1
+
+$ ls -l $bkRepo
+	{*} {num} {*} $bkFil
+$ ls -l $bkRepo/$bkFil
+	{*} {num} {*} $bkFil
+
+
+# Confirm Restore Target Directory
+$ cd $bkDir
+$ pwd
+	$bkDir
+	
+# ƒtƒHƒ‹ƒ_íœ
+$ df -g ./
+$
+$ cd ..
+$ pwd
+$ ls -la
+$ rm -ri ${bkDir##*/}
+$ ls -la 
+
+$ df -g ./
+
+
+# Confirm Backup/Restore Repository
+$ ls -d $bkRepo
+	$bkRepo
+$ ls -l $bkRepo
+	{*} {num} {*} $bkFil
+
+$ date
+$ zcat $bkRepo/$bkFil | tar xf -;date
+
+$ 
+$ df -g ./
+$ ls -la 
+
+
+EOF

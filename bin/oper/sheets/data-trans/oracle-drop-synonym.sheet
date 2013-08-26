@@ -1,0 +1,37 @@
+#!/bin/sh -u
+
+### Local Parameter
+synonym=${synonym:-$( Input  'Synonym Name'  'STATSPACK' )}
+public=${public:-$(   Input  'Public ?(y/n)' )}
+if [[ $public = 'y' ]];then
+  public='public'
+else
+  public=''
+fi
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set line 1000
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+> select OWNER,OBJECT_TYPE,count(*) from all_objects where status <> 'VALID' group by OWNER,OBJECT_TYPE order by OWNER,OBJECT_TYPE;
+
+> drop $public synonym $synonym;
+
+> select OWNER,OBJECT_TYPE,count(*) from all_objects where status <> 'VALID' group by OWNER,OBJECT_TYPE order by OWNER,OBJECT_TYPE;
+
+> exit
+
+$ exit
+
+
+EOF

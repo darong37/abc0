@@ -1,11 +1,11 @@
 #!/bin/sh -u
 
 ### Local Parameter
-typeset sid=${sid:-$(               Input 'Oracle SID' )}
-typeset pswdsys=${pswdsys:-$(       Input 'Oracle SYS password' )}
-typeset pswdsystem=${pswdsystem:-$( Input 'Oracle SYSTEM password' )}
-typeset pswdsysman=${pswdsysman:-$( Input 'Oracle SYSMAN password' )}
-typeset pswddbsnmp=${pswddbsnmp:-$( Input 'Oracle DNSNMP password' )}
+orasid=${orasid:-$(         Input 'Oracle SID' )}
+pswdsys=${pswdsys:-$(       Spass -db $host $orasid sys )}
+pswdsystem=${pswdsystem:-$( Spass -db $host $orasid system )}
+pswdsysman=${pswdsysman:-$( Spass -db $host $orasid sysman )}
+pswddbsnmp=${pswddbsnmp:-$( Spass -db $host $orasid dbsnmp )}
 
 
 ### Sheet
@@ -14,8 +14,11 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01.${title}
 ######################################################################
-$ . ${sid}.env
-> 1
+$ echo \$ORACLE_SID
+	$orasid
+
+$ echo \$ORACLE_HOME
+	$orahom
 
 $ # Password‚ðŒ³‚É–ß‚·
 $ sqlplus / as sysdba
@@ -23,9 +26,6 @@ $ sqlplus / as sysdba
 > alter user system identified by "${pswdsystem}";
 > alter user sysman identified by "${pswdsysman}";
 > alter user dbsnmp identified by "${pswddbsnmp}";
-
-
-
 
 > exit
 

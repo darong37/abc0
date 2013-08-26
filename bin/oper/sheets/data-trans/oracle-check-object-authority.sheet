@@ -1,0 +1,47 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID'   )}
+object=${object:-$( Input  'Object Name'  'DBMS_SYS_SQL DBMS_PIPE' )}
+owner=${owner:-$(   Input  'Object Owner' 'SYS' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set sqln off
+> set line 200
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+> set line 80
+> desc ALL_OBJECTS
+> set line 200
+> select * from ALL_OBJECTS where OWNER = '$owner' and OBJECT_NAME = '$object';
+
+> set line 80
+> desc ALL_TAB_PRIVS_MADE
+> set line 200
+
+> select * from ALL_TAB_PRIVS_MADE  where OWNER = '$owner' and TABLE_NAME='$object';
+
+> SET HEAD OFF
+
+> select 'grant ' || PRIVILEGE || ' on ' || OWNER || '.' || TABLE_NAME || ' to ' || GRANTEE
+> || DECODE(HIERARCHY,'YES',' WITH HIERARCHY OPTION','NO',' ')
+> || DECODE(GRANTABLE,'YES',' WITH GRANT OPTION;'   ,'NO',';')
+> from ALL_TAB_PRIVS_MADE
+> where OWNER = '$owner' and TABLE_NAME='$object';
+
+> exit
+
+$ exit
+
+
+
+EOF

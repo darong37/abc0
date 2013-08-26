@@ -1,0 +1,57 @@
+#!/bin/sh -u
+
+### Local Parameter
+#rcyc=${rcyc:-$( Input 'Recycle Folder' )}
+
+rehost=mecerp2d0111
+
+sid1=p301
+target1=/u02/${sid1}/oracle/arch
+
+sid2=p358
+target2=/u04/${sid2}/oracle/arch
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title} - ${sid1}
+######################################################################
+$ cd ${target1}
+$ pwd
+	${target1}
+
+# 同期するアーカイブを決定する
+$ ls -ltr
+$ remsh ${rehost} ls -ltr   ${target1}
+
+$ tar cvf sync_${sid1}.tar  # 同期するアーカイブを指定する、複数可。
+$ gzip sync_${sid1}.tar
+
+$ ls -l sync_${sid1}.tar.gz
+# FTP転送する
+
+$ rm -i sync_${sid1}.tar.gz
+
+
+######################################################################
+# 02. ${title} - ${sid2}
+######################################################################
+$ cd ${target2}
+$ pwd
+	${target2}
+
+# 同期するアーカイブを決定する
+$ ls -ltr
+$ remsh ${rehost} ls -ltr   ${target2}
+
+$ tar cvf sync_${sid2}.tar  # 同期するアーカイブを指定する、複数可。
+$ gzip sync_${sid2}.tar
+
+$ ls -l sync_${sid2}.tar.gz
+# FTP転送する
+
+$ rm -i sync_${sid2}.tar.gz
+
+
+EOF

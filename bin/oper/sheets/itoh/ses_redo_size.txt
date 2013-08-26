@@ -1,0 +1,24 @@
+set pages 9999
+set lines 140
+
+col name      for a30
+col date_time for a20
+col value     for 999,999,999,999
+col sid       for 99999
+
+select
+    to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') date_time,
+    a.sid,
+    b.name,
+    a.value
+from
+   v$sesstat a,
+   v$statname b
+where
+        a.statistic# = b.statistic#
+    and a.statistic# = 115
+--    and a.value >= 5000000
+order by
+    a.value,
+    a.sid
+/

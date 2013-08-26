@@ -1,0 +1,11 @@
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') date_time,
+    segtype,
+    sum(blocks)*8/1024 usedMbyte
+from
+    v$tempseg_usage
+where
+    tablespace = 'TEMP'
+group by
+    rollup(segtype)
+/

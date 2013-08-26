@@ -1,0 +1,31 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset orasid=${orasid:-$( Input 'Oracle SID' )}
+typeset schema=${schema:-$( Input 'Schema for Invalid Objects' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set line 1000
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+> spool ${schema}.log
+> select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
+> select OBJECT_TYPE,OBJECT_NAME,STATUS from all_objects where OWNER = '${schema}' order by OBJECT_TYPE,OBJECT_NAME;
+> spool off
+
+> exit
+
+$
+
+EOF

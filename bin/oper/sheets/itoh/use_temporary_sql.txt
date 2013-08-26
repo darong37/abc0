@@ -1,0 +1,40 @@
+set pages 9999
+set lines 300
+
+col date_time  for a20
+col username   for a10
+col user       for a10
+col "C-PID"    for a10
+col machine    for a10
+col client     for a20
+col tablespace for a10
+
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') date_time,
+    b.sid,
+    b.serial#,
+    b.machine,
+    decode(
+       nvl(b.program,0),
+           nvl(b.module,0),
+       b.program,
+           nvl2(substrb(b.program,-23),
+       nvl2(substrb(b.module,-23),
+           substrb(b.program,-23)||','||substrb(b.module,-23),
+       nvl(substrb(b.program,-23-length(b.module)),b.program)||','||b.module),
+           b.program||','||nvl(substrb(b.module,-23-length(b.program)),b.module)
+              )
+           ) client,
+    b.process "C-PID",
+    a.*,
+    (a.blocks * 8192/1024/1024) size_Mbyte
+from
+    v$tempseg_usage a,
+    v$session b
+where
+--      (a.blocks * 8192/1024/1024) > 50 -- 50Mbyte OVER
+        (a.blocks * 8192/1024/1024) > 0  -- 0Mbyte OVER
+    and a.session_num = b.serial#
+order by
+    size_Mbyte desc
+/

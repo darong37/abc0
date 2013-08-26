@@ -42,6 +42,11 @@
 
 	# pry‚ÌInstall
 	gem install pry
+	gem install pry-doc
+	gem install pry-debugger
+	
+	# active support
+	gem install active_support
 
 	# .profile ‚Ì•ÏX
 	#	ƒpƒX‚Ì’Ç‰Á

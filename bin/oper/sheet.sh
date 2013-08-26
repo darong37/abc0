@@ -36,29 +36,74 @@ Hello
   ##
   #  Arguments & Variables
   #
-  _SUBCMD=${1:-repl}
-  (( $# > 0 )) && shift
+  typeset key=${1:-$( SetKey )}
+  typeset host=${key#*@}
+  typeset user=${key%@*}
+  typeset _cdir=${2:-sheets}
 
   ##
   # Procedures
   #
+  cd $APPLDIR/$_cdir
   if tty -s;then
     typeset -i cnt=0
+    typeset _target=''
     while(( cnt < 5 ));do
-      _prompt=${PWD#$BASEDIR/}
-      _prompt=${_prompt#$BASEDIR}
-#     read SUB?"$_prompt> "
-      echo -n "$_prompt> "
-      read SUB
-      if [[ $SUB = '' ]];then
-        cnt=cnt+1
+      typeset _prompt=${PWD#$APPLDIR/}
+      Echo
+      Echo "# $user@$host"
+      if [[ $_target != '' ]];then
+        Echo "# _target: $_target"
+      fi
+      Echo -n "$_prompt> "
+      read _SUB
+      Echo
+      _SUB=$( echo $_SUB )
+      
+      if [[ "$_SUB" = *.sheet ]] && [ -f $_SUB ];then
+        Ls ${_SUB##*/}
+####
+      elif [[ "$_SUB" = '?' ]];then
+        Echo "# s: Set"
+        Echo "# m: Make"
+        Echo "# b: Branch"
+        Echo "# l: Ls"
+        Echo "#  : Ls"
+        Echo "# e: exit"
+      elif [[ "$_SUB" = 's' ]];then
+        Echo "# Set"
+        Set
+      elif [[ "$_SUB" = 't' ]];then
+        Echo "# Tel"
+        Tel
+      elif [[ "$_SUB" = 'm' ]];then
+        if [[ $_target = '' ]];then
+          Ls -r 'sheet'
+        fi
+        Echo "# Make"
+        Make
+      elif [[ "$_SUB" = 'b' ]];then
+        if [[ $_target = '' ]];then
+          Ls -r 'sheet'
+        fi
+        Echo "# Branch"
+        Branch
+      elif [[ "$_SUB" = 'e' ]];then
+        break
+      elif [[ "$_SUB" = 'exit' ]];then
+        break
+      elif [[ "$_SUB" = 'l' ]];then
+        Ls
+####
+      elif [[ $_SUB = '' ]];then
+        Ls
       else
         cnt=0
         ERROFF
-          eval "$SUB"
+          eval "$_SUB"
           typeset -i rtn=$?
-          echo
-          echo "--> $rtn"
+          Echo
+          Echo "--> $rtn"
         ERRON
       fi
     done

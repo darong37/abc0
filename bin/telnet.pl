@@ -11,7 +11,11 @@ use Term::ReadLine;
 use FindBin;
 use lib "$FindBin::Bin";
 use eyos;
+use stxt;
 
+use IO::Handle;
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
 
 ###
 $Term::ANSIColor::AUTORESET = 0;
@@ -21,88 +25,36 @@ chdir 'oper';
 my $wd = Cwd::getcwd();
 print "Current: $wd\n";
 
+
 ### Arguments
 my ( $stxtFile ) = @ARGV;
+print "S-text : $stxtFile\n";
 
 ### STXT
-open my $stxtH,"< $stxtFile" or die "can not open $stxtFile";
-$/ = undef;
-my $stxt = <$stxtH>;
-close $stxtH;
-
-$stxt =~ s/^[ \t\n]+//;        # 先頭スペース
-$stxt =~ s/[ \t\n]+$//;        # 終端スペース
-$stxt = "\n$stxt\n";           # 先頭終端改行付加
-
-$stxt =~ s/(?<=\n)###+\n//g;
-$stxt =~ s/(?<=\n)\s*\n//g;
-$stxt =~ s/(?<=\n)[#>\$]\s*\n//g;
-
-$stxt =~ s/^\n//;              # 先頭改行削除
-$stxt =~ s/\n$//;              # 終端改行削除
-
-$stxt =~ s/(?<=\n)([#>\$])/\n$1/g;
-
-my $host;
-my $user;
-my $log;
-
-my @cmds;
-my @rtns;
-
-for my $blk (split /\n\n/,$stxt){
-  if ($blk =~ /^#\@/){
-    ( $host ) = $blk =~ /^#\@host: (.+)\s*$/ if $blk =~ /^#\@host: /;
-    ( $user ) = $blk =~ /^#\@user: (.+)\s*$/ if $blk =~ /^#\@user: /;
-    ( $log  ) = $blk =~ /^#\@log: (.+)\s*$/  if $blk =~ /^#\@log: /;
-    next;
-  }
-  # ?
-  if ($blk =~ /^#/){
-    next;
-  }
-
-  my $cmd = '';
-  my $rtn = '';
-  for my $lin (split /\n/,$blk){
-    if ( $lin =~ /^#/ ){
-      $cmd .= $lin;
-    } elsif ( $lin =~ /^[>\$] / ){
-      $lin =~ s/^[>\$] //;
-      $cmd .= $lin;
-    } elsif ( $lin =~ /^_ / ){
-      $lin =~ s/^_ //;
-#     $cmd .= "\n";
-      $cmd .= '\n';
-      $cmd .= $lin;
-    } elsif ( $lin =~ /^\t/ ){
-      $lin =~ s/^\t//;
-      $rtn .= "$lin\n";
-    } else {
-      die "unknown lin:'$lin'";
-    }
-  }
-  push @cmds,$cmd;
-  push @rtns,$rtn;
-}
-
-#print "\n\n-- commands --\n";
-#for ( my $cnt=0; $cnt < scalar(@cmds) ; $cnt++ ){
-#  printf "%02d '$cmds[$cnt]' : '$rtns[$cnt]'\n",$cnt;
-#}
-#print "\n--";
-
-####
+my $stxt = Stxt->new($stxtFile);
+$stxt->read;
 
 
 ### TermREPL
+my $host = $stxt->{'host'};
+my $user = $stxt->{'user'};
+my $logf = $stxt->{'logf'};
+
+print "Host   : $host\n";
+print "User   : $user\n";
+print "Log    : $logf\n";
+
+my @cmds = @{ $stxt->{'cmds'} };
+my @rtns = @{ $stxt->{'rtns'} };
+
 my $pass = `sh /c/Users/JKK0544/.abc/bin/spass $host $user`;
-my ( $telnet,$last ) = termRepl($host,$user,$pass,"$log");
+my ( $telnet,$last ) = termRepl($host,$user,$pass,"$logf");
 
 ### シグナル制御
 $SIG{'INT'}  = 'Inthandler';
 sub Inthandler {
   print STDERR "you hit break!,   do you want to\n";
+  print STDERR "  0) No op\n";
   print STDERR "  1) Send BREAK \n";
   print STDERR "  2) forced exit\n";
 
@@ -112,7 +64,7 @@ sub Inthandler {
   if ( $ans == 1 ){
     my $ok = $telnet->break;
     print STDERR "send break($ok)!\n";
-  } else {
+  } elsif ( $ans == 2 ) {
     die "Forced Exit";
   }
 }
@@ -127,10 +79,24 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
   if ( /^\!\!/ ){
     if ( $_ eq '!!prev' ){
       exregex($rtns[$cnt-1],$target,1);
+    } elsif( /^\!\!reset/ ) {
+      $stxt->read;
+      @cmds = @{ $stxt->{'cmds'} };
+      @rtns = @{ $stxt->{'rtns'} };
+#     undef $keyboad;
+#     $keyboad = new Term::ReadLine 'my_term';
+      $cnt=0;
+      $keyboad->addhistory($cmds[$cnt]);
     } elsif( /^\!\![0-9]+/ ) {
       s/^\!\!//;
+      s/[\r\n]//g;
       $cnt = $_;
       $keyboad->addhistory($cmds[$cnt]);
+    } elsif( /^\!\!/ ) {
+      my $i=0;
+      for ( @cmds ){
+        printf "!!%2d  %s\n",$i++,$_;
+      }
     }
   } else {
     my @result = $telnet->cmd($_);

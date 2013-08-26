@@ -1,0 +1,48 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID' )}
+
+bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
+	/dev_db/wksp/userbackup
+DIRS
+))}
+bkDir=${bkDir:-$( Input  'Backup Target Directory' )}
+bkFil=${bkFil:-$( Input  'Backup File Name' "${orasid}_3_imported.tar.Z" )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ ps -ef | grep ora$orasid | grep ora_
+$ ps -ef | grep ora$orasid | grep ora_ | wc -l
+	0
+# Backup Target Directory
+$ cd $bkDir
+$ pwd
+	$bkDir
+
+$ cd ..
+$ pwd
+	${bkDir%/*}
+
+$ ls -l $bkRepo
+
+$ df -g $bkRepo
+
+$ du -sg $bkRepo
+
+$ date
+$ tar cf - ${bkDir##*/} |
+> compress > $bkRepo/${bkFil}; date
+
+$ ls -l $bkRepo
+
+$ df -g $bkRepo
+
+$ du -sg $bkRepo
+
+
+EOF

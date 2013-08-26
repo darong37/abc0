@@ -1,0 +1,30 @@
+#!/bin/sh -u
+
+homedr=/u10/u058/orau058
+
+orasid='u058'
+echo "orasid:'${orasid}'"
+
+### Sheet
+. $APPLDIR/sheets/00.sheet
+
+usedb=${usedb:-$( Ask 'Do you want to use DB ?' )}
+if [[ $usedb = 'y' ]];then
+  lsnr=u058
+  oraver=9i
+  orahom=/u10/u058/oracle/u058db/9.2.0
+  oradat=/u11/u058/oracle/u058data
+  alertlog=/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+  cat >> ${stxt} <<EOS
+$ . $orasid.env
+> 1
+
+$ echo \$ORACLE_SID
+	$orasid
+
+$ echo \$ORACLE_HOME
+	$orahom
+
+EOS
+fi
+

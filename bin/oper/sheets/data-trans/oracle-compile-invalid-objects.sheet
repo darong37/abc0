@@ -18,10 +18,10 @@ $ # Passwordを元に戻す
 $ sqlplus / as sysdba
 
 # 無効な オブジェクトを確認する
-> select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
 > set line 200
-> set pazesize 100
+> set pagesize 1000
 > col object_name FOR A30
+> select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
 > select OBJECT_TYPE,OWNER,OBJECT_NAME,STATUS from all_objects where status <> 'VALID' order by OBJECT_TYPE,OWNER,OBJECT_NAME;
 
 

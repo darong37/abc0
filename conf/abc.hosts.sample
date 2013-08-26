@@ -1,5 +1,5 @@
-#cat	host            	user    	password            	desc
-OS  	host-name       	root    	********            	開発マシン
-DB  	sid@host-name   	sys     	********            	sys@開発DB
-DB  	sid@host-name   	system  	********            	system@開発DB
-
+#category	group       	target              	user    	password            	desc
+OS       	Develop     	host-name           	root    	********            	開発マシン
+OS       	Prod        	host-name           	root    	********            	本番マシン
+DB       	Dev-Server   	sid-1               	sys     	********            	sys@開発DB
+DB       	Prd-Server   	sid-2               	system  	********            	system@開発DB

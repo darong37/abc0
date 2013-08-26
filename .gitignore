@@ -1,3 +1,4 @@
+.cpan
 .gem
 .sys
 .usrlocal
@@ -12,5 +13,6 @@ zip
 .lesshst
 .pry_history
 .coffee_history
+_recycle
 
 *.log

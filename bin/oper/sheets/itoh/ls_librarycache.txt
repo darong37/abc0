@@ -1,0 +1,25 @@
+set feed off
+set pause off
+set trimout on
+set linesize 240
+set pagesize 9999
+
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') DATE_TIME,
+    namespace,
+    gets,
+    gethits,
+    gethitratio,
+    pins,
+    pinhits,
+    pinhitratio,
+    reloads,
+    invalidations,
+    dlm_lock_requests,
+    dlm_pin_requests,
+    dlm_pin_releases,
+    dlm_invalidation_requests,
+    dlm_invalidations
+from
+    v$librarycache
+/

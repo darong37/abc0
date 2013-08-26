@@ -1,0 +1,27 @@
+set pages 9999
+set lines 250
+
+col begin_time for a20
+col end_time   for a20
+
+select
+    to_char(begin_time,'YYYY/MM/DD HH24:MI:SS') begin_time,
+    to_char(end_time,'YYYY/MM/DD HH24:MI:SS') end_time,
+    undotsn,
+    undoblks,
+    txncount,
+    MAXQUERYLEN,
+    MAXCONCURRENCY,
+    UNXPSTEALCNT,
+    UNXPBLKRELCNT,
+    UNXPBLKREUCNT,
+    EXPSTEALCNT,
+    EXPBLKRELCNT,
+    EXPBLKREUCNT,
+    SSOLDERRCNT,
+    NOSPACEERRCNT
+from
+    v$undostat
+order by
+    begin_time
+/

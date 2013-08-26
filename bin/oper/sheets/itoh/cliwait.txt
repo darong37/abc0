@@ -1,0 +1,113 @@
+set feed off
+set pause off
+set linesize 250
+set pagesize 9999
+set trimout on
+set trimspool on
+set arraysize 100
+set long 7000
+
+col sid         for 99999
+col client      for a49
+col date_time   for a19
+col event       for a24
+col command     for a12
+col "C-PID"     for a10
+col "S-PID"     for a10
+col lockwait    for a10
+col machine     for a10
+col "WAIT(s)"   for 99999
+col state       for a18
+
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') DATE_TIME,
+    a.sid,
+    substrb(a.event,1,40) EVENT,
+    a.seconds_in_wait "WAIT(s)",
+    a.wait_time,
+    a.p1,
+    a.p1raw,
+    a.p2,
+    a.p3,
+    b.machine,
+    substrb(decode(b.command, 0, b.command||':NONE',
+                              1, b.command||':CREATE TABLE',
+                              2, b.command||':INSERT',
+                              3, b.command||':SELECT',
+                              4, b.command||':CREATE CLUSTER',
+                              5, b.command||':ALTER CLUSTER',
+                              6, b.command||':UPDATE',
+                              7, b.command||':DELETE',
+                              8, b.command||':DROP CLUSTER',
+                              9, b.command||':CREATE INDEX',
+                             10, b.command||':DROP INDEX',
+                             11, b.command||':ALTER INDEX',
+                             12, b.command||':DROP TABLE',
+                             13, b.command||':UNDEFINED',
+                             14, b.command||':UNDEFINED',
+                             15, b.command||':ALTER TABLE',
+                             16, b.command||':UNDEFINED',
+                             17, b.command||':GRANT',
+                             18, b.command||':REVOKE',
+                             19, b.command||':CREATE SYNONYM',
+                             20, b.command||':DROP SYNONYM',
+                             21, b.command||':CREATE VIEW',
+                             22, b.command||':DROP VIEW',
+                             23, b.command||':UNDEFINED',
+                             24, b.command||':UNDEFINED',
+                             25, b.command||':UNDEFINED',
+                             26, b.command||':LOCK TABLE',
+                             27, b.command||':NO OPERATION',
+                             28, b.command||':RENAME',
+                             29, b.command||':COMMENT',
+                             30, b.command||':AUDIT',
+                             31, b.command||':NO AUDIT',
+                             32, b.command||':CREATE EXTERNAL DATABASE',
+                             33, b.command||':DROP EXTERNAL DATABASE',
+                             34, b.command||':CREATE DATABASE',
+                             35, b.command||':ALTER DATABASE',
+                             36, b.command||':CREATE ROLLBACK SEGMENT',
+                             37, b.command||':ALTER ROLLBACK SEGMENT',
+                             38, b.command||':DROP ROLLBACK SEGMENT',
+                             39, b.command||':CREATE TABLESPACE',
+                             40, b.command||':ALTER TABLESPACE',
+                             41, b.command||':DROP TABLESPACE',
+                             42, b.command||':ALTER SESSION',
+                             43, b.command||':ALTER USER',
+                             44, b.command||':COMMIT',
+                             45, b.command||':ROLLBACK',
+                             46, b.command||':SAVEPOINT',
+                             'UNKNOWN')
+                  ,1,12) command,
+--    substrb(b.program||','||b.module,1,30) client,
+    decode(
+           nvl(b.program,0),
+               nvl(b.module,0),
+           b.program,
+               nvl2(substrb(b.program,-23),
+           nvl2(substrb(b.module,-23),
+               substrb(b.program,-23)||','||substrb(b.module,-23),
+           nvl(substrb(b.program,-23-length(b.module)),b.program)||','||b.module),
+               b.program||','||nvl(substrb(b.module,-23-length(b.program)),b.module)
+              )
+           ) client,
+    b.process "C-PID",
+    c.spid "S-PID",
+    b.sql_hash_value SQL_HASH_VALUE,
+    a.state STATE
+from
+    v$session_wait a,
+    v$session b,
+    v$process c
+where
+        a.event != 'rdbms ipc message'
+    and a.event not like 'SQL*Net%'
+    and a.event != 'queue messages'
+    and a.event != 'pipe get'
+    and a.sid = b.sid
+    and b.paddr = c.addr
+order by
+    a.event,
+    a.p1,
+    a.sid
+/

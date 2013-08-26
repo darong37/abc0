@@ -1,0 +1,68 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input 'Oracle SID' )}
+lsnr=${lsnr:-$(     Input 'Listener Name' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	0
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+	{:}
+	Oracle Enterprise Manager 11g is not running.
+
+$ ls -l ${orasid}_start_db.sh
+
+$ cat ${orasid}_start_db.sh
+	#!/usr/bin/ksh
+
+	APPLNAM=\$( basename \$0 .sh )
+	BASEDIR=\$( cd dirname \$0;pwd )
+
+	mkdir -p \$BASEDIR/logs
+	now=\$( date +'%Y%m%d_%H%M%S' )
+
+	LOGFILE=\$BASEDIR/logs/\${APPLNAM}_\${now}.log
+	LISTENER=${lsnr}
+
+	cd \$APPLNAM
+	(
+	echo "##############################################"
+	echo "# Start Script "`date`
+	echo "##############################################"
+	time sqlplus -S /nolog <<-EOF
+		set echo off
+		connect / as SYSDBA
+		!echo "### Starting Oracle database "`date`
+		startup
+		exit
+		EOF
+	echo "### \$ORACLE_SID: Starting Oracle Net Listener "`date`
+	\$ORACLE_HOME/bin/lsnrctl start \${LISTENER}
+	echo "### \$ORACLE_SID: Starting Enterprise Manager "`date`
+	\$ORACLE_HOME/bin/emctl start dbconsole
+	echo "##############################################"
+	echo "# End Script "`date`
+	echo "# Log File: \$BASEDIR/logs/\${APPLNAM}_\${now}.log"
+	echo "##############################################"
+	) 2>&1 | tee -a \$LOGFILE
+
+$ ./${orasid}_start_db.sh
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+
+$ ps -ef | grep $user | grep ora
+
+
+EOF

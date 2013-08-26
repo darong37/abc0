@@ -4,7 +4,7 @@
 typeset ousr="ora${user}"
 typeset pswd=${pswd:-$( Input 'oracle system password' )}
 typeset work=${work:-$( Input 'work directory' )}
-
+typeset tbls=${tbls:-$( Input 'export tables' )}
 
 
 ### Sheet
@@ -25,10 +25,10 @@ $ pwd
 	$work
 
 $ bdf .
-$ exp \\"system/${pswd} as sysdba\\" file=$work/${user}_full.dmp log=$work/${user}_full.log full=y buffer=10485760 statistics=none ; date
+$ exp system/${pswd} file=$work/${user}_tbls.dmp log=$work/${user}_tbls.log tables=${tbls} ; date
 
-$ ls -l ${user}_full.*
-$ cksum ${user}_full.dmp
+$ ls -l ${user}_tbls.*
+$ cksum ${user}_tbls.dmp
 $ bdf .
 
 EOF

@@ -1,7 +1,7 @@
 #!/bin/sh -u
 
 ### Local Parameter
-sid=${sid:-$( Input 'Oracle SID' )}
+orasid=${orasid:-$( Input 'Oracle SID' )}
 sql=${sql:-$( Input 'SQL File(no .*)' )}
 
 
@@ -11,32 +11,40 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ . ${sid}.env
-> 1
+$ echo \$ORACLE_SID
+	$orasid
 
-#
-$ pwd
-$ ls -l ${sql}*
-	{*} ${sql}-1.sql
-	{*} ${sql}-2.sql
+$ echo \$ORACLE_HOME
+	$orahom
 
-$ ps -ef | grep $user | grep ora
+$ ls -l ${sql}.sql
+	{*} ${sql}.sql
+
+$ cat ${sql}.sql
+
+$ ps -ef | grep $user | grep ora_
+
+$ ls -l $oradat
 
 $ df -m .
+
 
 $ sqlplus / as sysdba
 > select INSTANCE_NAME from v\$instance;
 	INSTANCE_NAME
 	----------------
-	$sid
+	$orasid
 > set line 1000
+> set pagesize 1000
 > spool ${sql}.log
-> @${sql}-1.sql
-> @${sql}-2.sql
+> @${sql}.sql
 > spool off
 > exit
 
-$ 
+$ ls -l ${sql}.log
+
+$ ls -l $oradat
+
 $ df -m .
 
 EOF

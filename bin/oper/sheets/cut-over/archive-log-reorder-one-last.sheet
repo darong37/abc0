@@ -1,0 +1,68 @@
+#!/bin/sh -u
+
+### Local Parameter
+#rcyc=${rcyc:-$( Input 'Recycle Folder' )}
+
+rehost=mecerpd0111
+recycle=/u00/arch_bk
+remarcbk=/prod_db/arch_bk
+
+sid1=p301
+rcyc1=${recycle}/${sid1}
+target1=/u02/${sid1}/oracle/arch
+remabk1=${remarcbk}/${sid1}
+arclst1=/tmp/${sid1}_${rehost}.lst
+
+sid2=p358
+rcyc2=${recycle}/${sid2}
+target2=/u04/${sid2}/oracle/arch
+remabk2=${remarcbk}/${sid2}
+arclst2=/tmp/${sid2}_${rehost}.lst
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title} - ${sid1}
+######################################################################
+# 確認
+$ cd ${rcyc1}
+$ pwd
+$ ls -l
+$ ls -l | cksum
+$ remsh ${rehost} ls -ltr ${remabk1} | cksum
+
+#=> 一致することを確認
+
+# 削除
+$ cd ..
+$ pwd
+	${rcyc1%/*}
+$ ls -l
+$ rm -r ${sid1}
+
+$ 
+
+
+######################################################################
+# 02. ${title} - ${sid2}
+######################################################################
+# 確認
+$ cd ${rcyc2}
+$ pwd
+$ ls -l
+$ ls -l | cksum
+$ remsh ${rehost} ls -ltr ${remabk1} | cksum
+
+#=> 一致することを確認
+
+# 削除
+$ cd ..
+$ pwd
+	${rcyc2%/*}
+$ ls -l
+$ rm -r ${sid2}
+
+$
+
+EOF

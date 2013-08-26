@@ -1,0 +1,43 @@
+set feed off
+set pause off
+set trimout on
+set linesize 170
+set pagesize 50000
+set trimspool on
+
+col date_time                    for a20
+col request_id                   for 99999999
+col user_name                    for a12
+col phase                        for a10
+col user_concurrent_program_name for a70
+col request_date                 for a20
+col requested_start_date         for a20
+col actual_start_date            for a20
+col spid                         for a8
+col osid                         for a8
+
+select
+    to_char(sysdate,'YYYY/MM/DD HH24:MI:SS') date_time,
+    a.request_id request_id,
+    b.user_name user_name,
+    c.user_concurrent_program_name user_concurrent_program_name,
+    decode(a.phase_code,'R','RUNNNING','P','PENDING','I','INACTIVE') phase,
+    to_char(a.request_date,'YYYY/MM/DD HH24:MI:SS') request_date,
+    to_char(a.requested_start_date,'YYYY/MM/DD HH24:MI:SS') requested_start_date,
+    to_char(a.actual_start_date,'YYYY/MM/DD HH24:MI:SS') actual_start_date,
+    a.oracle_process_id spid,
+    a.os_process_id osid
+from
+    applsys.fnd_concurrent_requests a,
+    applsys.fnd_user b,
+    applsys.fnd_concurrent_programs_tl c
+where
+        a.requested_by = b.user_id
+    and a.concurrent_program_id = c.concurrent_program_id
+    and c.language = 'JA'
+    and b.user_name != 'SYSADMIN'
+    and (a.phase_code = 'R' or a.phase_code = 'P')
+order by
+    a.phase_code,
+    a.requested_start_date
+/

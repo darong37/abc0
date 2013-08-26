@@ -1,0 +1,45 @@
+set feed off
+set pause off
+set trimout on
+set pages 9999
+set linesize 170
+
+col lmode for a24
+col request for a12
+col mark1 for a2
+col message for a24
+col "WAIT(Min)" for 999990.99
+
+select
+    addr,
+    kaddr,
+    sid,
+    decode(type,'TX','*','TM','+') mark1,
+    type,
+    id1,
+    id2,
+    decode(lmode,'0','NONE',
+                 '1','Null',
+                 '2','SS:gyou kyouyuu',
+                 '3','SX:gyou haita',
+                 '4','S:kyouyuu',
+                 '5','SSX:kyouyuu/gyou haita',
+                 '6','X:haita',
+                 lmode) lmode,
+    decode(request,'0','NONE',
+                 '1','Null',
+                 '2','SS:gyou kyouyuu',
+                 '3','SX:gyou haita',
+                 '4','S:kyouyuu',
+                 '5','SSX:kyouyuu/gyou haita',
+                 '6','X:haita',
+                 request) request,
+    decode(request,'6',id1||':exclusive! Wait for some other transactions!') message,
+    ctime/60 "WAIT(Min)",
+    block
+from
+    v$lock
+where
+    type != 'MR' -- except Media Ricavery
+--    and type != 'TO' -- except
+/

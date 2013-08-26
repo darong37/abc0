@@ -1,49 +1,108 @@
 #!/usr/local/ruby/bin/ruby
+require 'rubygems'
+require 'active_support/core_ext'
 require 'readline'
 require 'net/telnet'
+require 'io/console'
 
-host,user,psw = ARGV
+require 'pry'
+
+#
+class Term < Net::Telnet
+  def cmds(options)
+    if options.kind_of?(Hash)
+      if block_given? 
+        login(options){ |c| yield c }
+      else
+        login(options)
+      end
+    else
+      if block_given? 
+        cmd(options){ |c| yield c }
+      else
+        cmd(options)
+      end
+    end
+  end
+end
+
+class Keyboad
+  attr_accessor :sfil, :cmds, :rtns
+  def initialize
+    @sfil = ''
+    @cmds = []
+    @rtns = []
+  end
+  
+  def read
+    src = File.open(@sfil).read
+    src.gsub!(/^[ \t\n]+/,'')            # å…ˆé ­ã‚¹ãƒšãƒ¼ã‚¹
+    src.gsub!(/[ \t\n]+$/,'')            # çµ‚ç«¯ã‚¹ãƒšãƒ¼ã‚¹
+    src = "\n#{src}\n"                   # å…ˆé ­çµ‚ç«¯æ”¹è¡Œä»˜åŠ 
+    src.gsub!(/(?<=\n)###+\n/,'')
+    src.gsub!(/(?<=\n)\s*\n/,'')
+    src.gsub!(/(?<=\n)[#>\$]\s*\n/,'')
+    src.gsub!(/^\n/,'')                  # å…ˆé ­æ”¹è¡Œå‰Šé™¤
+    src.gsub!(/\n$/,'')                  # çµ‚ç«¯æ”¹è¡Œå‰Šé™¤
+#   src.gsub!(/(?<=\n)([#>\$])/,"\n\\1")
+    src.gsub!(/(?<=\n)([#>\$])/){"\n#{$1}"}
+    
+#   print "'#{src}'\n"
+    for blk in src.split(/\n\n/)
+      if blk =~ /^#\@/
+        host = blk.scan(/^#\@host: (.+)\s*$/)[0] if blk =~ /^#\@host: /
+        user = blk.scan(/^#\@user: (.+)\s*$/)[0] if blk =~ /^#\@user: /
+        
+      end
+    end
+  end
+end
+
+
+stxt = Keyboad.new
+
+#stxt.file = '/c/Users/JKK0544/.abc/logs/oper/20130813/20130813-001_oracle-check-tablespaces-size_orae058@mecerp3x0111.txt'
+stxt.sfil = 'c:\Users\JKK0544\.abc\logs\oper\20130813\20130813-001_oracle-check-tablespaces-size_orae058@mecerp3x0111.txt'
+stxt.read
+
+exit
+
+#
+host,user,pswd = ARGV
 
 host ||= 'mecerp3x0111'
 user ||= 'root'
 
-if psw.blank? then
-  psw = STDIN.noecho(&:gets)
+if pswd.blank? then
+  pswd = STDIN.noecho(&:gets)
 end
 
-# ƒŠƒ‚[ƒgƒzƒXƒg
-# ƒ^ƒCƒ€ƒAƒEƒg‚Í 10 •b
-telnet = Net::Telnet.new(
+
+# ãƒªãƒ¢ãƒ¼ãƒˆãƒ›ã‚¹ãƒˆ
+# ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã¯ 3 ç§’
+telnet = Term.new(
   "Host"       => host,
   "Prompt"     => /[$%#>]\z/n,
-  "Output_log" => nil
+  "Output_log" => 'telnet.log',
   "Timeout"    => 3
 )
 
-# ƒƒOƒCƒ“‚µAƒvƒƒ“ƒvƒg‚ªo‚é‚Ü‚Å‘Ò‚¿‡‚í‚¹‚é
-telnet.login(
-  root, 
-  psw
-) { |c| print c }
+# ãƒ­ã‚°ã‚¤ãƒ³ã—ã€ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆãŒå‡ºã‚‹ã¾ã§å¾…ã¡åˆã‚ã›ã‚‹
+cmd = { "Name"=>user, "Password"=>pswd }
 
+# REPL
+begin
+  telnet.cmds(cmd) { |c|
+    print c
+  }
+  STDOUT.flush  # <- ã“ã‚ŒãŒãªã„ã¨ã“ã“ã¾ã§å‡¦ç†ãŒæ¥ã¦ã‚‹ã“ã¨ãŒã‚ã‹ã‚Šã«ãã„
+rescue
+  STDOUT.flush
+  prmpt = "rescue> "
+else
+  prmpt = " "
+end while cmd = Readline.readline(prmpt, true)
 
-
-
-
-
-# ls ƒRƒ}ƒ“ƒh‚ğÀs‚µAÀsŒãAƒvƒƒ“ƒvƒg‚ªo‚é‚Ü‚Å‘Ò‚¿‡‚í‚¹‚é
-telnet.cmd("ls") {|c|
-  print c
-}
-
-# sleep ‚Å 5 •b
-telnet.cmd("sleep 5 && echo foobar &") {|c| print c}
-
-STDOUT.flush # <- ‚±‚ê‚ª‚È‚¢‚Æ‚±‚±‚Ü‚Åˆ—‚ª—ˆ‚Ä‚é‚±‚Æ‚ª‚í‚©‚è‚É‚­‚¢
-
-# ‘O‚ÌƒRƒ}ƒ“ƒh‚Ìo—Í‚ğ‘Ò‚¿‡‚í‚¹‚é
-telnet.waitfor(/foobar\Z/) {|c| print c}
-
-# ƒƒOƒCƒ“ƒZƒbƒVƒ‡ƒ“‚ÌI—¹
-telnet.cmd("exit") {|c| print c}
+# ãƒ­ã‚°ã‚¤ãƒ³ã‚»ãƒƒã‚·ãƒ§ãƒ³ã®çµ‚äº†
 telnet.close
+
