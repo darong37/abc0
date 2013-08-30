@@ -19,6 +19,7 @@ export PS4='        +$LINENO	'
 
 ###
 cd $APPLDIR
+. $APPLDIR/.sheet
 
 Hello
 {
@@ -36,7 +37,7 @@ Hello
   ##
   #  Arguments & Variables
   #
-  typeset key=${1:-$( SetKey )}
+  typeset key=${1:-${defkey:-$( SetKey )}}
   typeset host=${key#*@}
   typeset user=${key%@*}
   typeset _cdir=${2:-sheets}
@@ -83,20 +84,21 @@ Hello
         Echo "# Make"
         Make
       elif [[ "$_SUB" = 'b' ]];then
-        if [[ $_target = '' ]];then
+        if [[ "$_target" = '' ]];then
           Ls -r 'sheet'
         fi
         Echo "# Branch"
         Branch
-      elif [[ "$_SUB" = 'e' ]];then
-        break
-      elif [[ "$_SUB" = 'exit' ]];then
-        break
+      elif [[ "$_SUB" = 'c' ]];then
+        _target=''
       elif [[ "$_SUB" = 'l' ]];then
         Ls
-####
-      elif [[ $_SUB = '' ]];then
+      elif [[ "$_SUB" = '' ]];then
         Ls
+####
+      elif [[ "$_SUB" = 'exit' ]];then
+        Echo "defkey=$user@$host" > $APPLDIR/.sheet
+        break
       else
         cnt=0
         ERROFF
@@ -104,6 +106,12 @@ Hello
           typeset -i rtn=$?
           Echo
           Echo "--> $rtn"
+          #
+          rst="$( jobs )"
+          if [[ "$rst" != '' ]];then
+            Echo "# jobs"
+            Echo "$rst"
+          fi
         ERRON
       fi
     done

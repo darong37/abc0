@@ -126,7 +126,7 @@ Select () {
  
   local ans
   Echo  >&2
-  select ans in "${array[@]:-..}";do
+  select ans in "${array[@]}";do
     if [[ $REPLY = '!!'* ]];then
       local ans="${REPLY#!!}"
       if [[ $ans = '' ]];then
@@ -244,6 +244,7 @@ Set () {
   #
   host="${eles[2]}"
   user="${eles[3]}"
+  Echo "defkey=$user@$host" > $APPLDIR/.sheet
 }
 
 Ls () {
@@ -284,6 +285,9 @@ Ls () {
 
 Branch () {
   local sheet=${1:-${_target:-( Select 'sheet' $( Lsf ) )}}
+  if [[ "$sheet" = *'-[0-9][0-9].sheet' ]];then
+     sheet="${sheet%-[0-9][0-9].sheet}.sheet"
+  fi
   #
   local -i seqno=1
   local branch
@@ -304,17 +308,28 @@ Branch () {
 
 Tel () {
   local today=$( date +'%Y%m%d' )
+  local sheet=${1:-${_target:-$( Echo '01.sheet' )}}
+  local desc=${2:-$(  Input  'description'  )}
+
+  
+  Echo
+  Echo "Host  : $host"
+  Echo "User  : $user"
+  Echo "Sheet : $sheet"
+
   mkdir -p $LOGSDIR/oper/${today}
   mkdir -p $LOGSDIR/oper/${today}/logs
 
-  title='01'
+  title='Trial'
   stxt="$LOGSDIR/oper/${today}/_${user}@${host}.txt"
+  Echo "Stxt  : $stxt"
+  Echo
+
   cat > ${stxt} <<-EOF
-	#
 	#@host: ${host}
 	#@user: ${user}
-	#@log: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
-	#
+	#@logf: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
+	#@sheet: $PWD/${sheet}
 	EOF
   if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
     .       $APPLDIR/sheets/$user@$host.sheet
@@ -323,11 +338,15 @@ Tel () {
   else
     . $APPLDIR/sheets/00.sheet
   fi
-  . $APPLDIR/sheets/01.sheet
+  if [[ "$sheet" = '01.sheet' ]];then
+    . $APPLDIR/sheets/01.sheet
+  else
+    . $PWD/${sheet}
+  fi
   . $APPLDIR/sheets/99.sheet
 
   #
-  ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt )&
+  ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt  )&
 }
 
 Make () {
@@ -338,7 +357,6 @@ Make () {
   Echo "Host  : $host"
   Echo "User  : $user"
   Echo "Sheet : $sheet"
-  Echo
   
   local today=$( date +'%Y%m%d' )
   mkdir -p $LOGSDIR/oper/${today}
@@ -351,38 +369,37 @@ Make () {
   fi
   Echo "\n### Title: $title"
   ### 
-  typeset -i seqno=1
-  typeset hdr
-  printf -v 'hdr' '%08d-%03d' "${today}" $seqno
-  
-  while [ -f $LOGSDIR/oper/${today}/${hdr}* ];do
-    seqno=$(( $seqno + 1 ))
-    printf -v 'hdr' '%08d-%03d' "${today}" $seqno
-  done
-  
-  typeset stxt="$LOGSDIR/oper/${today}/${hdr}_${title}${desc}_${user}@${host}.txt"
-  if [[ ${title} = '01' ]];then
-    stxt="$LOGSDIR/oper/${today}/${desc}_${user}@${host}.txt"
-  fi
   ###
   (
     while (( 1==1 ));do
+      typeset -i seqno=1
+      typeset hdr
+      printf -v 'hdr' '%08d-%03d' "${today}" $seqno
+      
+      while [ -f $LOGSDIR/oper/${today}/${hdr}* ];do
+        seqno=$(( $seqno + 1 ))
+        printf -v 'hdr' '%08d-%03d' "${today}" $seqno
+      done
+      
+      typeset stxt="$LOGSDIR/oper/${today}/${hdr}_${desc}${title}_${user}@${host}.txt"
+      if [[ ${title} = '01' ]];then
+        stxt="$LOGSDIR/oper/${today}/${desc}_${user}@${host}.txt"
+      fi
+      Echo "Stxt  : $stxt"
       Echo
       if [[ ${title} = '01' ]];then
         cat > ${stxt} <<-EOF
-			#
 			#@host: ${host}
 			#@user: ${user}
-			#@log: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
-			#
+			#@logf: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
+			#@sheet: $PWD/${sheet}
 		EOF
       else
         cat > ${stxt} <<-EOF
-			#
 			#@host: ${host}
 			#@user: ${user}
-			#@log: $LOGSDIR/oper/${today}/logs/${hdr}_${title}${desc}_${user}@${host}.log
-			#
+			#@logf: $LOGSDIR/oper/${today}/logs/${hdr}_${desc}${title}_${user}@${host}.log
+			#@sheet: $PWD/${sheet}
 		EOF
       fi
       if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
@@ -404,7 +421,7 @@ Make () {
       while [[ $act = '' ]];do
         act=$( Select 'action' 're-create' 'rm' 'edit-sheet' 'edit-stxt' 'telnet' 'N/A' )
         if [[ "$act" = 'telnet' ]];then
-          ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt )&
+          ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt  )&
           act=''
         fi
         if [[ "$act" = 'edit-sheet' ]];then
@@ -421,6 +438,9 @@ Make () {
         eval ls -l '$stxt'
         break
       fi
+      if [[ "$act" = 're-create' ]];then
+        eval rm '$stxt'
+      fi
       if [[ "$act" = 'rm' ]];then
         eval rm '$stxt'
         break
@@ -434,7 +454,6 @@ Find () {
   keyword='^[\$>_] .*'"$keyword"
 
   find . -type f -name '*.sheet' | while read;do
-#   Echo "egrep '$keyword' $REPLY" >&2
     rst="$( egrep "$keyword" "$REPLY" )"
     if [[ $rst != '' ]];then
       Echo >&2
@@ -459,7 +478,7 @@ List () {
     while [[ $act = '' ]];do
       act=$( Select 'action' 'cat' 'rm' 'ls -l' 'telnet' 'noop' )
       if [[ "$act" = 'telnet' ]];then
-        ( /bin/mintty -t "${list##*/}"  telnet.pl $list )&
+        ( /bin/mintty -t "${list##*/}"  telnet.pl $list  )&
         act=''
       fi
     done
@@ -470,4 +489,16 @@ List () {
       eval $act '$list'
     fi
   fi
+}
+
+Macro () {
+  local macro=$1
+  . $APPLDIR/macro/${macro}.macro
+}
+
+Task () {
+  local task=${1:-$( Select 'task' $( Lsf *.task ) )}
+  
+  Echo "Task: $task"
+  . $task
 }

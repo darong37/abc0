@@ -1,0 +1,16 @@
+# 
+# オラクルDBを停止する
+#
+	Make oracle-shutdown.sheet  01-task
+	
+#
+# User back-up領域からリストアする
+# rootで実行すること
+#
+	user=root
+	Make oracle-restore-user-backup.sheet  01-task
+	
+#
+# オラクルDBを起動する
+#
+	Make oracle-startup.sheet  01-task

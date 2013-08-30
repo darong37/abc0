@@ -1,15 +1,10 @@
 #!/bin/sh -u
 
 ### Local Parameter
-orasid=${orasid:-$( Input  'Oracle SID' )}
-bkDir=${bkDir:-$(   Input  'Restore Target Directory' )}
 
-bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
-	/dev_db/wksp/userbackup
-DIRS
-))}
-bkFil=${bkFil:-$(   Input  'Restore File Name' )}
-
+#
+# root@?.sheet ‚Å’è‹`Ï‚Ý
+#
 
 ### Sheet
 cat >> ${stxt} <<EOF

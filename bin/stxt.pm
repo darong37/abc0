@@ -4,16 +4,20 @@ package Stxt;
 use strict;
 use warnings;
 
+# $DB::single = 1 if $cnt > 20;
 sub new {
   my $pkg = shift;
-  my $stxtFile =  shift;
+  my $stxtFile = shift;
   bless {
-    stxt => $stxtFile,
-    host => '',
-    user => '',
-    logf => '',
-    cmds => [],
-    rtns => [],
+    stxt  => $stxtFile,
+    host  => '',
+    user  => '',
+    logf  => '',
+    sheet => '',
+    cmds  => [],
+    rtns  => [],
+    cmts  => [],
+    nots  => [],
   },$pkg;
 }
 
@@ -31,62 +35,98 @@ sub read {
   $stxt =~ s/[ \t\n]+$//;        # 終端スペース
   $stxt = "\n$stxt\n";           # 先頭終端改行付加
 
-  $stxt =~ s/(?<=\n)###+\n//g;
   $stxt =~ s/(?<=\n)\s*\n//g;
-  $stxt =~ s/(?<=\n)[#>\$]\s*\n//g;
 
   $stxt =~ s/^\n//;              # 先頭改行削除
   $stxt =~ s/\n$//;              # 終端改行削除
 
-  $stxt =~ s/(?<=\n)([#>\$])/\n$1/g;
   #
   my $host;
   my $user;
   my $logf;
+  my $sheet;
 
   my @cmds;
   my @rtns;
+  my @cmts;
+  my @nots;
 
-  for my $blk (split /\n\n/,$stxt){
-    if ($blk =~ /^#\@/){
-      ( $host ) = $blk =~ /^#\@host: (.+)\s*$/ if $blk =~ /^#\@host: /;
-      ( $user ) = $blk =~ /^#\@user: (.+)\s*$/ if $blk =~ /^#\@user: /;
-      ( $logf ) = $blk =~ /^#\@logf?: (.+)\s*$/ if $blk =~ /^#\@logf?: /;
+  my $cmd='';
+  my $rtn='';
+  my $cmt='';
+  my $not='';
+  for (split /\n/,$stxt){
+    s/\r?$//;
+    
+    # skip
+    next if ( /^[>\$]?\s*$/ );
+    if ( /^#\@/ ){
+      ( $host )  = $_ =~ /^#\@host: (.+)\s*$/  if /^#\@host: /;
+      ( $user )  = $_ =~ /^#\@user: (.+)\s*$/  if /^#\@user: /;
+      ( $logf )  = $_ =~ /^#\@logf?: (.+)\s*$/ if /^#\@logf?: /;
+      ( $sheet ) = $_ =~ /^#\@sheet: (.+)\s*$/ if /^#\@sheet: /;
       next;
     }
-    # ?
-    if ($blk =~ /^#/){
-      next;
-    }
-
-    my $cmd = '';
-    my $rtn = '';
-    for my $lin (split /\n/,$blk){
-      if ( $lin =~ /^#/ ){
-        $cmd .= $lin;
-      } elsif ( $lin =~ /^[>\$] / ){
-        $lin =~ s/^[>\$] //;
-        $cmd .= $lin;
-      } elsif ( $lin =~ /^_ / ){
-        $lin =~ s/^_ //;
-        $cmd .= "\n";
-        $cmd .= $lin;
-      } elsif ( $lin =~ /^\t/ ){
-        $lin =~ s/^\t//;
-        $rtn .= "$lin\n";
-      } else {
-        die "unknown lin:'$lin'";
+    
+    # evaluate
+    if ( /^[>\$] / ) {
+      if ( $cmd ne '' ){
+        push @cmds,$cmd;
+        push @rtns,$rtn;
+        push @cmts,'';
+        push @nots,$not;
+        $cmd='';
+        $rtn='';
+        $not='';
       }
+      if ( $cmt ne '' ){
+        push @cmds,'##';
+        push @rtns,'';
+        push @cmts,$cmt;
+        push @nots,'';
+        $cmt='';
+      }
+      # Command
+      s/^[>\$] //g;
+      $cmd=$_;
+    } elsif ( /^_ / ){
+      s/^_ //;
+      $cmd .= "\n";
+      $cmd .= $_;
+    } elsif ( /^\t#!/ ){
+      $_ =~ s/^\t//;
+      $not .= "\n$_";
+    } elsif ( /^\t/ ){
+      $_ =~ s/^\t//;
+      $rtn .= "\n$_";
+    } elsif ( /^#/ ){
+      # Comment
+      $cmt .= "\n".$_;
+    } else {
+      die "unknown _:'$_'";
     }
+  }
+  if ( $cmd ne '' ){
     push @cmds,$cmd;
     push @rtns,$rtn;
+    push @cmts,'';
+    push @nots,$not;
+  }
+  if ( $cmt ne '' ){
+    push @cmds,'##';
+    push @rtns,'';
+    push @cmts,$cmt;
+    push @nots,'';
   }
   #
-  $self->{'host'} = $host;
-  $self->{'user'} = $user;
-  $self->{'logf'} = $logf;
+  $self->{'host'}  = $host;
+  $self->{'user'}  = $user;
+  $self->{'logf'}  = $logf;
+  $self->{'sheet'} = $sheet;
   
   @{ $self->{'cmds'} } = @cmds;
   @{ $self->{'rtns'} } = @rtns;
+  @{ $self->{'cmts'} } = @cmts;
+  @{ $self->{'nots'} } = @nots;
 }
 1;

@@ -1,0 +1,46 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$(     Input  'Oracle SID' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$( Macro sqlplus )
+
+#
+# •\—Ìˆæ‚ÌŽg—p—Ê
+#
+
+> select     ddf.TABLESPACE_NAME,
+>            ddf.BYTES,
+>            ddf.BYTES-DFS.BYTES "BYTES_USED",
+>            round(((ddf.BYTES-dfs.BYTES)/ddf.BYTES)*100,2) "PERCENT_USED",
+>            dfs.BYTES "BYTES_FREE",
+>            round((1-((ddf.BYTES-dfs.BYTES)/ddf.BYTES))*100,2) "PERCENT_FREE"
+> from (
+>    select  TABLESPACE_NAME,
+>                    sum(BYTES) bytes
+>    from dba_data_files
+>    group by TABLESPACE_NAME) ddf,
+>    (       
+>            select  TABLESPACE_NAME,
+>                            sum(BYTES) bytes
+>            from    dba_free_space
+>            group   by TABLESPACE_NAME
+>    ) dfs
+> where      ddf.TABLESPACE_NAME=dfs.TABLESPACE_NAME 
+> order      by ((ddf.BYTES-dfs.BYTES)/ddf.BYTES) desc;
+
+
+> select TABLESPACE_NAME,FILE_NAME,BYTES,MAXBYTES,AUTOEXTENSIBLE,INCREMENT_BY,USER_BYTES from DBA_DATA_FILES where TABLESPACE_NAME = 'XXWK';
+
+> exit
+
+$ 
+
+EOF

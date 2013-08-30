@@ -2,7 +2,7 @@
 
 ### Local Parameter
 orasid=${orasid:-$( Input 'Oracle SID' )}
-script=${script:-$( Input 'Script File %.sql' "create_tbsp_${orasid}_v1" )}
+script=${script:-$( Input 'Script File %.sql' "create_tbl_${orasid}_v1" )}
 
 
 ### Sheet
@@ -12,9 +12,11 @@ cat >> ${stxt} <<EOF
 # 01. ${title}
 ######################################################################
 $ lftp
-> user darong darong
+> user oper
 > bin
 > cd $today
+	250 Requested file action okay, completed.
+
 > dir
 > get ${script}.sql
 > bye
@@ -48,7 +50,7 @@ $ ls -l ${script}.log
 $ ls -l $oradat
 
 $ lftp
-> user darong darong
+> user oper
 > bin
 > cd $today
 > !ls -l

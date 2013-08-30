@@ -1,0 +1,50 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID'   )}
+border=${border:-$( Input  'Border-Line created data in users'  '01-AUG-13' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set sqln off
+> set line 200
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+
+> select * from V\$NLS_PARAMETERS
+> where parameter in ('NLS_DATE_FORMAT', 'NLS_CALENDAR');
+
+> select * from all_users order by created;
+
+> select tbl.owner
+> , tbl.table_name
+> , to_number(
+>     extractvalue(
+>       xmltype(
+>         dbms_xmlgen.getxml('select count(*) c from '|| tbl.owner || '.' || tbl.table_name)
+>       ),'/ROWSET/ROW/C'
+>     ) ) count
+> from all_tables tbl
+>  ,   all_users  usr
+> where tbl.owner = usr.username
+>  and  usr.created > to_date('$border')
+>  and  tbl.table_name not like 'BIN\$%'
+>  and (tbl.iot_type != 'IOT_OVERFLOW' or tbl.iot_type is null)
+> order by tbl.owner,tbl.table_name;
+
+
+> exit
+
+$ exit
+
+
+EOF

@@ -1,0 +1,68 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID'   )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set sqln off
+> set line 200
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+
+> set head off
+> col owner for a10
+
+#?
+# スプール出力する場合
+#
+> spool ${host}_all_tables.txt
+
+> select owner
+> , table_name
+> , to_number(
+>     extractvalue(
+>       xmltype(
+>         dbms_xmlgen.getxml('select count(*) c from '|| owner || '.' || table_name)
+>       ),'/ROWSET/ROW/C'
+>     ) ) count
+> from all_tables
+> where owner not in ('SYS','SYSTEM','OUTLN','DIP','ORACLE_OCM','DBSNMP','APPQOSSYS'
+>  ,'WMSYS','EXFSYS','CTXSYS','XDB','ANONYMOUS','XS\$NULL','ORDSYS','ORDDATA','MDSYS'
+>  ,'SI_INFORMTN_SCHEMA','ORDPLUGINS','OLAPSYS','MDDATA','SPATIAL_WFS_ADMIN_USR'
+>  ,'SPATIAL_CSW_ADMIN_USR','SYSMAN','MGMT_VIEW','FLOWS_FILES','APEX_PUBLIC_USER'
+>  ,'APEX_030200','OWBSYS','OWBSYS_AUDIT','SCOTT','PERFSTAT')
+>  and  table_name not like 'BIN\$%'
+>  and (iot_type != 'IOT_OVERFLOW' or iot_type is null)
+> order by owner,table_name;
+
+> spool off
+
+> exit
+
+#?
+# Local-PC に送信する場合のみ実行
+# 実行する場合はFTPサーバを起動しておくこと
+#
+$ lftp <<EOC
+_ user oper
+_ cd $today
+_ bin
+_ put ${host}_all_tables.txt
+_ bye
+_ EOC
+	226 Transfer complete.
+	#! 要確認
+$
+
+
+EOF

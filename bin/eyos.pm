@@ -3,9 +3,62 @@ use strict;
 use warnings;
 use Term::ANSIColor qw(:constants);
 use Term::ReadLine;
+use POSIX 'strftime';
 
 
 ###
+sub now {
+  return strftime "%Y/%m/%d %H:%M:%S", localtime;
+}
+sub input {
+  my $prompt = shift;
+  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
+  
+  my $stock = $/;
+  print "$prompt > ";
+  $/="\n";
+  chomp( my $rtn = <$in> );
+  $rtn =~ s/\r$//;
+
+  close $in;
+  $/=$stock;
+  return $rtn;
+}
+sub inputS {
+  my $prompt = shift;
+  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
+  
+  my $stock = $/;
+  print "$prompt <<CTRL-D\n";
+  $/="";
+  chomp( my $rtn = <$in> );
+  $rtn =~ s/\r$//;
+
+  close $in;
+  $/=$stock;
+  return $rtn;
+}
+sub ask {
+  my ( $prompt,$default ) = @_;
+  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
+  
+  my $stock = $/;
+  print "$prompt ?[(y)es/(n)o] > ";
+  $/="\n";
+  chomp( my $rtn = <$in> );
+  $rtn =~ s/\r$//;
+  $rtn = $default if $rtn eq '';
+
+  close $in;
+  $/=$stock;
+  
+  if ( $rtn =~ /^[yY]/ ){
+    return 'y';
+  } else {
+#   return 'n';
+    return '';
+  }
+}
 sub stock {
   my ( $n,@src ) = @_;
   my @rtn;
@@ -273,9 +326,9 @@ sub colorprint {
     $target = pop @eles;
     @eles = map { sprintf "%s%s%s",GREEN,$_,BLUE } @eles;
     
-    print BLUE;
+    print  BLUE;
     printf $fmt,@eles;
-    printf RESET;
+    print  RESET;
   } else {
     @eles = ( eval '$target =~ m{^'.'((?:.|\n)*?)'.$ptn.'((?:.|\n)*)'.'$}x' );
     
@@ -283,14 +336,14 @@ sub colorprint {
     $target  = pop @eles;
     unless ( @eles ){ @eles = ( '' ) }
     
-    print RED;
+    print  RED;
     printf '%s',$prev;
-    print RESET;
+    print  RESET;
 
     @eles = map { sprintf "%s%s%s",GREEN,$_,BLUE } @eles;
-    print BLUE;
+    print  BLUE;
     printf $fmt,@eles;
-    printf RESET;
+    print  RESET;
   }
   return $target;
 }
@@ -298,48 +351,32 @@ sub colorprint {
 ### termRepl
 my $timout = 2;
 sub termRepl {
-  my ( $host, $user, $pass, $logf ) = @_ ;
+  my ( $host, $user, $pass, $logh ) = @_ ;
   
   ### Telnet
-  open my $logh,"> $logf" or die "can not open $logf";
   my $telnet = new Net::Telnet(
     Timeout   => $timout,
-    Prompt    => '/\S*[\$>] $/', # プロンプト(正規表現)
+    Prompt    => '/.*[\$>:?#%] *$/', # プロンプト(正規表現)
     Errmode   => "return",
     Input_log => $logh,
   );
+  $telnet->max_buffer_length(10485760);
 
   ### ホストに接続してログインする
   $telnet->open($host);
   my @result = $telnet->login($user, $pass);
-  print @result;
-  print "\n";
-#  if ( @result ){
-#    $telnet->input_log;
-#    close $logh;
-#    
-#    open $logh,"< $logf" or die "can not open $logf";
-#    while(<$logh>){
-#      print $_;
-#    }
-#    close $logh;
-#    
-#    open my $logh,">> $logf" or die "can not open $logf";
-#    $telnet->input_log($logh);
-#  }
 
   ### 初期コマンドの実行
   my $init = <<'EOS';
-    export PS1='$ '
+    export PS1='% '
     TERM=vt100
     stty rows 50 columns 144
-    date
 EOS
 
   # 実行
   for ( split /\n/,$init ){
     s/^\s+//;
-    print "\$ $_\n";
+    print "\% $_\n";
     @result = $telnet->cmd($_);
     print @result;
   }
@@ -356,27 +393,22 @@ sub auxread {
   my @buffer=();
   my $ans='';
   do{
-#   print STDERR "\n-- aux --\n";
     $ans = 0 unless $ans =~ /^[0-9]+$/;
 
     my $n=0;
-    while( $n < $ans+2 ){
+    while( $n < $ans+1 ){
       while(my @buffer = $telnet->getlines(All => 0) ){
-        print STDERR @buffer if @buffer;
+        print @buffer if @buffer;
         $n=0;
       }
       sleep $timout;
       $n++;
     }
-    print STDERR "\n-- Time out!, <enter|integer>:repeat else:exit-aux  :";
-    $/ = "\n";
-    $ans = <STDIN>;          # 標準入力から１行分のデータを受け取る
-    $ans =~ s/[\r\n]//g;     # $in の末尾にある改行文字を削除
-    if ( $ans =~ /^[0-9]*$/ ){
-       printf("\033[%dA",2) ;    # カーソルを1行だけ上に移動
-       printf("\033[s");
-       printf("\033[u");
-    }
+    printf "\n\n\033[%dA\n",2;
+    $ans = input '-- Time out!, <enter|integer>:repeat else:exit-aux';
+                                  # 標準入力から１行分のデータを受け取る
+    printf "\033[%dA",2;          # カーソルを2行だけ上に移動
+    printf "\033[J\033[%dA\n",1;  # 位置の右以降をクリア、1行上移動し改行
   } while($ans =~ /^[0-9]*$/ );
   
   push @result,@buffer;

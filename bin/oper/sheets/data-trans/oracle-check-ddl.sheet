@@ -1,0 +1,38 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID' )}
+owner=${owner:-$(   Input  'Owner'       'SYS')}
+object=${object:-$( Input  'Object Name' 'AQ$_JMS_USERPROPARRAY' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
+> set sqln off
+> set line 200
+> set pagesize 1000
+> set long 50000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+
+> select object_type,owner,object_name from all_objects where object_name='$object' and owner='$owner';
+
+> select owner
+>  ,     object_type
+>  ,     object_name
+>  ,     dbms_metadata.get_ddl(object_type,object_name,owner) 
+> from   all_objects
+> where  object_name='$object' and owner='$owner';
+
+> exit
+
+$ exit
+
+
+EOF

@@ -7,10 +7,42 @@ use lib "$FindBin::Bin";
 use stxt;
 
 #
-my $stxt = Stxt -> new('/c/Users/JKK0544/.abc/logs/oper/20130812/20130812-002_oracle-check-tablespaces-size_orae058@mecerp3x0111.txt');
+sub expr {
+  my $str = shift;
+  $str =~ s/\n/\\n /g;
+  if ( length($str) > 120 ){
+    $str = substr($str,0,120);
+    $str .= ' ...';
+  }
+  return $str;
+}
+#
+my ( $fn ) = @ARGV;
+
+my $stxt = Stxt -> new($fn);
 
 $stxt -> read;
 
-my @cmds = @{ $stxt->{'cmds'} };
-print $cmds[0];
+my $host  = $stxt->{'host'};
+my $user  = $stxt->{'user'};
+my $logf  = $stxt->{'logf'};
+my $sheet = $stxt->{'sheet'};
 
+printf "Host : %s\n",$host;
+printf "User : %s\n",$user;
+printf "Logf : %s\n",$logf;
+printf "Sheet: %s\n",$sheet;
+
+my @cmts = @{ $stxt->{'cmts'} };
+my @cmds = @{ $stxt->{'cmds'} };
+my @rtns = @{ $stxt->{'rtns'} };
+my @nots = @{ $stxt->{'nots'} };
+
+printf "Array:\n";
+for( my $idx=0;$idx<@cmds;$idx++ ){
+  printf "  No.%d\n",$idx;
+  printf "      comment : '%s'\n",&expr($cmts[$idx]);
+  printf "      command : '%s'\n",&expr($cmds[$idx]);
+  printf "      returns : '%s'\n",&expr($rtns[$idx]);
+  printf "      notes   : '%s'\n",&expr($nots[$idx]);
+}

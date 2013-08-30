@@ -10,7 +10,7 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ ps -ef | grep $user | grep ora
+$ ps -ef | grep $user | grep ora_
 
 $ lsnrctl status ${lsnr}
 
@@ -36,6 +36,8 @@ $ lsnrctl status ${lsnr}
 	Services Summary...
 	  {:}
 	The command completed successfully
+	
+	#! リスナーが起動されていることを確認
                                                                                                                                                 
 $ emctl status dbconsole
 	emctl status dbconsole
@@ -45,9 +47,15 @@ $ emctl status dbconsole
 	Oracle Enterprise Manager {*} is running.
 	------------------------------------------------------------------
 	Logs are generated in directory {*}
+	
+	#! DBコンソールが動いていることを確認
 
 $ ls -l ${orasid}_stop_db.sh
+	#! 存在すること
 
+#?
+# オラクルDB停止
+#
 $ ./${orasid}_stop_db.sh
 
 $ lsnrctl status ${lsnr}
@@ -58,6 +66,7 @@ $ ps -ef | grep $user | grep ora_
 $ ps -ef | grep $user | grep ora_ | wc -l
 	0
 
+	#! すべて停止していることを確認
 $
 
 EOF

@@ -1,0 +1,17 @@
+if [[ "$oraver" = "9i" ]];then 
+  Echo '$ sqlplus "/ as sysdba"'
+else 
+  Echo '$ sqlplus / as sysdba'
+fi
+
+cat <<EOS
+> set sqln off
+> set line 200
+> set pagesize 1000
+> select INSTANCE_NAME from v\$instance;
+	INSTANCE_NAME
+	----------------
+	$orasid
+	
+
+EOS

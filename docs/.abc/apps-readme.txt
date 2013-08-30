@@ -28,24 +28,31 @@ FFFTP
 		http://sourceforge.jp/projects/ffftp/releases/
 
 
-Sakura Editor (SakuraDown)
+Sakura Editor
 	Download
-		http://sourceforge.net/projects/sakura-editor/?source=dlp (sakura down)
+		http://sourceforge.net/projects/sakura-editor/files/wiki/SakuraDown12f-15_forv2.zip/download(sakura down)
 
+
+NekosogiFtpd
+	Download
+		http://nekosogi.sytes.net/wiki/index.php?plugin=attach&refer=DownLoad&openfile=nekosogiftpd207.zip
+		
+		Plug-in
+			http://nekosogi.sytes.net/wiki/index.php?PlugIn#content_1_0
 
 TeraTermPro
 	download zip-version to ./teratermpro
 		http://sourceforge.jp/projects/ttssh2/releases/
 		
-アタッシェケース
-	download zip-version
-		http://hibara.org/software/attachecase/
+#アタッシェケース(不要)
+#	download zip-version
+#		http://hibara.org/software/attachecase/
+#		
 		
-		
-downmarker
-	download 
-		https://bitbucket.org/wcoenen/downmarker/downloads
-		
+#downmarker(不要)
+#	download 
+#		https://bitbucket.org/wcoenen/downmarker/downloads
+#		
 		
 pandoc
 	download msi

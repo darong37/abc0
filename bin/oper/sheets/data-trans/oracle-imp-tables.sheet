@@ -1,0 +1,38 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input 'Oracle SID' )}
+work=${work:-$(     Input 'Dump-File Location' '/dev_db/wksp/file' )}
+dmpfn=${dmpfn:-$(   Input 'Dump-File Name'     "${user#ora}_full.dmp" )}
+
+owner=${owner:-$(   Input 'Owner'              'APPLSYS' )}
+tables=${tables:-$( Input 'Import Tables'      'WF_CONTROL,WF_JAVA_DEFERRED' )}
+
+pswd=$( Spass -db $host $orasid system )
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ cd
+$ pwd
+	${homedr}
+
+$ which imp
+	${orahom}/bin/imp
+
+$
+$ ls -l $work
+$ ls -l $work/$dmpfn
+
+
+$ date
+$ imp \\"system/${pswd} as sysdba\\" \\
+> file=$work/$dmpfn log=${work}/${orasid}_imp_tables.log \\
+> fromuser=${owner} touser=${owner} tables=${tables} buffer=10485760 ignore=Y ; date
+
+
+
+EOF
