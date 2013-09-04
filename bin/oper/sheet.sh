@@ -37,10 +37,12 @@ Hello
   ##
   #  Arguments & Variables
   #
-  typeset key=${1:-${defkey:-$( SetKey )}}
-  typeset host=${key#*@}
-  typeset user=${key%@*}
+# typeset key=${1:-${defkey:-$( Key )}}
+# typeset host=${key#*@}
+# typeset user=${key%@*}
+  typeset _key=${1:-${_defkey:-$( Key )}}
   typeset _cdir=${2:-sheets}
+  typeset _asof=${3:-$( date +'%Y%m%d' )}
 
   ##
   # Procedures
@@ -52,37 +54,43 @@ Hello
     while(( cnt < 5 ));do
       typeset _prompt=${PWD#$APPLDIR/}
       Echo
-      Echo "# $user@$host"
+      Echo "# key   : $_key"
+      Echo "# asof  : $_asof"
       if [[ $_target != '' ]];then
-        Echo "# _target: $_target"
+        Echo "# target: $_target"
       fi
       Echo -n "$_prompt> "
       read _SUB
       Echo
       _SUB=$( echo $_SUB )
       
-      if [[ "$_SUB" = *.sheet ]] && [ -f $_SUB ];then
+      if [[ "$_SUB" = *.sheet ]] && [ -f "$_SUB" ];then
         Ls ${_SUB##*/}
 ####
       elif [[ "$_SUB" = '?' ]];then
-        Echo "# s: Set"
-        Echo "# m: Make"
+        Echo "# k: Key"
+        Echo "# a: Asof"
+        Echo "# t: Tel"
+        Echo "# s: Sheet"
         Echo "# b: Branch"
         Echo "# l: Ls"
         Echo "#  : Ls"
         Echo "# e: exit"
-      elif [[ "$_SUB" = 's' ]];then
-        Echo "# Set"
-        Set
+      elif [[ "$_SUB" = 'k' ]];then
+        Echo "# Key"
+        Key
+      elif [[ "$_SUB" = 'a' ]];then
+        Echo "# Asof"
+        Asof
       elif [[ "$_SUB" = 't' ]];then
         Echo "# Tel"
         Tel
-      elif [[ "$_SUB" = 'm' ]];then
+      elif [[ "$_SUB" = 's' ]];then
         if [[ $_target = '' ]];then
           Ls -r 'sheet'
         fi
-        Echo "# Make"
-        Make
+        Echo "# Sheet"
+        Sheet
       elif [[ "$_SUB" = 'b' ]];then
         if [[ "$_target" = '' ]];then
           Ls -r 'sheet'
@@ -97,7 +105,7 @@ Hello
         Ls
 ####
       elif [[ "$_SUB" = 'exit' ]];then
-        Echo "defkey=$user@$host" > $APPLDIR/.sheet
+        Echo "_defkey=$_key" > $APPLDIR/.sheet
         break
       else
         cnt=0

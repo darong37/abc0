@@ -1,0 +1,48 @@
+Oracle接続不可暫定対応(2012/12/12)
+
+【事象】
+  12/12の昼頃より、DBA権限のあるユーザ以外でOracleに接続できない。
+  接続時に、下記エラーが発生。
+    ORA-00257: アーカイブ・エラーです。解除されるまで内部接続のみにしてください。
+
+【原因】
+  アラートログファイルを確認すると、以下エラーが出ている。
+
+************************************************************************
+ARC0: Error 19809 Creating archive log file to 'E:\UATCPC\ORACLE\FAST_RECOVERY_AREA\DEVCPF\ARCHIVELOG\2012_12_12\O1_MF_1_3069_%U_.ARC'
+Wed Dec 12 14:23:10 2012
+Errors in file E:\UATCPC\ORACLE\diag\rdbms\devcpf\devcpf\trace\devcpf_arc2_5028.trc:
+ORA-19815: 警告: db_recovery_file_dest_size(32212254720バイト)は100.00%バイトが使用され、残り0バイトが使用可能です。
+************************************************************************
+You have following choices to free up space from recovery area:
+1. Consider changing RMAN RETENTION POLICY. If you are using Data Guard,
+   then consider changing RMAN ARCHIVELOG DELETION POLICY.
+2. Back up files to tertiary device such as tape using RMAN
+   BACKUP RECOVERY AREA command.
+3. Add disk space and increase db_recovery_file_dest_size parameter to
+   reflect the new space.
+4. Delete unnecessary files using RMAN DELETE command. If an operating
+   system command was used to delete files, then use RMAN CROSSCHECK and
+   DELETE EXPIRED commands.
+************************************************************************
+
+  
+  これより、フラッシュリカバリ領域(db_recovery_file_dest)がいっぱいになっていると判断。
+
+SQL> show parameter recovery
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+db_recovery_file_dest                string      E:\uatcpc\oracle\fast_recovery
+                                                 _area
+db_recovery_file_dest_size           big integer 30G
+recovery_parallelism                 integer     0
+
+
+【対応方法】
+  db_recovery_file_destのサイズ(db_recovery_file_dest_size)を拡張。
+  devcpfに合わせて、60GBとする。
+
+SQL> alter system set DB_RECOVERY_FILE_DEST_SIZE = 64424509440;
+
+  ⇒特に再起動も必要とせず解消。

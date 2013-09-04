@@ -1,0 +1,57 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.cron設定確認及び設定バックアップ
+######################################################################
+$ cd $crondir
+
+$ pwd
+	$crondir
+
+$ ls -l
+
+$ cat root
+
+$ crontab -l
+
+$ datim=\$(date '+%Y%m%d_%H%M%S')
+$ echo \$datim
+
+$ cp -p root root.\${datim}
+
+$ ls -l
+
+######################################################################
+# 02.cron設定変更
+######################################################################
+
+$ crontab -l > cron.${host}
+
+$ diff cron.${host} root.\${datim}
+	#! 同一であること
+
+$( Macro localftp put oper cron.${host} )
+	#! Localで修正する
+
+#
+# 修正後、再転送する
+#
+$( Macro localftp get oper cron.${host} )
+
+$ diff root.\${datim} cron.${host}
+	#! 修正部分を確認
+
+$
+$ crontab cron.${host}
+
+$ crontab -l
+
+$ diff root cron.${host}
+
+
+EOF

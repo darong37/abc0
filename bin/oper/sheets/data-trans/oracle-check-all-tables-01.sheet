@@ -9,23 +9,14 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set sqln off
-> set line 200
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-
-
+$(  Macro sqlplus )
 > set head off
 > col owner for a10
 
-#?
-# スプール出力する場合
 #
-> spool ${host}_all_tables.txt
+# スプール出力する
+#
+> spool ${_key}_tables.txt
 
 > select owner
 > , table_name
@@ -49,19 +40,11 @@ $ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlp
 
 > exit
 
-#?
-# Local-PC に送信する場合のみ実行
+#
+# Local-PC に送信する
 # 実行する場合はFTPサーバを起動しておくこと
 #
-$ lftp <<EOC
-_ user oper
-_ cd $today
-_ bin
-_ put ${host}_all_tables.txt
-_ bye
-_ EOC
-	226 Transfer complete.
-	#! 要確認
+$( Macro localftp put logs ${_key}_tables.txt )
 $
 
 

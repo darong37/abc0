@@ -1,5 +1,6 @@
 #!/bin/sh -u
 
+osname=AIX
 homedr=/u45/e058/orae058
 
 orasid='e058'

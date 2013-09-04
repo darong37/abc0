@@ -1,11 +1,10 @@
 #!/bin/sh -u
 
-osname=AIX
+osname=HP-UX
 homedr='/'
-crondir=/var/spool/cron/crontabs/
 
-_001_oradat=/u43/e001/oracle/db/apps_st/data/e001
-_058_oradat=/u45/e058/oracle/db/apps_st/data/e058
+_001_oradat=/u03/u001/oracle/u001data
+_058_oradat=/u11/u058/oracle/u058data
 
 useback=${useback:-$( Ask 'Do you want to Backup/Restore DB' )}
 if [[ "$useback" = 'y' ]];then

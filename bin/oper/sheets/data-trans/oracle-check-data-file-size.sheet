@@ -1,0 +1,40 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$(     Input  'Oracle SID' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$( Macro sqlplus )
+
+#
+# データファイルの使用量
+#
+
+> col TABLESPACE_NAME for a15
+> col FILE_NAME       for a45
+
+> select 
+>   TABLESPACE_NAME
+>  ,FILE_NAME
+>  ,BYTES/1024/1024           M_aloc
+>  ,MAXBYTES/1024/1024        M_max
+>  ,USER_BYTES/1024/1024      M_used
+>  ,USER_BYTES/1024/1024/1024 G_byte
+> from 
+>   dba_data_files 
+> order by 
+>   TABLESPACE_NAME
+>  ,FILE_NAME
+> ;
+
+> exit
+
+$ ls -l ${oradat}
+
+EOF

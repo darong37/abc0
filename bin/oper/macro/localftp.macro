@@ -1,0 +1,47 @@
+
+fcmd="${prms[0]}"    # get  | put
+oper="${prms[1]}"    # oper | logs | scripts
+flnm="${prms[2]}"
+
+if [[ "$oper" = 'oper' ]];then
+  rdir="$_asof"
+elif [[ "$oper" = 'logs' ]];then
+  rdir="$_asof/logs"
+  oper='oper'
+else
+  rdir="$oper"
+  oper='scripts'
+fi
+
+if [[ "$fcmd" = 'get' ]];then
+  prev="dir"
+  post="!ls -l"
+else
+  prev="!ls -l"
+  post="dir"
+fi
+
+
+cat <<EOS1
+$ ftp -niv ${localip}
+> user ${oper}
+> bin
+> cd ${rdir}
+> pwd
+EOS1
+
+typeset -i idx=2
+while [[ "${prms[$idx]:-}" != '' ]];do
+  flnm="${prms[$idx]}"
+  cat <<EOS2
+> ${prev} ${flnm}
+> ${fcmd} ${flnm}
+	226 Transfer complete.
+	#! —vŠm”F
+> ${post} ${flnm}
+EOS2
+
+  idx=idx+1
+done
+
+echo "> bye"

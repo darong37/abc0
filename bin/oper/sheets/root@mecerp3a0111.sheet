@@ -1,0 +1,10 @@
+#!/bin/sh -u
+
+osname=AIX
+homedr='/'
+crondir=/var/spool/cron/crontabs/
+
+### Sheet
+. $APPLDIR/sheets/00.sheet
+
+

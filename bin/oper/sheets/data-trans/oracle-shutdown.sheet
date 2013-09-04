@@ -11,6 +11,8 @@ cat >> ${stxt} <<EOF
 # 01. ${title}
 ######################################################################
 $ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	{([1-9][0-9]*)}
 
 $ lsnrctl status ${lsnr}
 
@@ -53,7 +55,7 @@ $ emctl status dbconsole
 $ ls -l ${orasid}_stop_db.sh
 	#! ‘¶Ý‚·‚é‚±‚Æ
 
-#?
+#
 # ƒIƒ‰ƒNƒ‹DB’âŽ~
 #
 $ ./${orasid}_stop_db.sh

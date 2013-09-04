@@ -1,10 +1,10 @@
 #!/bin/sh -u
 
 ### Local Parameter
-typeset orasid=${orasid:-$( Input 'Oracle SID' )}
-typeset pswd=${pswd:-$(     Input 'Oracle system password' )}
-typeset work=${work:-$(     Input 'Dump-File Location Directory' )}
-typeset dmpfn=${dmpfn:-$(   Input 'Dump-File Name' )}
+orasid=${orasid:-$( Input 'Oracle SID' )}
+pswd=$( Spass -db $host $orasid system )
+work=${work:-$(     Input 'Dump-File Location Directory' '/dev_db/wksp/file' )}
+dmpfn=${dmpfn:-$(   Input 'Dump-File Name(-.dmp)' "${orasid}_full" )}
 
 
 ### Sheet
@@ -28,19 +28,35 @@ $ which imp
 
 $
 $ ls -l $work
-$ ls -l $work/$dmpfn
-
+$ ls -l $work/${dmpfn}.dmp
+	{*} $work/${dmpfn}.dmp
+	#! ‘¶Ý‚·‚é‚±‚Æ‚ðŠm”F
 
 $ ls -l $oradat
 $ du -sg $oradat
 $ df -g .
 
 $ date
-$ imp \\"system/${pswd} as sysdba\\" file=$work/$dmpfn log=$work/${orasid}_imp_full.log full=y buffer=10485760 ; date
+$ ( imp \\"system/${pswd} as sysdba\\" \
+>     file=$work/${dmpfn}.dmp          \
+>     log=$work/${orasid}_imp_full.log \
+>     full=y buffer=10485760 > /tmp/tmp.log 2>&1
+>   date )&
+
+$ cd $work/
+
+$ ls -l $work/${orasid}_imp_full.log
+
+$ tail  $work/${orasid}_imp_full.log
 
 $ df -g .
 $ du -sg $oradat
 $ ls -l $oradat
+
+$ cd $work/
+$(  Macro localftp put logs ${orasid}_imp_full.log  )
+$ cd -
+
 
 
 EOF

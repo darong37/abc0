@@ -62,7 +62,7 @@ $ lsnrctl status ${lsnr}
 
 $ emctl status dbconsole
 
-$ ps -ef | grep $user | grep ora
+$ ps -ef | grep $user | grep ora_
 
 
 EOF

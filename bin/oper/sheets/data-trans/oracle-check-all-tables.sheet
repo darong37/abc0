@@ -44,7 +44,5 @@ $ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlp
 
 > exit
 
-$ exit
-
 
 EOF

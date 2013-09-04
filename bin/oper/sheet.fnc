@@ -43,9 +43,11 @@ Echo () {
     fi
     
     if (( $# > 0 ));then
+#     set -x
       printf -- "${@}"
+#     set +x
     else
-      printf ''
+      print ''
     fi
   fi
   
@@ -230,21 +232,20 @@ Lsf () {
   }
 }
 
-SetKey () {
-  local eles=( $( SelTbl $CONFDIR/abc.hosts 'OS' ) )
-  #
-  Echo "${eles[3]}@${eles[2]}"
-}
 
 ###
 ### Sheet
 ###
-Set () {
+Asof () {
+  local asof=$( Input 'as of date' )
+  _asof="$asof"
+}
+
+Key () {
   local eles=( $( SelTbl $CONFDIR/abc.hosts 'OS' ) )
   #
-  host="${eles[2]}"
-  user="${eles[3]}"
-  Echo "defkey=$user@$host" > $APPLDIR/.sheet
+  Echo "${eles[3]}@${eles[2]}"
+  _key="${eles[3]}@${eles[2]}"
 }
 
 Ls () {
@@ -285,6 +286,7 @@ Ls () {
 
 Branch () {
   local sheet=${1:-${_target:-( Select 'sheet' $( Lsf ) )}}
+  
   if [[ "$sheet" = *'-[0-9][0-9].sheet' ]];then
      sheet="${sheet%-[0-9][0-9].sheet}.sheet"
   fi
@@ -307,28 +309,34 @@ Branch () {
 }
 
 Tel () {
-  local today=$( date +'%Y%m%d' )
   local sheet=${1:-${_target:-$( Echo '01.sheet' )}}
-  local desc=${2:-$(  Input  'description'  )}
+  if [[ "$sheet" != *.sheet ]];then
+    sheet='01.sheet'
+  fi
+  
+  local key=${2:-${_key}}
+  local desc=${3:-$(  Input  'description'  )}
 
+  local host=${key#*@}
+  local user=${key%@*}
   
   Echo
+  Echo "Sheet : $sheet"
   Echo "Host  : $host"
   Echo "User  : $user"
-  Echo "Sheet : $sheet"
 
-  mkdir -p $LOGSDIR/oper/${today}
-  mkdir -p $LOGSDIR/oper/${today}/logs
+  mkdir -p $LOGSDIR/oper/${_asof}
+  mkdir -p $LOGSDIR/oper/${_asof}/logs
 
   title='Trial'
-  stxt="$LOGSDIR/oper/${today}/_${user}@${host}.txt"
+  stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.txt"
   Echo "Stxt  : $stxt"
   Echo
 
   cat > ${stxt} <<-EOF
 	#@host: ${host}
 	#@user: ${user}
-	#@logf: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
+	#@logf: $LOGSDIR/oper/${_asof}/logs/${desc}_${user}@${host}.log
 	#@sheet: $PWD/${sheet}
 	EOF
   if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
@@ -349,18 +357,21 @@ Tel () {
   ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt  )&
 }
 
-Make () {
+Sheet () {
   local sheet=${1:-${_target:-$( Select 'sheet' $( Lsf ) )}}
-  local desc=${2:-$(  Input  'description'  )}
+  local key=${2:-${_key}}
+  local desc=${3:-}
+
+  local host=${key#*@}
+  local user=${key%@*}
   
   Echo
+  Echo "Sheet : $sheet"
   Echo "Host  : $host"
   Echo "User  : $user"
-  Echo "Sheet : $sheet"
   
-  local today=$( date +'%Y%m%d' )
-  mkdir -p $LOGSDIR/oper/${today}
-  mkdir -p $LOGSDIR/oper/${today}/logs
+  mkdir -p $LOGSDIR/oper/${_asof}
+  mkdir -p $LOGSDIR/oper/${_asof}/logs
 
   title=${sheet%.sheet}
   title=${title##*/}
@@ -368,22 +379,23 @@ Make () {
     desc="-$desc"
   fi
   Echo "\n### Title: $title"
+  
   ### 
   ###
   (
     while (( 1==1 ));do
       typeset -i seqno=1
       typeset hdr
-      printf -v 'hdr' '%08d-%03d' "${today}" $seqno
+      printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
       
-      while [ -f $LOGSDIR/oper/${today}/${hdr}* ];do
+      while [ -f $LOGSDIR/oper/${_asof}/${hdr}* ];do
         seqno=$(( $seqno + 1 ))
-        printf -v 'hdr' '%08d-%03d' "${today}" $seqno
+        printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
       done
       
-      typeset stxt="$LOGSDIR/oper/${today}/${hdr}_${desc}${title}_${user}@${host}.txt"
+      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${desc}_${title}_${user}@${host}.txt"
       if [[ ${title} = '01' ]];then
-        stxt="$LOGSDIR/oper/${today}/${desc}_${user}@${host}.txt"
+        stxt="$LOGSDIR/oper/${_asof}/${desc}_${user}@${host}.txt"
       fi
       Echo "Stxt  : $stxt"
       Echo
@@ -391,24 +403,28 @@ Make () {
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${today}/logs/${desc}_${user}@${host}.log
+			#@logf: $LOGSDIR/oper/${_asof}/logs/${desc}_${user}@${host}.log
 			#@sheet: $PWD/${sheet}
 		EOF
       else
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${today}/logs/${hdr}_${desc}${title}_${user}@${host}.log
+			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${desc}${title}_${user}@${host}.log
 			#@sheet: $PWD/${sheet}
 		EOF
       fi
       if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
+        Echo "Inclue $user@$host.sheet"
         .       $APPLDIR/sheets/$user@$host.sheet
       elif [ -e $APPLDIR/sheets/$host.sheet ];then
+        Echo "Inclue $host.sheet"
         .       $APPLDIR/sheets/$host.sheet
       else
+        Echo "Inclue 00.sheet"
         . $APPLDIR/sheets/00.sheet
       fi
+      Echo "Inclue ${sheet}"
       . $PWD/${sheet}
       . $APPLDIR/sheets/99.sheet
 
@@ -465,10 +481,10 @@ Find () {
 }
 
 List () {
-  local today=$( date +'%Y%m%d' )
-  mkdir -p $LOGSDIR/oper/${today}
+  local _asof=$( date +'%Y%m%d' )
+  mkdir -p $LOGSDIR/oper/${_asof}
 
-  local list=${1:-"$LOGSDIR/oper/$today"}
+  local list=${1:-"$LOGSDIR/oper/$_asof"}
   
   mkdir -p  $list
   list=$( Select 'file/folder' $( Lsf $list ) )
@@ -493,12 +509,34 @@ List () {
 
 Macro () {
   local macro=$1
+  shift
+  prms=( "${@:-}" )
+  #
   . $APPLDIR/macro/${macro}.macro
 }
 
+Lab () {
+  typeset -i no=$1
+  typeset msg=${2:-}
+  if (( $bgn <= $no )) && (( $no <= $end ));then
+    Echo "Label $no"
+    Echo "$msg"
+    return 0
+  else
+    Echo "Label $no"
+    Echo "SKIP"
+    return 1
+  fi
+}
+
 Task () {
-  local task=${1:-$( Select 'task' $( Lsf *.task ) )}
+  local task=${1:-$( Select 'task' $( Lsf *.task ) ) }
+  typeset -i bgn=${2:-1}
+  typeset -i end=${3:-99}
   
   Echo "Task: $task"
-  . $task
+  ( 
+    desc="$( basename $task .task )"
+    . $task
+  )
 }

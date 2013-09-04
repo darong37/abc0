@@ -11,13 +11,7 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ lftp
-> user darong darong
-> bin
-> cd $today
-> dir
-> get ${script}.sql
-> bye
+$( Macro localftp get datatans ${script}.sql )
 
 $ ls -l ${script}.sql
 	{*} ${script}.sql
@@ -27,17 +21,11 @@ $ cat ${script}.sql
 $ ps -ef | grep $user | grep ora_
 $ ps -ef | grep $user | grep ora_ | wc -l
 	{([1-9][0-9]*)}
+	
+	#! ƒIƒ‰ƒNƒ‹DB‚ª‹N“®‚µ‚Ä‚¢‚é‚±‚Æ
 
-
-$ sqlplus / as sysdba
-> set sqln off
-> set line 1000
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-
+$( Macro sqlplus )
+> set echo on
 > spool ${script}.log
 > @${script}.sql
 > spool off
@@ -45,17 +33,9 @@ $ sqlplus / as sysdba
 
 $ ls -l ${script}.log
 
+$( Macro localftp put logs ${script}.log )
+
 $ ls -l $oradat
-
-$ lftp
-> user darong darong
-> bin
-> cd $today
-> !ls -l
-> put ${script}.log
-> bye
-
-$ exit
 
 
 EOF

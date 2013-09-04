@@ -356,7 +356,7 @@ sub termRepl {
   ### Telnet
   my $telnet = new Net::Telnet(
     Timeout   => $timout,
-    Prompt    => '/.*[\$>:?#%] *$/', # プロンプト(正規表現)
+    Prompt    => '/.*[\$>:?#%] +$/', # プロンプト(正規表現)
     Errmode   => "return",
     Input_log => $logh,
   );
@@ -399,6 +399,7 @@ sub auxread {
     while( $n < $ans+1 ){
       while(my @buffer = $telnet->getlines(All => 0) ){
         print @buffer if @buffer;
+        $ans = 0;
         $n=0;
       }
       sleep $timout;

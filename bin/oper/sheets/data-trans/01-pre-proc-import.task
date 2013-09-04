@@ -1,0 +1,58 @@
+#
+# インポート前作業
+#
+local key_old="orau001@MECERP3D"
+local key_new="orae001@mecerp3x0111"
+local keyroot="root@mecerp3x0111"
+
+Lab 1 '
+	##
+	##  u001 テーブルスペースの確認
+	##
+'	&&	Sheet  oracle-check-data-file-size.sheet  $key_old  $desc
+
+Lab 2 '
+	##
+	##  e001 作業前テーブルスペースの確認
+	##
+'	&&	Sheet  oracle-check-data-file-size.sheet  $key_new  $desc
+
+Lab 3 '
+	##
+	## s001 領域削除(確認)
+	##
+'	&&	Sheet  remove-directory.sheet             $keyroot  $desc
+
+Lab 4 '
+	##
+	## 表領域作成
+	##   事前にSQLを作成しておく
+	##
+'	&&	Sheet  oracle-create-tablespace.sheet     $key_new  $desc
+
+Lab 5 '
+	##
+	## OracleDB停止
+	##
+'	&&	Sheet  oracle-shutdown.sheet              $key_new  $desc
+
+Lab 6 '
+	##
+	## User Backup
+	##
+'	&&	Sheet  oracle-save-user-backup.sheet      $keyroot  $desc
+
+Lab 7 '
+	##
+	## OracleDB起動
+	##
+'	&&	Sheet  oracle-startup.sheet               $key_new  $desc
+
+Lab 8 '
+	##
+	## インポート
+	##
+'	&&	Sheet  oracle-imp-full.sheet              $key_new  $desc
+
+##
+##

@@ -96,6 +96,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
       $stxt->read;
       @cmds = @{ $stxt->{'cmds'} };
       @rtns = @{ $stxt->{'rtns'} };
+      @nots = @{ $stxt->{'nots'} };
 
       $cnt=0;
       $keyboad->addhistory($cmds[$cnt]);
@@ -159,7 +160,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
 
     # 
 #   s/^(#|-)+ *//;
-    if ( $_ eq $cmds[$cnt] ){
+    if ( $_ eq $cmds[$cnt] || $_ eq '#'.$cmds[$cnt] ){
       if ( $rtns[$cnt] ne '' ){
         exregex($rtns[$cnt],$target);
       } else {

@@ -1,6 +1,11 @@
 #!/bin/sh -u
 
 ### Local Parameter
+if [[ "$user" != 'root' ]];then
+  echo "user root used only"
+  exit 1
+fi
+
 orasid=${orasid:-$( Input  'Oracle SID' )}
 
 bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
@@ -8,7 +13,7 @@ bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
 DIRS
 ))}
 bkDir=${bkDir:-$( Input  'Backup Target Directory' )}
-bkFil=${bkFil:-$( Input  'Backup File Name' "${orasid}_3_imported" )}
+bkFil=${bkFil:-$( Input  'Backup File Name(-.tar.Z)' "${orasid}_3_imported" )}
 
 ### Sheet
 cat >> ${stxt} <<EOF
@@ -28,23 +33,16 @@ $ cd ..
 $ pwd
 	${bkDir%/*}
 
-$ ls -l $bkRepo
+$ ls -l  ${bkDir##*/}
 
-$ df -g $bkRepo
+$ df -g  .
 
-$ du -sg $bkRepo
+$ du -sg ${bkDir##*/}
 
-$ date
-$ ( tar cf - ${bkDir##*/} |
->   compress > $bkRepo/${bkFil}.tar.Z ; date )&
+$ # rm -ri ${bkDir##*/}
+	#! çÌèúçœÇ›Ç≈Ç†ÇÈÇ±Ç∆
 
-$ jobs
 
-$ ls -l $bkRepo
-
-$ df -g $bkRepo
-
-$ du -sg $bkRepo
 
 
 EOF

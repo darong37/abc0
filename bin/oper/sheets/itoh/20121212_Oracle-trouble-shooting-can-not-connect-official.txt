@@ -1,0 +1,169 @@
+Oracle接続不可本格対応(2012/12/12)
+
+【事象】
+  12/12の夕方頃より、DBA権限のあるユーザ以外でOracleに接続できない。
+  接続時に、下記エラーが発生。
+    ORA-00257: アーカイブ・エラーです。解除されるまで内部接続のみにしてください。
+    
+  12月時点で既に2回発生したため、本格対応を実施。
+
+【原因】
+  アラートログファイルを確認すると、以下エラーが出ている。
+
+************************************************************************
+ARC0: Error 19809 Creating archive log file to 'E:\UATCPC\ORACLE\FAST_RECOVERY_AREA\DEVCPF\ARCHIVELOG\2012_12_12\O1_MF_1_3714_%U_.ARC'
+ARCH: Archival stopped, error occurred. Will continue retrying
+Thread 1 cannot allocate new log, sequence 3716
+Checkpoint not complete
+  Current log# 1 seq# 3715 mem# 0: E:\UATCPC\ORACLE\ORADATA\DEVCPF\REDO01.LOG
+Thread 1 advanced to log sequence 3716 (LGWR switch)
+  Current log# 2 seq# 3716 mem# 0: E:\UATCPC\ORACLE\ORADATA\DEVCPF\REDO02.LOG
+Wed Dec 12 16:10:37 2012
+Errors in file E:\UATCPC\ORACLE\diag\rdbms\devcpf\devcpf\trace\devcpf_arc2_5028.trc:
+ORA-19815: 警告: db_recovery_file_dest_size(64424509440バイト)は100.00%バイトが使用され、残り0バイトが使用可能です。
+************************************************************************
+You have following choices to free up space from recovery area:
+1. Consider changing RMAN RETENTION POLICY. If you are using Data Guard,
+   then consider changing RMAN ARCHIVELOG DELETION POLICY.
+2. Back up files to tertiary device such as tape using RMAN
+   BACKUP RECOVERY AREA command.
+3. Add disk space and increase db_recovery_file_dest_size parameter to
+   reflect the new space.
+4. Delete unnecessary files using RMAN DELETE command. If an operating
+   system command was used to delete files, then use RMAN CROSSCHECK and
+   DELETE EXPIRED commands.
+************************************************************************
+
+  
+  これより、フラッシュリカバリ領域(db_recovery_file_dest)がいっぱいになっていると判断。
+
+
+【対応方法】
+  1.アーカイブの設定を解除する。
+  
+    1-1.APサーバの「manualope_Stop_IM.bat」を実行し、Intramartを停止
+
+
+############################################################
+# バッチ名: "sub_Stop_IM.bat"
+# サーバ名: NIT-IMAP-DEV1
+############################################################
+
+================= 開始 2012/12/12 18:24:34 =================
+
+***** SVF サービス停止 *************************************
+
+
++++ svf - service stop...
+
+- intra-mart Service Platform
+
+intra-mart Service Platform サービスを停止中です....
+intra-mart Service Platform サービスは正常に停止されました。
+
+
+- intra-mart Server Manager
+
+intra-mart Server Manager サービスを停止中です...
+intra-mart Server Manager サービスは正常に停止されました。
+
+
+
+# 判定
+
+ ####### #    #
+ #     # #   #
+ #     # #  #
+ #     # ###
+ #     # #  #
+ #     # #   #
+ ####### #    #
+
+# Return-code: 0
+
+================= 終了 2012/12/12 18:24:52 =================
+
+
+# 最終判定
+
+ ####### #    #
+ #     # #   #
+ #     # #  #
+ #     # ###
+ #     # #  #
+ #     # #   #
+ ####### #    #
+
+# Return-code: 0
+
+
+
+    1-2.DBサーバのoracleを再起動
+    
+      1-2-1.oracle停止
+      
+        SQL>SHUTDOWN IMMEDIATE 
+      
+        ※停止できない場合は以下コマンドを入力（強制的にシャットダウンを行う）
+        SQL>SHUTDOWN ABORT
+    
+      1-2-2.oracle起動
+        SQL>STARUP
+      
+        ※カウントするがオープンできない（ORA-600エラー end-of-fileが検出)
+          アーカイブログを作ろうとするがfile容量が一杯のため行えない場合は、以下を実行
+        
+        SQL>SHUTDOWN ABORT
+      
+        SQL>STARUP MOUNT
+    
+
+
+    1-3.アーカイブ起動停止
+      SQL>ALTER DATABASE NOARCHIVELOG
+
+
+      
+    1-4.クローズしたデータベースを起動
+      SQL>alter database open
+    
+
+
+  2.フラッシュリカバリ領域のファイルを削除
+    
+    2-1.RMANに接続
+      RMAN TARGET /
+    
+    
+    2-2.容量確認
+    
+    
+      2-2-1.BACKUPファイルの容量確認
+        RMAN>LIST BACKUP
+    
+      2-2-1.BACKUPSETファイルの容量確認
+        RMAN>LIST BACKUPSET
+    
+    
+    2-3.BACKUPSETファイルを削除
+      DELETE BACKUPSET
+      
+      
+  3.メモリを大幅に使用していた「TEMP領域」の縮小
+    3-1.DESTファイルの容量を確認
+    SQL> select * from V$RECOVERY_FILE_DEST;
+    
+    
+    3-2.TEMPファイルの容量を縮小
+    SQL> alter database tempfile 'E:\UATCPC\ORACLE\ORADATA\DEVCPF\TEMP01.DBF' resize 1G;
+  
+  
+  4.起動作業
+  
+    4-1.DVサーバの「manualope_Stop_Oracle_devcpf.bat」を実行し、Oracleを停止
+  
+    
+    4-2.DVサーバの「manualope_Start_Oracle_devcpf.bat」を実行し、Oracleの起動
+  
+    
+    4-3.APサーバの「manualope_Start_IM.bat」を実行し、Intramartの起動

@@ -1,0 +1,59 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID'   )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$( Macro sqlplus )
+> show parameter DB_FILES
+> alter system set DB_FILES = 600 SCOPE=SPFILE;
+
+> exit
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	{([1-9][0-9]*)}
+	#! 起動していることを確認
+
+$ ls -l ${orasid}_stop_db.sh
+	#! 存在すること
+
+#
+# オラクルDB停止
+#
+$ ./${orasid}_stop_db.sh
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	0
+
+	#! すべて停止していることを確認
+$
+
+
+#
+# オラクルDB起動
+#
+$ ./${orasid}_start_db.sh
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	{([1-9][0-9]*)}
+	#! 起動していることを確認
+
+$( Macro sqlplus )
+> show parameter DB_FILES
+
+> exit
+
+
+EOF

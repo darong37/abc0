@@ -1,0 +1,83 @@
+#
+# インポート前作業
+#
+local key_old="orau001@MECERP3D"
+local key_new="orae001@mecerp3x0111"
+local keyroot="root@mecerp3x0111"
+
+Lab 1 '
+	##
+	##  パスワードを戻す
+	##
+'	&&	Sheet  oracle-post-proc-after-imp-full.sheet  $key_new  $desc
+
+Lab 2 '
+	##
+	##  u001 全てのテーブルを取得する
+	##
+'	&&	Sheet  oracle-check-all-tables-01.sheet       $key_old  $desc
+
+Lab 3 '
+	##
+	##  e001 全てのテーブルを取得する
+	##
+'	&&	Sheet  oracle-check-all-tables-01.sheet       $key_new  $desc
+
+Lab 4 '
+	##
+	##  作成できなかったテーブルを作成する
+	##    スクリプトを用意する
+	##
+'	&&	Sheet  oracle-create-tables.sheet             $key_new  $desc
+
+Lab 4 '
+	##
+	##  オブジェクトの再コンパイル
+	##
+'	&&	Sheet  oracle-check-object-authority-01.sheet $key_old  $desc
+
+Lab 4 '
+	##
+	##  オブジェクトの再コンパイル
+	##
+'	&&	Sheet  oracle-compile-invalid-pl-sql.sheet    $key_new  $desc
+
+Lab 3 '
+	##
+	## s001 領域削除(確認)
+	##
+'	&&	Sheet  remove-directory.sheet             $keyroot  $desc
+
+Lab 4 '
+	##
+	## 表領域作成
+	##   事前にSQLを作成しておく
+	##
+'	&&	Sheet  oracle-create-tablespace.sheet     $key_new  $desc
+
+Lab 5 '
+	##
+	## OracleDB停止
+	##
+'	&&	Sheet  oracle-shutdown.sheet              $key_new  $desc
+
+Lab 6 '
+	##
+	## User Backup
+	##
+'	&&	Sheet  oracle-save-user-backup.sheet      $keyroot  $desc
+
+Lab 7 '
+	##
+	## OracleDB起動
+	##
+'	&&	Sheet  oracle-startup.sheet               $key_new  $desc
+
+Lab 8 '
+	##
+	## インポート
+	##
+'	&&	Sheet  oracle-imp-full.sheet              $key_new  $desc
+
+##
+##

@@ -1,9 +1,9 @@
 #!/bin/sh -u
 
 osname=HP-UX
-homedr=/u10/u058/orau058
+homedr=/u02/u001/orau001
 
-orasid='u058'
+orasid='u001'
 echo "orasid:'${orasid}'"
 
 ### Sheet
@@ -13,9 +13,9 @@ usedb=${usedb:-$( Ask 'Do you want to use DB ?' )}
 if [[ $usedb = 'y' ]];then
   lsnr=u058
   oraver=9i
-  orahom=/u10/u058/oracle/u058db/9.2.0
-  oradat=/u11/u058/oracle/u058data
-  alertlog=/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+  orahom=/u02/u001/oracle/u001db/9.2.0
+  oradat=/u03/u001/oracle/u001data
+  alertlog=/u02/u001/oracle/u001db/9.2.0/admin/u001_mecerp3d/bdump/alert_u001.log
   cat >> ${stxt} <<EOS
 $ . $orasid.env
 > 1
