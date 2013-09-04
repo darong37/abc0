@@ -13,6 +13,7 @@ zip
 .lesshst
 .pry_history
 .coffee_history
+_viminfo
 _recycle
 
 *.log

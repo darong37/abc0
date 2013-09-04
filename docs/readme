@@ -17,7 +17,11 @@
 
 1.Git‚ÌŠî–{‘€ì
 	git add $target
-	git commit -a -m "reorder"
+	git add -u
+	
+	git commit -m 'reorder'
+	git commit -a -m 'reorder'
+	
 	git push origin master
 
 
