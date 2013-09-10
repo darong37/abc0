@@ -1,4 +1,4 @@
-if [[ "$oraver" = "9i" ]];then 
+if [[ "$oraVer" = "9i" ]];then 
   Echo '$ sqlplus "/ as sysdba"'
 else 
   Echo '$ sqlplus / as sysdba'
@@ -11,7 +11,7 @@ cat <<EOS
 > select INSTANCE_NAME from v\$instance;
 	INSTANCE_NAME
 	----------------
-	$orasid
+	$oraSID
 	
 
 EOS

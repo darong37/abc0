@@ -16,6 +16,14 @@ exec 3>&1
 
 ###
 export PS4='        +$LINENO	'
+IntHandler () {
+  Echo "handler"
+  local act=$( Select 'interrupt action' 'continue' 'exit' )
+  if [[ $act = 'exit' ]];then
+    exit
+  fi
+}
+trap 'echo "# you hit break!";IntHandler;return 1' INT
 
 ###
 cd $APPLDIR
@@ -33,100 +41,47 @@ Hello
   #
 # (( $# == 0 ))                        || Die  "script requires 1 argument only"         2
 
-
   ##
   #  Arguments & Variables
   #
-# typeset key=${1:-${defkey:-$( Key )}}
-# typeset host=${key#*@}
-# typeset user=${key%@*}
   typeset _key=${1:-${_defkey:-$( Key )}}
   typeset _cdir=${2:-sheets}
-  typeset _asof=${3:-$( date +'%Y%m%d' )}
+  typeset _target=${3:-}
+  typeset _asof=${4:-$( date +'%Y%m%d' )}
 
   ##
   # Procedures
   #
   cd $APPLDIR/$_cdir
-  if tty -s;then
-    typeset -i cnt=0
-    typeset _target=''
-    while(( cnt < 5 ));do
-      typeset _prompt=${PWD#$APPLDIR/}
+  if ! tty -s;then exit;fi
+  
+  # REPL
+  while(( 0==0 ));do
+    rst="$( jobs )"
+    if [[ "$rst" != '' ]];then
+      Echo "# jobs"
+      Echo "$rst"
+    fi
+    Echo
+    Echo "# asof  : $_asof"
+    Echo "# key   : $_key"
+    if [[ $_target != '' ]];then
+      Echo "# target: $_target"
+    fi
+    #
+    # REP
+    #
+    ERROFF
+      _SUB="$( Repl "${PWD#$APPLDIR/}" )"
+      Echo "$_SUB"
+      eval "$_SUB"
+      typeset -i rtn=$?
       Echo
-      Echo "# key   : $_key"
-      Echo "# asof  : $_asof"
-      if [[ $_target != '' ]];then
-        Echo "# target: $_target"
-      fi
-      Echo -n "$_prompt> "
-      read _SUB
-      Echo
-      _SUB=$( echo $_SUB )
-      
-      if [[ "$_SUB" = *.sheet ]] && [ -f "$_SUB" ];then
-        Ls ${_SUB##*/}
-####
-      elif [[ "$_SUB" = '?' ]];then
-        Echo "# k: Key"
-        Echo "# a: Asof"
-        Echo "# t: Tel"
-        Echo "# s: Sheet"
-        Echo "# b: Branch"
-        Echo "# l: Ls"
-        Echo "#  : Ls"
-        Echo "# e: exit"
-      elif [[ "$_SUB" = 'k' ]];then
-        Echo "# Key"
-        Key
-      elif [[ "$_SUB" = 'a' ]];then
-        Echo "# Asof"
-        Asof
-      elif [[ "$_SUB" = 't' ]];then
-        Echo "# Tel"
-        Tel
-      elif [[ "$_SUB" = 's' ]];then
-        if [[ $_target = '' ]];then
-          Ls -r 'sheet'
-        fi
-        Echo "# Sheet"
-        Sheet
-      elif [[ "$_SUB" = 'b' ]];then
-        if [[ "$_target" = '' ]];then
-          Ls -r 'sheet'
-        fi
-        Echo "# Branch"
-        Branch
-      elif [[ "$_SUB" = 'c' ]];then
-        _target=''
-      elif [[ "$_SUB" = 'l' ]];then
-        Ls
-      elif [[ "$_SUB" = '' ]];then
-        Ls
-####
-      elif [[ "$_SUB" = 'exit' ]];then
-        Echo "_defkey=$_key" > $APPLDIR/.sheet
-        break
-      else
-        cnt=0
-        ERROFF
-          eval "$_SUB"
-          typeset -i rtn=$?
-          Echo
-          Echo "--> $rtn"
-          #
-          rst="$( jobs )"
-          if [[ "$rst" != '' ]];then
-            Echo "# jobs"
-            Echo "$rst"
-          fi
-        ERRON
-      fi
-    done
-  fi
+      Echo "--> $rtn"
+    ERRON
+  done
 } 2>&1 | tee -a $LOGFILE
 Bye
 
 ##### Final
 exit
-

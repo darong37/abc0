@@ -1,0 +1,52 @@
+#host       	#user   	#name    	value
+mecerp3a0111	root    	homeDir  	/
+mecerp3x0111	root    	homeDir  	/
+MECERP3D    	root    	homeDir  	/
+mecerp3x0111	orae001 	homeDir  	/u43/e001/orae001
+mecerp3x0111	orae058 	homeDir  	/u45/e058/orae058
+MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
+MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
+
+mecerp3a0111	root    	cronDir  	/var/spool/cron/crontabs/
+mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs/
+
+mecerp3a0111	root    	osName   	AIX
+mecerp3x0111	root    	osName   	AIX
+MECERP3D    	root    	osName   	HP-UX
+mecerp3x0111	orae001 	osName   	AIX
+mecerp3x0111	orae058 	osName   	AIX
+MECERP3D    	orau001 	osName   	HP-UX
+MECERP3D    	orau058 	osName   	HP-UX
+
+mecerp3x0111	orae001 	oraVer   	11g
+mecerp3x0111	orae058 	oraVer   	11g
+MECERP3D    	orau001 	oraVer   	9i
+MECERP3D    	orau058 	oraVer   	9i
+
+mecerp3x0111	orae001 	oraSID   	e001
+mecerp3x0111	orae058 	oraSID   	e058
+MECERP3D    	orau001 	oraSID   	u001
+MECERP3D    	orau058 	oraSID   	u058
+
+mecerp3x0111	orae001 	oraLsnr  	e001
+mecerp3x0111	orae058 	oraLsnr  	e058
+MECERP3D    	orau001 	oraLsnr  	u001
+MECERP3D    	orau058 	oraLsnr  	u058
+
+mecerp3x0111	orae001 	oraHome  	/u43/e001/oracle/db/tech_st/11.2.0
+mecerp3x0111	orae058 	oraHome  	/u45/e058/oracle/db/tech_st/11.2.0
+MECERP3D    	orau001 	oraHome  	/u02/u001/oracle/u001db/9.2.0
+MECERP3D    	orau058 	oraHome  	/u10/u058/oracle/u058db/9.2.0
+
+mecerp3x0111	orae001 	oraData  	/u43/e001/oracle/db/apps_st/data/e001
+mecerp3x0111	orae058 	oraData  	/u45/e058/oracle/db/apps_st/data/e058
+MECERP3D    	orau001 	oraData  	/u03/u001/oracle/u001data
+MECERP3D    	orau058 	oraData  	/u11/u058/oracle/u058data
+
+mecerp3x0111	orae001 	alrtLog  	/u43/e001/oracle/diag/rdbms/e001/e001/trace/alert_e001.log
+mecerp3x0111	orae058 	alrtLog  	/u45/e058/oracle/diag/rdbms/e058/e058/trace/alert_e058.log
+MECERP3D    	orau001 	alrtLog  	/u02/u001/oracle/u001db/9.2.0/admin/u001_mecerp3d/bdump/alert_u001.log
+MECERP3D    	orau058 	alrtLog  	/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+
+mecerp3x0111	orae001 	oemURL   	https://mecerp3x0111.in.mec.co.jp:1158/em/console/aboutApplication
+mecerp3x0111	orae058 	oemURL   	https://mecerp3x0111.in.mec.co.jp:5500/em/console/aboutApplication

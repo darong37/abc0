@@ -90,7 +90,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
   s/[\r\n]$//g;
   #
   if ( /^\!\!/ ){
-    if ( $_ eq '!!prev' ){
+    if ( $_ eq '!!review' ){
       exregex($rtns[$cnt-1],$target,1);
     } elsif( /^\!\!reset/ ) {
       $stxt->read;

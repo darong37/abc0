@@ -1,0 +1,45 @@
+#
+desc='03-set-priv'
+local key_old="orau001@MECERP3D"
+local key_new="orae001@mecerp3x0111"
+
+
+#
+LNO=0
+
+Lab '
+#
+# SYSオブジェクト権限スクリプト作成
+#
+' &&	Sheet  oracle-check-object-authority-01.sheet   	$key_old  "03-set-priv-$LNO"
+
+Lab '
+#
+# SYSオブジェクト権限スクリプト実行
+#
+' &&	Sheet  oracle-grant-object-authority-01.sheet   	$key_new  "03-set-priv-$LNO"
+
+Lab '
+#
+# SYSオブジェクト権限スクリプト実行2
+#
+' &&	Sheet  oracle-grant-object-authority.sheet      	$key_new  "03-set-priv-$LNO"
+
+Lab '
+#
+#  オブジェクトの比較(u001)
+#
+' &&	Sheet  oracle-compare-objects.sheet             	$key_old  "03-set-priv-$LNO"
+
+Lab '
+#
+#  オブジェクトの比較(e001)
+#
+' &&	Sheet  oracle-compare-objects.sheet             	$key_new  "03-set-priv-$LNO"
+
+Lab '
+#
+# SYSオブジェクト権限スクリプト実行
+#
+' &&	Sheet  oracle-grant-object-authority-01.sheet   	$key_new  "03-set-priv-$LNO"
+

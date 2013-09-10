@@ -5,7 +5,7 @@ typeset CONFDIR='conf'    # 環境設定フォルダのBASEDIRからの相対パス
 . $APPLDIR/oper/sheet.fnc
 #
 typeset category='OS'
-typeset group=''
+typeset group='*'
 if [[ ${1:-} = '-db' ]];then
   category='DB'
   group=$2

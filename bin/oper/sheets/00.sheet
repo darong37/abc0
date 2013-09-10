@@ -1,6 +1,17 @@
 #!/bin/sh -u
 
-localip=10.213.32.246
+# Set sheet.prms
+host=${key#*@}
+user=${key%@*}
+#
+while read key val;do
+  printf -v "$key" "$val"
+  eval echo "$key: \$$key"
+done <<-EOS
+	$( SelTbl $APPLDIR/sheet.prms  "$host"  "$user" '*' | awk '{print $3,$4}' )
+EOS
+
+localIP=10.213.32.246
 
 ### Sheet
 cat >> ${stxt} <<EOF
@@ -15,7 +26,7 @@ $ whoami ; id ; uname -n
 	#! ホスト名、ユーザ名を確認
 	
 $ pwd
-	${homedr}
+	${homeDir}
 
 $ echo \${\$}
 
@@ -24,5 +35,22 @@ $ date
 $ export PS1='$ '
 	#! プロンプト'$ 'は'cmd.log'に出力される
 
-
 EOF
+
+
+### Oracle
+
+echo "oraSID : ${oraSID:-N/A}"
+if [[ "${oraSID:-}" != '' ]];then
+cat >> ${stxt} <<EOS
+$ . $oraSID.env
+> 1
+
+$ echo \$ORACLE_SID
+	$oraSID
+
+$ echo \$ORACLE_HOME
+	$oraHome
+
+EOS
+fi

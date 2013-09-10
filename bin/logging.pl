@@ -40,6 +40,7 @@ my $timoff = $timend - $timbgn;
 output ;
 output "# execution ${timoff} sec.";
 print $OUT "\n\n\n";
+print $CMD "\n";
 
 close $OUT;
 close $CMD;

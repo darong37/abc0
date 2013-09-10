@@ -56,6 +56,44 @@ Echo () {
   fi
 }
 
+Repl () {
+  local prompt=$1
+  #
+  local cmd
+  Echo -n "$prompt> " >&2
+  read  cmd
+  cmd=$( echo $cmd )
+  #
+  case "$cmd" in
+  '?')
+      Echo "# a: Asof"   >&2
+      Echo "# k: Key"    >&2
+      Echo "# c: Key"    >&2
+      Echo "# e: Edit"   >&2
+      Echo "# t: Tel"    >&2
+      Echo "# b: Branch" >&2
+      Echo "# q: break"  >&2
+      ;;
+  a)  Echo "Asof"        ;;
+  k)  Echo "Key"         ;;
+  c)  Echo "_target=''"  ;;
+  e)  Echo "Edit"        ;;
+  t)  Echo "Tel"         ;;
+  b)  Echo "Branch"      ;;
+  q)  Echo "break"       ;;
+  '')
+      if [[   $_target = '' ]];then
+        Echo "Ls"
+      elif [[ $_target = *.sheet ]];then
+        Echo "Sheet"
+      elif [[ $_target = *.task ]];then
+        Echo "Task"
+      fi
+      ;;
+  *)  Echo "$cmd"   ;;
+  esac
+}
+
 Input () {
   local prompt=${1:-''}
   local dflt=${2:-}
@@ -98,26 +136,24 @@ Ask () {
   fi
   #
   local prompt=${1:-''}
+  local yes=${2:-'y'}
   
   typeset ans
   Echo   >&2
-  Echo -n "${prompt} ?[(y)es/(n)o] > "  >&2
+  Echo -n "${prompt} ?[y/n] > "  >&2
   read  ans
   if [[ $ans = 'n'* ]];then
-    if [[ "$rflg" = 'off' ]];then
-      Echo 'n'
-    else
+    Echo ''
+    if [[ "$rflg" = 'on' ]];then
       return 1
     fi
   else
-    if [[ "$rflg" = 'off' ]];then
-      Echo 'y'
-    else
+    Echo "$yes"
+    if [[ "$rflg" = 'on' ]];then
       return 0
     fi
   fi
 }
-
 
 Select () {
   local targ=${1:-''}
@@ -128,32 +164,174 @@ Select () {
  
   local ans
   Echo  >&2
-  select ans in "${array[@]}";do
-    if [[ $REPLY = '!!'* ]];then
-      local ans="${REPLY#!!}"
-      if [[ $ans = '' ]];then
-        return 1
+  if (( ${#array[*]} == 0 ));then
+    ans="$( Input "new ${targ}" '' )"
+    Echo "$ans"
+  else
+    select ans in "${array[@]}";do
+      if [[ $REPLY = '!!'* ]];then
+        local ans="${REPLY#!!}"
+        if [[ $ans = '' ]];then
+          return 1
+        else
+          Ask -r "eval $ans" || return 1
+          eval "$ans" >&2
+        fi
       else
-        Ask -r "eval $ans" || return 1
-        eval "$ans" >&2
+        if [[ ${ans} = '' ]];then
+          for no in "$REPLY";do
+            if perl -e "exit 1 unless '$no'=~/^[0-9]+\$/";then
+              no=$(( $no - 1 ))
+              Echo "${array[$no]}"
+            else
+              Echo "${no}"
+            fi
+          done
+        else
+          Echo "$ans"
+        fi
+        break
+      fi
+    done
+  fi
+  return 0
+}
+
+SelTbl () {
+  local flgU='off'
+  if [[ $1 = '-u' ]];then
+    flgU='on'
+    shift
+  fi
+  #
+  local tbl=$1
+  shift
+  
+  eles=( $( head -1 $tbl ) )
+  typeset -i c=0
+  typeset -i n=0
+  local cond='/^[^#]/'
+  local precond='/^[^#]/'
+  local vals=''
+  for ele in ${eles[*]};do
+    n=n+1
+    #
+    if [[ $ele = '#'* ]];then
+      if (( $# > 0 ));then
+        val=$1
+        shift
+      else
+        local choice="$( awk " $cond {print \$$n} " $tbl | sort | uniq )"
+        if [[ $choice = '' ]];then
+          choice="$( awk " $precond {print \$$n} " $tbl | sort | uniq )"
+          val=$( Select "new $ele" $choice )
+        else
+          precond="$cond"
+          val=$( Select "$ele" $choice )
+        fi
+      fi
+      #
+      if [[ $vals = '' ]];then
+        vals="$val"
+      else
+        vals="$vals	$val"
+      fi
+      if [[ $val = '*' ]];then
+        cond="$cond && \$$n ~ /.*/"
+      else
+        cond="$cond && \$$n == \"$val\""
       fi
     else
-      if [[ ${ans} = '' ]];then
-        for no in $REPLY;do
-          if perl -e "exit 1 unless '$no'=~/^[0-9]+\$/";then
-            no=$(( $no - 1 ))
-            Echo "${array[$no]}"
-          else
-            Echo "${no}"
-          fi
-        done
+      c=$( awk " $cond {print} " $tbl | wc -l )
+      if (( $c == 0 ));then
+        val="$( Input "$ele" )"
+        vals="$vals	$val"
       else
-        Echo $ans
+        # TBLに存在するデータの場合
+        awk " $cond {print} " $tbl | sed 's/ //g'
+        return 0
       fi
-      break
     fi
   done
-  return 0
+  # TBLに存在しないデータの場合
+  Echo "$vals"
+  if [[ $flgU = 'on' ]];then
+    cp -p ${tbl} ${tbl}.tmp
+    if [ ! -e ${tbl}.$( date +'%Y%m%d' ) ];then
+      cp -p ${tbl} ${tbl}.$( date +'%Y%m%d' )
+    fi
+    Echo "$vals" >> ${tbl}.tmp
+    AnlTbl ${tbl}.tmp > ${tbl}
+    rm ${tbl}.tmp
+    diff ${tbl}.$( date +'%Y%m%d' ) ${tbl}
+  fi
+}
+
+AnlTbl () {
+  local tbl=$1
+  local line=''
+  typeset -i lno=0
+  typeset -i idx=0
+  maxs=()
+  while read line;do
+    lno=lno+1
+    if [[ $line != '#'* ]] || (( lno == 1 ));then
+      idx=0
+      for ele in $line;do
+        typeset -i len=${#ele}
+        typeset -i max=${maxs[$idx]:-0}
+        if (( len > max ));then
+          maxs[$idx]=$len
+          printf "Line %03d.   maxs[%d] -> %2d\n" $lno $idx "${maxs[$idx]}" >&2
+        fi
+        idx=idx+1
+      done
+    fi
+  done < $tbl
+  #
+  Echo >&2
+  typeset fmt=''
+  typeset -i max=0
+  eles=( $( head -1 $tbl ) )
+  idx=0
+  for max in ${maxs[*]};do
+    typeset -i prty=$(( $max/4 * 4 ))
+    if (( $max > $prty ));then
+      prty=prty+4
+    fi
+    #
+    printf "%2d. %-16s : %3d  -> %3d\n" $idx "${eles[$idx]}" $max $prty >&2
+
+    idx=idx+1
+    if (( $idx == ${#maxs[*]} ));then
+      if [[ $fmt = '' ]];then
+        fmt="%s"
+      else
+        fmt="${fmt}\t%s"
+      fi
+    else
+      if [[ $fmt = '' ]];then
+        fmt="%-${prty}s"
+      else
+        fmt="${fmt}\t%-${prty}s"
+      fi
+    fi
+  done
+  #
+  Echo >&2
+  Echo "%s\n" "Format : '$fmt'" >&2
+  #
+  Echo "Pretty Format" >&2
+  lno=0
+  while read line;do
+    lno=lno+1
+    if [[ $line != '#'* ]] || (( lno == 1 ));then
+      eles=( $line )
+      printf "${fmt}\n" "${eles[@]}"
+    else
+      Echo "$line"
+    fi
+  done < $tbl
 }
 
 Col () {
@@ -168,37 +346,6 @@ Row () {
   local tbl=${2:-}
   
   awk 'NR=='$rno $tbl
-}
-
-SelTbl () {
-  local tbl=$1
-  shift
-  
-  eles=( $( head -1 $tbl ) )
-  typeset -i n=0
-  typeset -i c=0
-  local cond='NR>2 '
-  local vals=''
-  for ele in ${eles[*]};do
-    n=n+1
-    if (( $# > 0 ));then
-      val=$1
-      shift
-    else
-      val=$( Select "$ele" $( awk " $cond {print \$$n} " $tbl | sort | uniq ) )
-    fi
-    if [[ $val != '' && $val != '*' ]];then
-      cond="$cond && \$$n == \"$val\""
-    fi
-    #
-    c=$( awk " $cond {print} " $tbl | wc -l )
-    if (( $c == 0 ));then
-      break
-    elif (( $c == 1 ));then
-      awk " $cond {print} " $tbl | sed 's/ //g'
-      break
-    fi
-  done
 }
 
 Spass () {
@@ -217,6 +364,42 @@ Spass () {
   echo "${eles[4]}"
 }
 
+#Exist () {
+#  local fln=${1:-$_target}
+#  #
+#  if [ ! -e $fln ];then
+#    edit $( ConvPath "$PWD/$fln" )
+#  fi
+#  wait
+#  echo "$PWD/$fln"
+#}
+Edit () {
+  local fln=${1:-$( Ask -r "Correct edit:$_target" "$_target" || Select 'edit' $( Lsf ) )}
+  #
+  if [ ! -e $fln ];then
+    ful=$( echo $PWD/$fln )
+    Echo "Edit $ful ( $( ConvPath -r "$ful" ) )"
+    ( edit "$( ConvPath -r "$ful" )" )&
+    wait
+  fi
+}
+
+###
+### Sheet
+###
+Asof () {
+  local asof=$( Input 'as of date' "$( date +'%Y%m%d' )" )
+  _asof="$asof"
+}
+
+Key () {
+  local eles=( $( SelTbl $CONFDIR/abc.hosts 'OS' ) )
+  #
+  Echo "${eles[3]}@${eles[2]}"
+  _key="${eles[3]}@${eles[2]}"
+  Echo "_defkey=$_key" > $APPLDIR/.sheet
+}
+
 Lsf () {
   typeset stock=''
   ls -1F "$@" | {
@@ -230,22 +413,6 @@ Lsf () {
     done
     Echo "$stock"
   }
-}
-
-
-###
-### Sheet
-###
-Asof () {
-  local asof=$( Input 'as of date' )
-  _asof="$asof"
-}
-
-Key () {
-  local eles=( $( SelTbl $CONFDIR/abc.hosts 'OS' ) )
-  #
-  Echo "${eles[3]}@${eles[2]}"
-  _key="${eles[3]}@${eles[2]}"
 }
 
 Ls () {
@@ -309,93 +476,61 @@ Branch () {
 }
 
 Tel () {
-  local sheet=${1:-${_target:-$( Echo '01.sheet' )}}
-  if [[ "$sheet" != *.sheet ]];then
-    sheet='01.sheet'
-  fi
-  
-  local key=${2:-${_key}}
-  local desc=${3:-$(  Input  'description'  )}
-
-  local host=${key#*@}
-  local user=${key%@*}
+  local stxt=${1:-$( Select 'Sheet' $( Lsf $LOGSDIR/oper/$_asof/*.txt ) )}
   
   Echo
-  Echo "Sheet : $sheet"
-  Echo "Host  : $host"
-  Echo "User  : $user"
-
-  mkdir -p $LOGSDIR/oper/${_asof}
-  mkdir -p $LOGSDIR/oper/${_asof}/logs
-
-  title='Trial'
-  stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.txt"
   Echo "Stxt  : $stxt"
-  Echo
+  local shead=$( basename $stxt .txt )
+  shead=${shead##*_}
+  Echo "Shead : $stxt"
+  
+  local logf=$( dirname $stxt )
+  logf="${logf}/logs/$( basename $stxt '.txt' ).log"
+  Echo "# logf  : $logf"
 
-  cat > ${stxt} <<-EOF
-	#@host: ${host}
-	#@user: ${user}
-	#@logf: $LOGSDIR/oper/${_asof}/logs/${desc}_${user}@${host}.log
-	#@sheet: $PWD/${sheet}
-	EOF
-  if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
-    .       $APPLDIR/sheets/$user@$host.sheet
-  elif [ -e $APPLDIR/sheets/$host.sheet ];then
-    .       $APPLDIR/sheets/$host.sheet
-  else
-    . $APPLDIR/sheets/00.sheet
-  fi
-  if [[ "$sheet" = '01.sheet' ]];then
-    . $APPLDIR/sheets/01.sheet
-  else
-    . $PWD/${sheet}
-  fi
-  . $APPLDIR/sheets/99.sheet
-
-  #
-  ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt  )&
+  ( /bin/mintty -t "$shead - Tel"  telnet.pl $stxt  )&
 }
 
 Sheet () {
-  local sheet=${1:-${_target:-$( Select 'sheet' $( Lsf ) )}}
-  local key=${2:-${_key}}
+  local sheet=${1:-$( Ask -r "Correct Sheet:${_target:-01.sheet}" "${_target:-01.sheet}" || Select 'sheet' $( Lsf ) )}
+  local key=${2:-$(   Ask -r "Correct Key:$_key" "$_key" || Key )}
   local desc=${3:-}
+  Echo
+  key=$( echo $key )
+  Echo "Key   : '$key'"
 
   local host=${key#*@}
   local user=${key%@*}
   
   Echo
-  Echo "Sheet : $sheet"
-  Echo "Host  : $host"
-  Echo "User  : $user"
+  Echo "Sheet : '$sheet'"
+  Echo "Host  : '$host'"
+  Echo "User  : '$user'"
   
   mkdir -p $LOGSDIR/oper/${_asof}
   mkdir -p $LOGSDIR/oper/${_asof}/logs
 
   title=${sheet%.sheet}
   title=${title##*/}
-  if [[ $desc != '' ]];then
-    desc="-$desc"
-  fi
-  Echo "\n### Title: $title"
+  Echo "\n### Title: '$title'"
   
   ### 
   ###
   (
     while (( 1==1 ));do
       typeset -i seqno=1
-      typeset hdr
-      printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-      
-      while [ -f $LOGSDIR/oper/${_asof}/${hdr}* ];do
-        seqno=$(( $seqno + 1 ))
+      typeset hdr=${desc}
+      if [[ $hdr = '' ]];then
         printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-      done
-      
-      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${desc}_${title}_${user}@${host}.txt"
+        
+        while [ -f $LOGSDIR/oper/${_asof}/${hdr}* ];do
+          seqno=$(( $seqno + 1 ))
+          printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
+        done
+      fi
+      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${title}_${user}@${host}.txt"
       if [[ ${title} = '01' ]];then
-        stxt="$LOGSDIR/oper/${_asof}/${desc}_${user}@${host}.txt"
+        stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.txt"
       fi
       Echo "Stxt  : $stxt"
       Echo
@@ -403,29 +538,23 @@ Sheet () {
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${_asof}/logs/${desc}_${user}@${host}.log
+			#@logf: $LOGSDIR/oper/${_asof}/logs/_${user}@${host}.log
 			#@sheet: $PWD/${sheet}
 		EOF
       else
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${desc}${title}_${user}@${host}.log
+			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${title}_${user}@${host}.log
 			#@sheet: $PWD/${sheet}
 		EOF
       fi
-      if   [ -e $APPLDIR/sheets/$user@$host.sheet ];then
-        Echo "Inclue $user@$host.sheet"
-        .       $APPLDIR/sheets/$user@$host.sheet
-      elif [ -e $APPLDIR/sheets/$host.sheet ];then
-        Echo "Inclue $host.sheet"
-        .       $APPLDIR/sheets/$host.sheet
+      . $APPLDIR/sheets/00.sheet
+      if [[ ${sheet} = '01.sheet' ]];then
+        . $APPLDIR/sheets/01.sheet
       else
-        Echo "Inclue 00.sheet"
-        . $APPLDIR/sheets/00.sheet
+        . $PWD/${sheet}
       fi
-      Echo "Inclue ${sheet}"
-      . $PWD/${sheet}
       . $APPLDIR/sheets/99.sheet
 
       cat ${stxt}
@@ -437,7 +566,7 @@ Sheet () {
       while [[ $act = '' ]];do
         act=$( Select 'action' 're-create' 'rm' 'edit-sheet' 'edit-stxt' 'telnet' 'N/A' )
         if [[ "$act" = 'telnet' ]];then
-          ( /bin/mintty -t "${user}@${host} - ${title}"  telnet.pl $stxt  )&
+          Tel $stxt
           act=''
         fi
         if [[ "$act" = 'edit-sheet' ]];then
@@ -455,10 +584,14 @@ Sheet () {
         break
       fi
       if [[ "$act" = 're-create' ]];then
-        eval rm '$stxt'
+        if [ -e $stxt ];then
+          eval rm '$stxt'
+        fi
       fi
       if [[ "$act" = 'rm' ]];then
-        eval rm '$stxt'
+        if [ -e $stxt ];then
+          eval rm '$stxt'
+        fi
         break
       fi
     done
@@ -516,23 +649,25 @@ Macro () {
 }
 
 Lab () {
-  typeset -i no=$1
-  typeset msg=${2:-}
-  if (( $bgn <= $no )) && (( $no <= $end ));then
-    Echo "Label $no"
+  typeset msg="${1:-}"
+  
+  LNO=$(( $LNO + 1 ))
+  if (( $bgn <= $LNO )) && (( $LNO <= $end ));then
+    Echo "Label $LNO"
     Echo "$msg"
     return 0
   else
-    Echo "Label $no"
-    Echo "SKIP"
+    Echo "Skip Label $LNO"
     return 1
   fi
 }
 
 Task () {
-  local task=${1:-$( Select 'task' $( Lsf *.task ) ) }
-  typeset -i bgn=${2:-1}
-  typeset -i end=${3:-99}
+  local task=${1:-$( Ask -r "Correct Task:$_target" "$_target" || Select 'task' $( Lsf *.task ) )}
+  cat $task
+  
+  typeset -i bgn=$( Input 'Begin task' '1')
+  typeset -i end=$( Input 'End   task' '99')
   
   Echo "Task: $task"
   ( 

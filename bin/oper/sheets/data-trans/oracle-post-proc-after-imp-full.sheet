@@ -14,14 +14,8 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01.${title}
 ######################################################################
-$ echo \$ORACLE_SID
-	$orasid
-
-$ echo \$ORACLE_HOME
-	$orahom
-
-$ # Password‚ðŒ³‚É–ß‚·
-$ sqlplus / as sysdba
+# Password‚ðŒ³‚É–ß‚·
+$(Macro sqlplus)
 > alter user sys    identified by "${pswdsys}";
 > alter user system identified by "${pswdsystem}";
 > alter user sysman identified by "${pswdsysman}";

@@ -1,28 +1,25 @@
 #!/bin/sh -u
 
 ### Local Parameter
-typeset orasid=${orasid:-$( Input 'Oracle SID' )}
-typeset schema=${schema:-$( Input 'Schema for Invalid Objects' )}
-
+typeset oraSID=${oraSID:-$( Input 'Oracle SID' )}
 
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01.${title}
+# 01.オブジェクトの権限を比較する
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set line 1000
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
+$
+$( Macro localftp get scripts getprv.sql )
 
-> spool ${schema}.log
-> select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
-> select OBJECT_TYPE,OBJECT_NAME,STATUS from all_objects where OWNER = '${schema}' order by OBJECT_TYPE,OBJECT_NAME;
-> spool off
+$ ls -l getprv.sql
+	#! 存在すること
+
+
+$( Macro sqlplus )
+
+# 比較したいオブジェクトを指定する
+> @getprv --obj
 
 > exit
 

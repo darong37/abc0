@@ -1,0 +1,35 @@
+#!/bin/sh -u
+
+### Local Parameter
+orasid=${orasid:-$( Input  'Oracle SID' )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$( Macro localftp get scripts getddl.sql )
+
+$ ls -l getddl.sql
+
+$( Macro sqlplus )
+
+> spool ${orasid}_${host}_getddl.txt
+
+#
+# •K—v‚È‚¾‚¯ŒJ‚è•Ô‚·
+#
+> @getddl --type --owner --name
+
+> spool off
+
+> exit
+
+$ ls -l ${orasid}_${host}_getddl.txt
+
+$( Macro localftp put oper ${orasid}_${host}_getddl.txt )
+
+
+
+EOF

@@ -1,0 +1,62 @@
+#!/bin/sh -u
+
+### Local Parameter
+oraSid=${oraSid:-$( Input  'Oracle SID'   )}
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. ${title}
+######################################################################
+$( Macro sqlplus )
+> show parameter memory_max_target
+> alter system set memory_max_target = 1073741824 SCOPE=SPFILE;
+
+> exit
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	{([1-9][0-9]*)}
+	#! 起動していることを確認
+
+$ ls -l ${oraSid}_stop_db.sh
+	#! 存在すること
+
+#
+# オラクルDB停止
+#
+$ ./${oraSid}_stop_db.sh
+
+$ lsnrctl status ${lsnr}
+
+$ emctl status dbconsole
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	0
+
+	#! すべて停止していることを確認
+$
+
+
+#
+# オラクルDB起動
+#
+$ ./${oraSid}_start_db.sh
+
+$ ps -ef | grep $user | grep ora_
+$ ps -ef | grep $user | grep ora_ | wc -l
+	{([1-9][0-9]*)}
+	#! 起動していることを確認
+
+$( Macro sqlplus )
+> show parameter memory_max_target
+> show parameter memory_target
+> alter system set memory_target = 1073741824 SCOPE=BOTH;
+> show parameter memory_target
+
+> exit
+
+
+EOF

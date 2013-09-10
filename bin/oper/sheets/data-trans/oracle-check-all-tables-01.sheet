@@ -7,7 +7,7 @@ orasid=${orasid:-$( Input  'Oracle SID'   )}
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01. ${title}
+# 01. 全テーブルのカウントをスプールに出力する
 ######################################################################
 $(  Macro sqlplus )
 > set head off
@@ -16,7 +16,7 @@ $(  Macro sqlplus )
 #
 # スプール出力する
 #
-> spool ${_key}_tables.txt
+> spool ${orasid}_${host}_tables.txt
 
 > select owner
 > , table_name
@@ -44,7 +44,7 @@ $(  Macro sqlplus )
 # Local-PC に送信する
 # 実行する場合はFTPサーバを起動しておくこと
 #
-$( Macro localftp put logs ${_key}_tables.txt )
+$(Macro localftp put logs ${orasid}_${host}_tables.txt)
 $
 
 

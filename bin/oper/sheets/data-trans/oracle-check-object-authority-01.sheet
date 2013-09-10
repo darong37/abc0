@@ -1,24 +1,16 @@
 #!/bin/sh -u
 
 ### Local Parameter
-orasid=${orasid:-$( Input  'Oracle SID'   )}
+oraSID=${oraSID:-$( Input  'Oracle SID'   )}
 owner=${owner:-$(   Input  'Object Owner' 'SYS' )}
 
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01. ${title}
+# 01. SYS のオブジェクトのPrivilegeを設定する
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set sqln off
-> set line 200
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-
+$( Macro sqlplus  )
 > select OWNER,TABLE_NAME,GRANTEE,PRIVILEGE 
 > from ALL_TAB_PRIVS_MADE  
 > where OWNER = '$owner'
@@ -26,7 +18,7 @@ $ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlp
 
 > set head off
 > set feedback off
-> spool ${owner}.sql
+> spool ${user}_${host}_${owner}.sql
 
 > select 'grant ' || prv.PRIVILEGE || ' on ' || prv.OWNER || '.' || prv.TABLE_NAME || ' to ' || prv.GRANTEE
 > || DECODE(prv.HIERARCHY,'YES',' WITH HIERARCHY OPTION','NO',' ')
@@ -43,8 +35,7 @@ $ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlp
 
 > exit
 
-$ exit
-
+$( Macro localftp put logs ${user}_${host}_${owner}.sql )
 
 
 EOF

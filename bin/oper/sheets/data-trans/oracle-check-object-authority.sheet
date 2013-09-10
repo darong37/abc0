@@ -9,26 +9,9 @@ owner=${owner:-$(   Input  'Object Owner' 'SYS' )}
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01. ${title}
+# 01. SYS ‚ÌPrivilege‚ðÝ’è‚·‚é
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set sqln off
-> set line 200
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-> set line 80
-> desc ALL_OBJECTS
-> set line 200
-> select * from ALL_OBJECTS where OWNER = '$owner' and OBJECT_NAME = '$object';
-
-> set line 80
-> desc ALL_TAB_PRIVS_MADE
-> set line 200
-
-> select * from ALL_TAB_PRIVS_MADE  where OWNER = '$owner' and TABLE_NAME='$object';
+$( Macro sqlplus  )
 
 > SET HEAD OFF
 
@@ -36,11 +19,9 @@ $ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlp
 > || DECODE(HIERARCHY,'YES',' WITH HIERARCHY OPTION','NO',' ')
 > || DECODE(GRANTABLE,'YES',' WITH GRANT OPTION;'   ,'NO',';')
 > from ALL_TAB_PRIVS_MADE
-> where OWNER = '$owner' and TABLE_NAME='$object';
+> where OWNER = 'SYS' and TABLE_NAME='$object';
 
 > exit
-
-$ exit
 
 
 

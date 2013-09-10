@@ -2,24 +2,16 @@
 
 ### Local Parameter
 orasid=${orasid:-$( Input 'Oracle SID' )}
-script=${script:-$( Input 'Script File %.sql' "create_tbl_${orasid}_v1" )}
+script=${script:-$( Input 'Script File -.sql' "create_tbl_${orasid}_v1" )}
 
 
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01. ${title}
+# 01. script で Tableを作成する
 ######################################################################
-$ lftp
-> user oper
-> bin
-> cd $today
-	250 Requested file action okay, completed.
-
-> dir
-> get ${script}.sql
-> bye
+$( Macro localftp get data-trans ${script}.sql )
 
 $ ls -l ${script}.sql
 	{*} ${script}.sql
@@ -29,35 +21,20 @@ $ cat ${script}.sql
 $ ps -ef | grep $user | grep ora_
 $ ps -ef | grep $user | grep ora_ | wc -l
 	{([1-9][0-9]*)}
+	#! DBが起動していることを確認
 
-
-$ sqlplus / as sysdba
-> set sqln off
-> set line 1000
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-
+$( Macro sqlplus )
 > spool ${script}.log
 > @${script}.sql
 > spool off
-> exit
 
+> exit
+#
+# 結果ログをLocal-PCに保存
+#
 $ ls -l ${script}.log
 
-$ ls -l $oradat
-
-$ lftp
-> user oper
-> bin
-> cd $today
-> !ls -l
-> put ${script}.log
-> bye
-
-$ exit
+$( Macro localftp put logs ${script}.log )
 
 
 EOF

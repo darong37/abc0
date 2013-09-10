@@ -1,0 +1,68 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.pscheck証跡
+######################################################################
+$ cd /u00/unyo/scripts/ebs
+$ pwd
+	/u00/unyo/scripts/ebs
+#
+# 正常系
+#
+$ ./dev_ebs_pscheck.sh u301
+
+
+$ echo \$?
+	0
+
+#
+# common.csv にアーカイブログのプロセスを追加する
+#
+$ cd ../LIST
+$ pwd
+	/u00/unyo/scripts/LIST
+
+$ cp -p common.csv common.csv.backup
+
+$( Macro localftp put oper common.csv )
+
+#
+# common.csvを編集
+#
+$( Macro localftp get oper common.csv )
+
+$ diff common.csv.backup common.csv
+	#! 変更を確認
+	
+$ cd ../ebs
+$ pwd
+	/u00/unyo/scripts/ebs
+
+#
+# 異常系
+#
+$ ./dev_ebs_pscheck.sh u301
+
+$ echo \$?
+	{([1-9][0-9]*)}
+	#! 0(正常)以外であること
+$
+
+#
+# 元に戻す
+#
+$ cd ../LIST
+$ pwd
+	/u00/unyo/scripts/LIST
+
+$ mv common.csv.backup common.csv
+$ ls -l
+
+
+EOF

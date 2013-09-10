@@ -1,9 +1,7 @@
 #!/bin/sh -u
 
 ### Local Parameter
-orasid=${orasid:-$( Input  'Oracle SID'   )}
-object=${object:-$( Input  'Object Name'  'DBMS_SYS_SQL' )}
-owner=${owner:-$(   Input  'Object Owner' 'SYS' )}
+oraSID=${oraSID:-$( Input  'Oracle SID'   )}
 
 ### Sheet
 cat >> ${stxt} <<EOF
@@ -11,38 +9,25 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01. ${title}
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set line 1000
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
-
-> select * from ALL_TAB_PRIVS_MADE  where OWNER = '$owner' and TABLE_NAME='$object';
+$( Macro sqlplus )
 
 > grant EXECUTE on SYS.DBMS_LOCK to APPS;
 
-> grant EXECUTE on SYS.DBMS_SYS_SQL to SYSTEM  WITH GRANT OPTION;
-> grant EXECUTE on SYS.DBMS_SYS_SQL to MDSYS;
 > grant EXECUTE on SYS.DBMS_SYS_SQL to APPS;
-> grant EXECUTE on SYS.DBMS_SYS_SQL to OWAPUB;
 
-> grant EXECUTE on SYS.DBMS_PIPE to SYSTEM  WITH GRANT OPTION;
-> grant EXECUTE on SYS.DBMS_PIPE to EXECUTE_CATALOG_ROLE;
-> grant EXECUTE on SYS.DBMS_PIPE to CTXSYS;
 > grant EXECUTE on SYS.DBMS_PIPE to APPS;
-> grant EXECUTE on SYS.DBMS_PIPE to OWAPUB;
+
+> grant SELECT on V_$DATABASE to SYSTEM with GRANT OPTION;
+> grant SELECT on V_$DATABASE to PUBLIC;
+> grant SELECT on V_$DATABASE to APPS;
 
 > select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
 
 # 無効な PL/SQL オブジェクトをコンパイルする
-> EXECUTE UTL_RECOMP.RECOMP_PARALLEL(NULL,'$owner');
+> EXECUTE UTL_RECOMP.RECOMP_PARALLEL(NULL);
 > select OWNER,count(*) "count" from all_objects where status <> 'VALID' group by OWNER order by "count" desc;
 
 > exit
-
-$ exit
 
 
 

@@ -9,24 +9,36 @@ elif [[ "$oper" = 'logs' ]];then
   rdir="$_asof/logs"
   oper='oper'
 else
-  rdir="$oper"
+  if [[ "$oper" = 'scripts' ]];then
+    rdir='.'
+  else
+    rdir="$oper"
+  fi
   oper='scripts'
 fi
 
 if [[ "$fcmd" = 'get' ]];then
-  prev="dir"
+  prv1="dir"
+  prv2="!ls -l"
   post="!ls -l"
 else
-  prev="!ls -l"
+  prv1="!ls -l"
+  prv2="dir"
   post="dir"
 fi
 
 
 cat <<EOS1
-$ ftp -niv ${localip}
+#
+# PC側のFTPサーバを起動する
+#
+$ ftp -niv ${localIP}
 > user ${oper}
+	230 Login OK!!!
 > bin
+	200 Binary Mode
 > cd ${rdir}
+	250 Requested file action okay, completed.
 > pwd
 EOS1
 
@@ -34,11 +46,22 @@ typeset -i idx=2
 while [[ "${prms[$idx]:-}" != '' ]];do
   flnm="${prms[$idx]}"
   cat <<EOS2
-> ${prev} ${flnm}
+> ${prv1} ${flnm}
+	{*} ${flnm}
+	#! 存在すること
+
+> ${prv2}
+	#! 上書きに注意する
+
 > ${fcmd} ${flnm}
+	200 PORT command successful.
+	150 Opening data connection.
 	226 Transfer complete.
-	#! 要確認
+
 > ${post} ${flnm}
+	{*} ${flnm}
+	#! サイズ等確認
+
 EOS2
 
   idx=idx+1

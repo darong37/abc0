@@ -3,6 +3,7 @@
 osname=AIX
 homedr='/'
 crondir=/var/spool/cron/crontabs/
+oraver=11g
 
 _001_oradat=/u43/e001/oracle/db/apps_st/data/e001
 _058_oradat=/u45/e058/oracle/db/apps_st/data/e058

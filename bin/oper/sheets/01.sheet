@@ -9,17 +9,11 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01.${title}
 ######################################################################
-$ $( if [[ "$oraver" = "9i" ]];then echo 'sqlplus "/ as sysdba"';else echo 'sqlplus / as sysdba';fi )
-> set sqln off
-> set line 200
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$orasid
+$( Macro sqlplus )
 
 > exit
 
+$( Macro localftp put oper a.a )
 
 
 EOF

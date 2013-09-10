@@ -1,0 +1,100 @@
+#!/bin/sh -u
+
+### Local Parameter
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.lcl_svrchk_allバグFIX 証跡
+######################################################################
+$ cd /u00/unyo/scripts/ebs
+$ pwd
+	/u00/unyo/scripts/ebs
+
+#
+# バグ再現
+#   現象: lcl_svrchk_all サーバcheckメール内の出力メールに  WARNING 
+#         がでてしまった
+#   理由: sub_pscheck.sh 内でbanner  WARNING  が  -s  サイレントモード
+#         に対応していないため。
+#   対処: banner部分を -s  サイレントモードに適応させる
+#
+$ ./lcl_svrchk_all.sh DB c301
+
+
+	#! メールと同様の現象を確認
+
+$ cp -p sub_pscheck.sh sub_pscheck.sh.back
+
+$( Macro localftp get ebs sub_pscheck.sh )
+
+$ diff sub_pscheck.sh.back sub_pscheck.sh
+
+$ ./lcl_svrchk_all.sh DB c301
+
+	#! バグが消えることを確認
+
+######################################################################
+# 02.pscheck証跡
+#    昨日のテストの影響が無いことを確認
+######################################################################
+$ pwd
+	/u00/unyo/scripts/ebs
+
+
+#
+# 正常系
+#
+$ ./dev_ebs_pscheck.sh u301
+
+
+$ echo \$?
+	0
+
+#
+# common.csv にアーカイブログのプロセスを追加する
+#
+$ cd ../LIST
+$ pwd
+	/u00/unyo/scripts/LIST
+
+$ cp -p common.csv common.csv.backup
+
+$( Macro localftp put oper common.csv )
+
+#
+# common.csvを編集
+#
+$( Macro localftp get oper common.csv )
+
+$ diff common.csv.backup common.csv
+	#! 変更を確認
+	
+$ cd ../ebs
+$ pwd
+	/u00/unyo/scripts/ebs
+
+#
+# 異常系
+#
+$ ./dev_ebs_pscheck.sh u301
+
+$ echo \$?
+	{([1-9][0-9]*)}
+	#! 0(正常)以外であること
+$
+
+#
+# 元に戻す
+#
+$ cd ../LIST
+$ pwd
+	/u00/unyo/scripts/LIST
+
+$ mv common.csv.backup common.csv
+$ ls -l
+
+
+EOF
