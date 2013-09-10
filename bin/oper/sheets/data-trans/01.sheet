@@ -1,0 +1,46 @@
+#!/bin/sh -u
+
+### Local Parameter
+oraSID=${oraSID:-$(       Input 'Oracle SID' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.${title}
+######################################################################
+$ pwd
+$( Macro sqlplus )
+
+> select OWNER,OBJECT_TYPE,count(*) "count" 
+> from   all_objects 
+> where  status <> 'VALID' 
+> group  by OWNER,OBJECT_TYPE 
+> order  by OWNER,OBJECT_TYPE;
+
+> select OWNER,count(*) "count" 
+> from   all_objects 
+> where  status <> 'VALID' 
+> group  by OWNER 
+> order  by "count" desc;
+
+# 無効な PL/SQL オブジェクトをコンパイルする
+> EXECUTE UTL_RECOMP.RECOMP_PARALLEL(NULL);
+
+> select OWNER,count(*) "count" 
+> from   all_objects 
+> where  status <> 'VALID' 
+> group  by OWNER 
+> order  by "count" desc;
+
+> select OWNER,OBJECT_TYPE,count(*) "count" 
+> from   all_objects 
+> where  status <> 'VALID' 
+> group  by OWNER,OBJECT_TYPE 
+> order  by OWNER,OBJECT_TYPE;
+
+> exit
+
+
+EOF

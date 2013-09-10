@@ -482,7 +482,7 @@ Tel () {
   Echo "Stxt  : $stxt"
   local shead=$( basename $stxt .txt )
   shead=${shead##*_}
-  Echo "Shead : $stxt"
+  Echo "Shead : $shead"
   
   local logf=$( dirname $stxt )
   logf="${logf}/logs/$( basename $stxt '.txt' ).log"

@@ -1,8 +1,13 @@
 #!/bin/sh -u
 
 # Set sheet.prms
+key=${key:-$_key}
 host=${key#*@}
 user=${key%@*}
+#
+Echo "Host  : '$host'"
+Echo "User  : '$user'"
+
 #
 while read key val;do
   printf -v "$key" "$val"

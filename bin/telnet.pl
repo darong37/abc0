@@ -72,7 +72,9 @@ sub Inthandler {
   print STDERR "> ";
 
   my $ans = input 'No.';  # 標準入力から１行分のデータを受け取る
-  if ( $ans == 1 ){
+  if ( $ans == 0 ){
+    $telnet->cmd('');
+  } elsif ( $ans == 1 ) {
     my $ok = $telnet->break;
     print STDERR "send break($ok)!\n";
   } elsif ( $ans == 2 ) {
@@ -96,6 +98,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
       $stxt->read;
       @cmds = @{ $stxt->{'cmds'} };
       @rtns = @{ $stxt->{'rtns'} };
+      @cmts = @{ $stxt->{'cmts'} };
       @nots = @{ $stxt->{'nots'} };
 
       $cnt=0;

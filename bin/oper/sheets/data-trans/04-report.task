@@ -1,0 +1,21 @@
+#
+desc='04-report'
+#local key_old="orau001@MECERP3D"
+local key_new1="orae001@mecerp3x0111"
+local key_new2="orae058@mecerp3x0111"
+
+
+#
+LNO=0
+
+Lab '
+#
+# invalid オブジェクト一覧
+#
+' &&	Sheet  oracle-outcsv-invalid-objects-detail.sheet   	$key_new1  "${desc}-$LNO"
+
+Lab '
+#
+# invalid オブジェクト一覧
+#
+' &&	Sheet  oracle-outcsv-invalid-objects-detail.sheet   	$key_new2  "${desc}-$LNO"

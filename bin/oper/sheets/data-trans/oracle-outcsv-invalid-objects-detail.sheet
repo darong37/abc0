@@ -1,0 +1,46 @@
+#!/bin/sh -u
+
+### Local Parameter
+oraSID=${oraSID:-$(       Input 'Oracle SID' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.invalid オブジェクト一覧
+######################################################################
+$ pwd
+$( Macro sqlplus )
+
+$( Macro sqlcsv ) 
+> spool ${user}_${host}_invobj.csv
+
+> set line 300
+> set pagesize 1000
+> col nm for   a40
+> col OBJECT_TYPE for a12
+> col LINE for 9999
+> col text for a200
+> select obj.OWNER || '.' || obj.OBJECT_NAME "nm"
+> ,      obj.OBJECT_TYPE
+> ,      err.line
+> ,      err.text
+> from   all_objects obj
+> ,      all_errors  err
+> where  obj.status <> 'VALID'
+>  and   obj.owner  =  err.owner
+>  and   obj.OBJECT_NAME = err.NAME
+>  and   obj.OBJECT_TYPE = err.TYPE
+> group  by obj.OWNER,obj.OBJECT_TYPE,obj.OBJECT_NAME,err.line,err.text
+> order  by obj.OWNER,obj.OBJECT_TYPE,obj.OBJECT_NAME,err.line,err.text;
+
+> spool off
+
+> exit
+
+$( Macro localftp put oper ${user}_${host}_invobj.csv )
+
+
+
+EOF
