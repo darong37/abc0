@@ -1,0 +1,9 @@
+cat <<EOS
+> set echo off
+> set linesize 1000
+> set pagesize 0
+> set trimspool on
+> set feedback off
+> set colsep '	'
+
+EOS
