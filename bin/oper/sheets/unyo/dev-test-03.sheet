@@ -1,0 +1,63 @@
+#!/bin/sh -u
+
+### Restrict
+[[ $user = 'root' ]] || Die "$user can not run (root only)"
+
+
+### Local Parameter
+tgtSID=${tgtSID:-$( Input 'Target test SID' 's058' )}
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01.開発環境 個別起動停止
+######################################################################
+$ cd /u00/unyo/scripts/ebs
+$ pwd
+	/u00/unyo/scripts/ebs
+
+#
+# テスト前状態確認
+#
+$ ./dev_ebs_pscheck.sh ${tgtSID}
+	#! 起動していることを確認
+
+$ echo \$?
+	0
+
+#
+# 停止ALL テスト
+#
+$ ./dev_ebs_stop_ALL_all.sh ${tgtSID}
+	#! 途中経過が出力されることを確認
+
+$ echo \$?
+	0
+
+$ ./dev_ebs_pscheck.sh ${tgtSID}
+	#! 起動していないことを確認(WARNING)
+
+$ echo \$?
+	99
+
+
+#
+# 起動ALL テスト
+#
+$ ./dev_ebs_start_ALL_all.sh ${tgtSID}
+	#! 途中経過が出力されることを確認
+
+$ echo \$?
+	0
+
+$ ./dev_ebs_pscheck.sh ${tgtSID}
+	#! 正常に起動されていることを確認
+
+$ echo \$?
+	0
+
+
+
+EOF
