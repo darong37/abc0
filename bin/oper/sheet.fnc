@@ -1,36 +1,36 @@
 #!/bin/sh -u
-alias Reload='. sheet.fnc'
-alias Fol='while read;do printf -v "${REPLY%:*}" "${REPLY#*:}";done'
+#alias Reload='. sheet.fnc'
+#alias Fol='while read;do printf -v "${REPLY%:*}" "${REPLY#*:}";done'
 
-f_func () {
-  local _FUNC=
-  {
-    echo
-    echo '#? ファンクションの番号を選択してください'
-    PS3='>> '
-    select _FUNC in $( typeset -f |grep function |perl -ple 's/function //' ) n/a ;do
-      echo
-      break
-    done
-  } >&2
-  
-  if [[ $_FUNC = 'n/a' ]];then
-    echo 'no select' >&2 
-  else
-    echo $_FUNC
-  fi
-}
+#f_func () {
+#  local _FUNC=
+#  {
+#    echo
+#    echo '#? ファンクションの番号を選択してください'
+#    PS3='>> '
+#    select _FUNC in $( typeset -f |grep function |perl -ple 's/function //' ) n/a ;do
+#      echo
+#      break
+#    done
+#  } >&2
+#  
+#  if [[ $_FUNC = 'n/a' ]];then
+#    echo 'no select' >&2 
+#  else
+#    echo $_FUNC
+#  fi
+#}
 
-Trace () {
-  local _FUNC=${1:-$( Select 'Function'  )}
-
-  local tron=$( typeset -ft |grep "$_FUNC" )
-  if [[ "$tron" = "" ]];then
-    typeset -ft $_FUNC
-  else
-    typeset +ft $_FUNC
-  fi
-}
+#Trace () {
+#  local _FUNC=${1:-$( Select 'Function'  )}
+#
+#  local tron=$( typeset -ft |grep "$_FUNC" )
+#  if [[ "$tron" = "" ]];then
+#    typeset -ft $_FUNC
+#  else
+#    typeset +ft $_FUNC
+#  fi
+#}
 
 ###
 Echo () {
@@ -43,16 +43,14 @@ Echo () {
     fi
     
     if (( $# > 0 ));then
-#     set -x
       printf -- "${@}"
-#     set +x
     else
-      print ''
+      printf ''
     fi
   fi
   
   if [[ "$nflg" = 'off' ]];then
-    echo
+    printf "\n"
   fi
 }
 
@@ -60,7 +58,7 @@ Repl () {
   local prompt=$1
   #
   local cmd
-  Echo -n "$prompt> " >&2
+  Echo -n "$prompt > " >&2
   read  cmd
   cmd=$( echo $cmd )
   #
@@ -68,9 +66,9 @@ Repl () {
   '?')
       Echo "# a: Asof"   >&2
       Echo "# k: Key"    >&2
-      Echo "# c: Key"    >&2
+      Echo "# c: Clear"  >&2
       Echo "# e: Edit"   >&2
-      Echo "# t: Tel"    >&2
+      Echo "# s: Sheet"  >&2
       Echo "# b: Branch" >&2
       Echo "# q: break"  >&2
       ;;
@@ -78,7 +76,7 @@ Repl () {
   k)  Echo "Key"         ;;
   c)  Echo "_target=''"  ;;
   e)  Echo "Edit"        ;;
-  t)  Echo "Tel"         ;;
+  s)  Echo "Sheet"       ;;
   b)  Echo "Branch"      ;;
   q)  Echo "break"       ;;
   '')
@@ -107,6 +105,13 @@ Input () {
   while((1==1));do
     Echo -n "Input ${prompt} > "  >&2
     read ans
+    if [[ $ans = '??' ]];then
+      ans="$( SelTbl $APPLDIR/sheet.prms | awk '{print $4}' )"
+      Echo "${prompt} : '$ans'"   >&2
+    fi
+    if [[ $ans = '.' ]];then
+      return 1
+    fi
     if [[ $ans = '' ]];then
       ans="$dflt"
     fi
@@ -116,7 +121,7 @@ Input () {
       if [[ $ans = '' ]];then
         return 1
       else
-        Ask -r "eval $ans" || return 1
+        Ask -r "eval $ans" >&- || return 1
         eval "$ans" >&2
       fi
     else
@@ -143,7 +148,6 @@ Ask () {
   Echo -n "${prompt} ?[y/n] > "  >&2
   read  ans
   if [[ $ans = 'n'* ]];then
-    Echo ''
     if [[ "$rflg" = 'on' ]];then
       return 1
     fi
@@ -174,9 +178,11 @@ Select () {
         if [[ $ans = '' ]];then
           return 1
         else
-          Ask -r "eval $ans" || return 1
+          Ask -r "eval $ans" >&- || return 1
           eval "$ans" >&2
         fi
+      elif [[ $REPLY = '.' ]];then
+        return 1
       else
         if [[ ${ans} = '' ]];then
           for no in "$REPLY";do
@@ -364,17 +370,8 @@ Spass () {
   echo "${eles[4]}"
 }
 
-#Exist () {
-#  local fln=${1:-$_target}
-#  #
-#  if [ ! -e $fln ];then
-#    edit $( ConvPath "$PWD/$fln" )
-#  fi
-#  wait
-#  echo "$PWD/$fln"
-#}
 Edit () {
-  local fln=${1:-$( Ask -r "Correct edit:$_target" "$_target" || Select 'edit' $( Lsf ) )}
+  local fln=${1:-$( Ask -r "edit $_target" "$_target" || Select 'edit' $( Lsf ) )}
   #
   if [ ! -e $fln ];then
     ful=$( echo $PWD/$fln )
@@ -388,8 +385,11 @@ Edit () {
 ### Sheet
 ###
 Asof () {
-  local asof=$( Input 'as of date' "$( date +'%Y%m%d' )" )
+  local asof=${1:-$( Input 'as of date' "$( date +'%Y%m%d' )" )}
   _asof="$asof"
+  
+  mkdir -p $LOGSDIR/oper/${_asof}
+  mkdir -p $LOGSDIR/oper/${_asof}/logs
 }
 
 Key () {
@@ -429,7 +429,7 @@ Ls () {
     local cont=$ropt
     #
     if [[ $object = '?'* ]];then
-      Ask -r "Find '$object'" || return 1
+      Ask -r "find '$object'" || return 1
       object=$( Select "$prompt" $( Find "${object#?}" ) )
     fi
     #
@@ -476,45 +476,27 @@ Branch () {
 }
 
 Tel () {
-  local stxt=${1:-$( Select 'Sheet' $( Lsf $LOGSDIR/oper/$_asof/*.txt ) )}
+  local stxt=${1:-$( Select 'Sheet' $( Lsf $LOGSDIR/oper/$_asof/*.stxt ) )}
   
   Echo
   Echo "Stxt  : $stxt"
-  local shead=$( basename $stxt .txt )
+  local shead=$( basename $stxt .stxt )
   shead=${shead##*_}
   Echo "Shead : $shead"
   
   local logf=$( dirname $stxt )
-  logf="${logf}/logs/$( basename $stxt '.txt' ).log"
+  logf="${logf}/logs/$( basename $stxt '.stxt' ).log"
   Echo "# logf  : $logf"
 
   ( /bin/mintty -t "$shead - Tel"  telnet.pl $stxt  )&
 }
 
 Sheet () {
-  local sheet=${1:-$( Ask -r "Correct Sheet:${_target:-01.sheet}" "${_target:-01.sheet}" || Select 'sheet' $( Lsf ) )}
-  local key=${2:-$(   Ask -r "Correct Key:$_key" "$_key" || Key )}
+  local sheet=${1:-$( Ask -r "Sheet: ${_target:-01.sheet}" "${_target:-01.sheet}" || Select 'sheet' $( Lsf ) )}
+  local key=${2:-$(   Ask -r "Key: $_key" "$_key" || Key )}
   local desc=${3:-}
-  Echo
-  key=$( echo $key )
-  Echo "Key   : '$key'"
-
   local host=${key#*@}
   local user=${key%@*}
-  
-  Echo
-  Echo "Sheet : '$sheet'"
-  Echo "Host  : '$host'"
-  Echo "User  : '$user'"
-  
-  mkdir -p $LOGSDIR/oper/${_asof}
-  mkdir -p $LOGSDIR/oper/${_asof}/logs
-
-  title=${sheet%.sheet}
-  title=${title##*/}
-  Echo "\n### Title: '$title'"
-  
-  ### 
   ###
   (
     while (( 1==1 ));do
@@ -528,13 +510,13 @@ Sheet () {
           printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
         done
       fi
-      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${title}_${user}@${host}.txt"
-      if [[ ${title} = '01' ]];then
-        stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.txt"
+      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${sheet%.sheet}_${user}@${host}.stxt"
+      if [[ ${sheet} = '01.sheet' ]];then
+        stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.stxt"
       fi
       Echo "Stxt  : $stxt"
       Echo
-      if [[ ${title} = '01' ]];then
+      if [[ ${sheet} = '01.sheet' ]];then
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
@@ -545,31 +527,58 @@ Sheet () {
         cat > ${stxt} <<-EOF
 			#@host: ${host}
 			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${title}_${user}@${host}.log
+			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${sheet%.sheet}_${user}@${host}.log
 			#@sheet: $PWD/${sheet}
 		EOF
       fi
       . $APPLDIR/sheets/00.sheet
-      if [[ ${sheet} = '01.sheet' ]];then
-        . $APPLDIR/sheets/01.sheet
+      rtn=${?}
+      if (( $rtn == 0 ));then
+        if [[ ${sheet} = '01.sheet' ]];then
+          . $APPLDIR/sheets/01.sheet
+        else
+          . $PWD/${sheet}
+        fi
+        rtn=${?}
+        if (( $rtn == 0 ));then
+          . $APPLDIR/sheets/99.sheet
+          rtn=${?}
+          if (( $rtn == 0 ));then
+            cat ${stxt}
+          else
+            Echo "Error 99.sheet"
+          fi
+        else
+          Echo "Error ${sheet}"
+        fi
       else
-        . $PWD/${sheet}
+        Echo "Error 00.sheet"
       fi
-      . $APPLDIR/sheets/99.sheet
 
-      cat ${stxt}
       Echo
-      Echo "### created ${stxt}"
+      Echo "Key   : '$key'"
+      Echo "Host  : '$host'"
+      Echo "User  : '$user'"
+      Echo "Sheet : '$sheet'"
+      Echo "Stxt  : '${stxt}'"
       Echo
       
       act=''
       while [[ $act = '' ]];do
-        act=$( Select 'action' 're-create' 'rm' 'edit-sheet' 'edit-stxt' 'telnet' 'N/A' )
+        act=$( Select 'action' 're-create' 'telnet' 'edit-sheet' 'edit-stxt' 'rm' 'N/A' )
         if [[ "$act" = 'telnet' ]];then
           Tel $stxt
           act=''
         fi
         if [[ "$act" = 'edit-sheet' ]];then
+          if [[ "$sheet" = '01.sheet' ]];then
+            sheet=$( Input 'new sheet name' )
+            while [ -e $PWD/${sheet} ];do
+              sheet=$( Input 'new sheet name' )
+            done
+            sheet="${sheet%.sheet}.sheet"
+            cp $APPLDIR/sheets/01.sheet $PWD/${sheet}
+          fi
           ( edit $PWD/${sheet} )&
           act=''
         fi
@@ -632,8 +641,8 @@ List () {
       fi
     done
     if [[ $act = 'noop' ]];then
-      mv $list "${list%%_*}_noop.txt"
-      echo "no operation" > "${list%%_*}_noop.txt"
+      mv $list "${list%%_*}_noop.stxt"
+      echo "no operation" > "${list%%_*}_noop.stxt"
     else
       eval $act '$list'
     fi
@@ -663,7 +672,7 @@ Lab () {
 }
 
 Task () {
-  local task=${1:-$( Ask -r "Correct Task:$_target" "$_target" || Select 'task' $( Lsf *.task ) )}
+  local task=${1:-$( Ask -r "Task: $_target" "$_target" || Select 'task' $( Lsf *.task ) )}
   cat $task
   
   typeset -i bgn=$( Input 'Begin task' '1')

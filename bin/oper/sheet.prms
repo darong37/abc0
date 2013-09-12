@@ -4,6 +4,7 @@ mecerp3x0111	root    	homeDir  	/
 MECERP3D    	root    	homeDir  	/
 mecerp3x0111	orae001 	homeDir  	/u43/e001/orae001
 mecerp3x0111	orae058 	homeDir  	/u45/e058/orae058
+mecerp3x0111	orad301 	homeDir  	/u22/d301/orad301
 MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
 MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
 
@@ -22,6 +23,11 @@ mecerp3x0111	orae001 	oraVer   	11g
 mecerp3x0111	orae058 	oraVer   	11g
 MECERP3D    	orau001 	oraVer   	9i
 MECERP3D    	orau058 	oraVer   	9i
+
+mecerp3x0111	orae001 	oraEBS   	off
+mecerp3x0111	orae058 	oraEBS   	off
+MECERP3D    	orau001 	oraEBS   	on
+MECERP3D    	orau058 	oraEBS   	on
 
 mecerp3x0111	orae001 	oraSID   	e001
 mecerp3x0111	orae058 	oraSID   	e058

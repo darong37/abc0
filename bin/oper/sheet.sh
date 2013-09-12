@@ -16,14 +16,14 @@ exec 3>&1
 
 ###
 export PS4='        +$LINENO	'
-IntHandler () {
-  Echo "handler"
-  local act=$( Select 'interrupt action' 'continue' 'exit' )
-  if [[ $act = 'exit' ]];then
-    exit
-  fi
-}
-trap 'echo "# you hit break!";IntHandler;return 1' INT
+#IntHandler () {
+#  Echo "handler"
+#  local act=$( Select 'interrupt action' 'continue' 'exit' )
+#  if [[ $act = 'exit' ]];then
+#    exit
+#  fi
+#}
+#trap 'echo "# you hit break!";IntHandler' INT
 
 ###
 cd $APPLDIR
@@ -54,6 +54,7 @@ Hello
   #
   cd $APPLDIR/$_cdir
   if ! tty -s;then exit;fi
+  Asof $_asof
   
   # REPL
   while(( 0==0 ));do
@@ -71,14 +72,16 @@ Hello
     #
     # REP
     #
-    ERROFF
-      _SUB="$( Repl "${PWD#$APPLDIR/}" )"
-      Echo "$_SUB"
-      eval "$_SUB"
-      typeset -i rtn=$?
-      Echo
-      Echo "--> $rtn"
-    ERRON
+#   ERROFF
+      if _SUB="$( Repl "${PWD#$APPLDIR/}" )";then
+        eval "$_SUB"
+        typeset -i rtn=$?
+        Echo
+        Echo "--> $rtn"
+      else
+        Echo "XX: $_SUB"
+      fi
+#   ERRON
   done
 } 2>&1 | tee -a $LOGFILE
 Bye

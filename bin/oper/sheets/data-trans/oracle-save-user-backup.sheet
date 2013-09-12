@@ -1,23 +1,32 @@
 #!/bin/sh -u
 
+### Restrict
+if [[ $user != 'root' ]];then
+  echo "$user can not run (root only)"
+  exit 1
+fi
+
 ### Local Parameter
-orasid=${orasid:-$( Input  'Oracle SID' )}
+bkSID=${bkSID:-$( Input  'Oracle SID' )}
 
 bkRepo=${bkRepo:-$( Select 'Backup/Restore Repository' $( cat <<-DIRS
 	/dev_db/wksp/userbackup
 DIRS
 ))}
 bkDir=${bkDir:-$( Input  'Backup Target Directory' )}
-bkFil=${bkFil:-$( Input  'Backup File Name' "${orasid}_3_imported" )}
+bkFil=${bkFil:-$( Input  'Backup File Name' "${bkSID}_3_imported" )}
+
 
 ### Sheet
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01. ${title}
+# 01. DBのユーザバックアップを取得する
 ######################################################################
-$ ps -ef | grep ora$orasid | grep ora_
-$ ps -ef | grep ora$orasid | grep ora_ | wc -l
+$ pwd
+	$homeDir
+$ ps -ef | grep ora$bkSID | grep ora_
+$ ps -ef | grep ora$bkSID | grep ora_ | wc -l
 	0
 # Backup Target Directory
 $ cd $bkDir

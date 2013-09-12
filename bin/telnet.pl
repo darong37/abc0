@@ -65,13 +65,13 @@ my ( $telnet,$last ) = termRepl($host,$user,$pass,$logh);
 ### シグナル制御
 $SIG{'INT'}  = 'Inthandler';
 sub Inthandler {
-  print STDERR "you hit break!,   do you want to\n";
+  print STDERR "\nyou hit break!,   do you want to\n";
   print STDERR "  0) No op\n";
   print STDERR "  1) Send BREAK \n";
   print STDERR "  2) forced exit\n";
   print STDERR "> ";
 
-  my $ans = input 'No.';  # 標準入力から１行分のデータを受け取る
+  my $ans = input('No.','0');  # 標準入力から１行分のデータを受け取る
   if ( $ans == 0 ){
     $telnet->cmd('');
   } elsif ( $ans == 1 ) {
@@ -100,14 +100,19 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
       @rtns = @{ $stxt->{'rtns'} };
       @cmts = @{ $stxt->{'cmts'} };
       @nots = @{ $stxt->{'nots'} };
-
-      $cnt=0;
-      $keyboad->addhistory($cmds[$cnt]);
-      
       print "# Host   : $host\n";
       print "# User   : $user\n";
       print "# Log    : $logf\n";
       print "# Sheet  : $sheet\n";
+      my $i=0;
+      for ( @cmds ){
+        printf "!!%2d  %s\n",$i++,$_;
+      }
+      do{
+        $cnt = input('!!',"$cnt");       # 標準入力から１行分のデータを受け取る
+      } until ( $cnt =~ /^[0-9]+$/ );
+      $keyboad->addhistory($cmds[$cnt]);
+      
     } elsif( /^\!\!add/ ) {
       my $add = inputS 'Commands';
       my @adds = split /\n/,$add;
@@ -131,7 +136,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
         printf "!!%2d  %s\n",$i++,$_;
       }
       do{
-        $cnt = input '!!';       # 標準入力から１行分のデータを受け取る
+        $cnt = input('!!',"$cnt");       # 標準入力から１行分のデータを受け取る
       } until ( $cnt =~ /^[0-9]+$/ );
       $keyboad->addhistory($cmds[$cnt]);
     }

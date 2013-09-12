@@ -7,14 +7,18 @@ user=${key%@*}
 #
 Echo "Host  : '$host'"
 Echo "User  : '$user'"
+Echo ""
 
 #
-while read key val;do
-  printf -v "$key" "$val"
-  eval echo "$key: \$$key"
+while read var val;do
+  if [[ "$var" != '*' ]];then
+    printf -v "$var" "$val"
+    eval echo "$var: \$$var"
+  fi
 done <<-EOS
 	$( SelTbl $APPLDIR/sheet.prms  "$host"  "$user" '*' | awk '{print $3,$4}' )
 EOS
+Echo ""
 
 localIP=10.213.32.246
 
@@ -31,7 +35,7 @@ $ whoami ; id ; uname -n
 	#! ホスト名、ユーザ名を確認
 	
 $ pwd
-	${homeDir}
+	${homeDir:-未入力}
 
 $ echo \${\$}
 
@@ -42,14 +46,12 @@ $ export PS1='$ '
 
 EOF
 
-
 ### Oracle
 
-echo "oraSID : ${oraSID:-N/A}"
 if [[ "${oraSID:-}" != '' ]];then
 cat >> ${stxt} <<EOS
 $ . $oraSID.env
-> 1
+$( if [[ $oraEBS = 'on' ]];then echo '> 1';fi )
 
 $ echo \$ORACLE_SID
 	$oraSID

@@ -4,26 +4,57 @@ use warnings;
 use Term::ANSIColor qw(:constants);
 use Term::ReadLine;
 use POSIX 'strftime';
-
+#use IO::Prompt::Simple;
+use Term::Prompt;
 
 ###
 sub now {
   return strftime "%Y/%m/%d %H:%M:%S", localtime;
 }
-sub input {
-  my $prompt = shift;
-  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
-  
-  my $stock = $/;
-  print "$prompt > ";
-  $/="\n";
-  chomp( my $rtn = <$in> );
-  $rtn =~ s/\r$//;
 
-  close $in;
-  $/=$stock;
+sub input {
+  my ( $prompt,$default,$help,$flag ) = @_;
+  $default = ' ' unless defined $default;
+  $help    = ''  unless defined $help;
+  $flag    = 'x' unless defined $flag;
+  my $ans = prompt($flag,"$prompt ?","$help","$default");
+# printf "\nans: '$ans'\n";
+  return $ans;
+}
+
+#sub input {
+#  my $prompt = shift;
+#  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
+#  
+#  my $stock = $/;
+#  print "$prompt > ";
+#  $/="\n";
+#  
+#  chomp( my $rtn = <$in> );
+#  
+#  $rtn =~ s/\r$//;
+#
+#  close $in;
+#  $/=$stock;
+#  return $rtn;
+#}
+
+sub inputT {
+  my $rtn='3';
+  eval {
+    local $SIG{ALRM} = sub {die};
+    alarm(5);
+    chomp( $rtn = input @_ );
+    my $timeleft = alarm(0);
+  };
+  if ($@) {
+    # タイムアウト
+    print "\n";
+  }
+# $rtn =~ s/\r$//;
   return $rtn;
 }
+
 sub inputS {
   my $prompt = shift;
   open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
@@ -38,27 +69,18 @@ sub inputS {
   $/=$stock;
   return $rtn;
 }
-sub ask {
-  my ( $prompt,$default ) = @_;
-  open( my $in ,">&STDIN" ) || die "can not open dup STDIN";
-  
-  my $stock = $/;
-  print "$prompt ?[(y)es/(n)o] > ";
-  $/="\n";
-  chomp( my $rtn = <$in> );
-  $rtn =~ s/\r$//;
-  $rtn = $default if $rtn eq '';
 
-  close $in;
-  $/=$stock;
-  
+sub ask {
+  my ( $prompt,$rstring ) = @_;
+
+  my $rtn = input("$prompt","y","y/n");
   if ( $rtn =~ /^[yY]/ ){
-    return 'y';
+    return "$rstring";
   } else {
-#   return 'n';
     return '';
   }
 }
+
 sub stock {
   my ( $n,@src ) = @_;
   my @rtn;
@@ -397,7 +419,7 @@ sub auxread {
 
     my $n=0;
     while( $n < $ans+1 ){
-      while(my @buffer = $telnet->getlines(All => 0) ){
+      while(@buffer = $telnet->getlines(All => 0) ){
         print @buffer if @buffer;
         $ans = 0;
         $n=0;
@@ -406,7 +428,10 @@ sub auxread {
       $n++;
     }
     printf "\n\n\033[%dA\n",2;
-    $ans = input '-- Time out!, <enter|integer>:repeat else:exit-aux';
+#   $DB::single = 1;
+#   $ans = inputT '-- Time out!, <enter|integer>:repeat else:exit-aux';
+#   $ans = prompt 'Time Out > ';
+    $ans = inputT '	TO';
                                   # 標準入力から１行分のデータを受け取る
     printf "\033[%dA",2;          # カーソルを2行だけ上に移動
     printf "\033[J\033[%dA\n",1;  # 位置の右以降をクリア、1行上移動し改行
