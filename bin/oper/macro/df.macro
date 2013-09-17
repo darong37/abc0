@@ -1,4 +1,4 @@
-if [[ "$osname" = "HP-UX" ]];then 
+if [[ "$osName" = "HP-UX" ]];then 
   Echo '$ bdf .'
 else 
   Echo '$ df -k .'

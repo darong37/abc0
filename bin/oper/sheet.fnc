@@ -381,6 +381,11 @@ Edit () {
   fi
 }
 
+Adjust () {
+  local ind=${1:-'  '}
+  perl -pe "s/^${ind}//"
+}
+
 ###
 ### Sheet
 ###
@@ -514,8 +519,23 @@ Sheet () {
       if [[ ${sheet} = '01.sheet' ]];then
         stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.stxt"
       fi
-      Echo "Stxt  : $stxt"
-      Echo
+      ##
+      key=${key:-$_key}
+      host=${key#*@}
+      user=${key%@*}
+      Echo ""
+
+      # Set sheet.prms
+      while read var val;do
+        if [[ "$var" != '*' ]];then
+          printf -v "$var" "$val"
+          eval echo "$var: \$$var"
+        fi
+      done <<-EOS
+		$( SelTbl $APPLDIR/sheet.prms  "$host"  "$user" '*' | awk '{print $3,$4}' )
+		EOS
+      Echo ""
+      
       if [[ ${sheet} = '01.sheet' ]];then
         cat > ${stxt} <<-EOF
 			#@host: ${host}
@@ -652,9 +672,11 @@ List () {
 Macro () {
   local macro=$1
   shift
-  prms=( "${@:-}" )
   #
-  . $APPLDIR/macro/${macro}.macro
+  (
+    prms=( "${@:-}" )
+    . $APPLDIR/macro/${macro}.macro 
+  )
 }
 
 Lab () {

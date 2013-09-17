@@ -1,0 +1,20 @@
+host="${prms[0]}"
+user="${prms[1]}"
+
+##
+Adjust <<EOS
+  $ export PS1='% '
+
+  $ date
+
+  $ jobs
+  	{(\s*)}
+  	#! バックグランドプロセスがないことを確認
+
+  $ whoami ; id ; uname -n
+  	${user}
+  	{*}(${user}) {*}
+  	${host}
+
+  $ exit
+EOS

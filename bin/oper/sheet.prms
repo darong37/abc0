@@ -1,10 +1,10 @@
 #host       	#user   	#name    	value
 mecerp3a0111	root    	homeDir  	/
 mecerp3x0111	root    	homeDir  	/
-MECERP3D    	root    	homeDir  	/
 mecerp3x0111	orae001 	homeDir  	/u43/e001/orae001
 mecerp3x0111	orae058 	homeDir  	/u45/e058/orae058
 mecerp3x0111	orad301 	homeDir  	/u22/d301/orad301
+MECERP3D    	root    	homeDir  	/
 MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
 MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
 
@@ -13,11 +13,14 @@ mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs/
 
 mecerp3a0111	root    	osName   	AIX
 mecerp3x0111	root    	osName   	AIX
-MECERP3D    	root    	osName   	HP-UX
 mecerp3x0111	orae001 	osName   	AIX
 mecerp3x0111	orae058 	osName   	AIX
+MECERP3D    	root    	osName   	HP-UX
 MECERP3D    	orau001 	osName   	HP-UX
 MECERP3D    	orau058 	osName   	HP-UX
+
+mecerp3a0111	root    	srvTier  	AP
+mecerp3x0111	root    	srvTier  	DB
 
 mecerp3x0111	orae001 	oraVer   	11g
 mecerp3x0111	orae058 	oraVer   	11g

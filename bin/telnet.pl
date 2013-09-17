@@ -17,7 +17,94 @@ use IO::Handle;
 STDOUT->autoflush(1);
 STDERR->autoflush(1);
 
+
+###
 # $DB::single = 1 if $cnt > 20;
+### termRepl
+my $timout = 2;
+my $regexP = '/.*[\$>:?#%] +$/';
+sub termRepl {
+  my ( $host, $user, $pass, $logh ) = @_ ;
+  
+  ### Telnet
+  my $telnet = new Net::Telnet(
+    Timeout   => $timout,
+    Prompt    => $regexP, # プロンプト(正規表現)
+    Errmode   => "return",
+    Input_log => $logh,
+  );
+  $telnet->max_buffer_length(10485760);
+
+  ### ホストに接続してログインする
+  $telnet->open($host);
+  my @result = $telnet->login($user, $pass);
+
+  ### 初期コマンドの実行
+  my $init = <<'EOS';
+    export PS1='% '
+    TERM=vt100
+    stty rows 50 columns 144
+EOS
+
+  # 実行
+  for ( split /\n/,$init ){
+    s/^\s+//;
+    print "\% $_\n";
+    @result = $telnet->cmd($_);
+    print @result;
+  }
+  my $last = $telnet->last_prompt;
+  
+  return ( $telnet,$last );
+}
+### 補助入力
+sub auxread {
+  my ( $telnet ) = @_ ;
+  my @result;
+
+  my @buffer=();
+  my $ans='';
+  my $last='';
+  do{
+    $ans = 0 unless $ans =~ /^[0-9]+$/;
+
+    my $n=0;
+    while( $n < $ans+1 ){
+      while(@buffer = $telnet->getlines(All => 0) ){
+        if ( $last ne '' ){
+          unshift @buffer,$last;
+          $last='';
+        }
+        print @buffer if @buffer;
+        $ans = 0;
+        $n=0;
+      }
+      sleep $timout;
+      $n++;
+    }
+    $last = $telnet->get(Timeout => 0) || '';
+    
+    if ( eval '$last =~ '.$regexP ){
+      $ans=" ";
+    } else {
+    
+      my $dat=$last;
+      if ( $dat ne '' ){
+        $dat =~ s/(.|\n)+\n//g;
+      }
+      printf "\n\n\033[%dA\n",2;
+      $ans = inputT  "	Wait or Enter('$dat')";
+                                    # 標準入力から１行分のデータを受け取る
+      printf "\033[%dA",2;          # カーソルを2行だけ上に移動
+      printf "\033[J\033[%dA\n",1;  # 位置の右以降をクリア、1行上移動し改行
+    }
+  } while($ans =~ /^[0-9]*$/ );
+  
+  push @result,@buffer;
+# my $last = $telnet->get;
+  push @result,$last;
+  return @result;
+}
 ###
 $Term::ANSIColor::AUTORESET = 0;
 print RESET;
@@ -162,7 +249,7 @@ while ( defined($_ = $keyboad->readline("$cnt $last")) ) {
         last if ask "\nAre you sure you want to quit telnet",'y';
       }
       @result = auxread($telnet);
-      $last = '> ';
+      $last = shift @result;
     }
     $target = join '',@result;
 

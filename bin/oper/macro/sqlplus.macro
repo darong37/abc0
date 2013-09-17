@@ -1,17 +1,18 @@
-if [[ "$oraVer" = "9i" ]];then 
+if [[ "${oraVer:-}" = "9i" ]];then
   Echo '$ sqlplus "/ as sysdba"'
-else 
+elif [[ "${oraVer:-}" = "11g" ]];then 
   Echo '$ sqlplus / as sysdba'
 fi
 
-cat <<EOS
-> set sqln off
-> set line 200
-> set pagesize 1000
-> select INSTANCE_NAME from v\$instance;
-	INSTANCE_NAME
-	----------------
-	$oraSID
-	
-
-EOS
+if [[ "${oraVer:-}" != "" ]];then 
+  Adjust '    ' <<-EOS
+    > set sqln off
+    > set line 200
+    > set pagesize 1000
+    > select INSTANCE_NAME from v\$instance;
+    	INSTANCE_NAME
+    	----------------
+    	$oraSID
+    	
+	EOS
+fi

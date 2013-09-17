@@ -1,0 +1,23 @@
+host="${prms[0]}"
+user="${prms[1]}"
+homeDir="${prms[2]}"
+
+##
+Adjust <<EOS
+  $ export PS1='% '
+  $ whoami ; id ; uname -n 
+  	${user}
+  	{*}(${user}) {*}
+  	${host}
+  	#! ホスト名、ユーザ名を確認
+  	
+  $ pwd
+  	${homeDir:-未入力}
+
+  $ echo \${\$}
+
+  $ date
+
+  $ export PS1='$ '
+  	#! プロンプト'$ 'は'cmd.log'に出力される
+EOS

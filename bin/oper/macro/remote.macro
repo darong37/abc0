@@ -1,0 +1,11 @@
+host="${prms[0]}"
+user="${prms[1]}"
+homeDir="${prms[2]}"
+
+##
+Adjust <<EOS
+  $ remsh ${host}
+
+$( Macro  init "$host" "$user" "$homeDir" )
+
+EOS

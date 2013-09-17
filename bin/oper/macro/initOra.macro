@@ -1,0 +1,19 @@
+oraSID="${prms[0]}"
+oraHome="${prms[1]}"
+oraEBS="${prms[2]}"
+
+[[ $oraSID = '' ]]  && Die "oraSID not defined"
+[[ $oraHome = '' ]] && Die "oraHome not defined"
+
+##
+Adjust <<EOS
+  $ . $oraSID.env
+  $( if [[ $oraEBS = 'on' ]];then echo '> 1';fi )
+
+  $ echo \$ORACLE_SID
+  	$oraSID
+
+  $ echo \$ORACLE_HOME
+  	$oraHome
+EOS
+

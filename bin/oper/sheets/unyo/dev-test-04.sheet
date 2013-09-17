@@ -1,7 +1,8 @@
 #!/bin/sh -u
 
 ### Restrict
-[[ $user = 'root' ]]      || Die "$user can not run (root only)"
+[[ $user    = 'root' ]] || Die "$user can not run (root only)"
+[[ $srvTier = 'DB' ]]   || Die "$srvTier Tier can not run (DB only)"
 
 
 ### Local Parameter
@@ -12,7 +13,7 @@ tgtSID=${tgtSID:-$( Input 'Target test SID' 's058' )}
 cat >> ${stxt} <<EOF
 
 ######################################################################
-# 01.開発環境 個別起動停止
+# 01.開発環境 個別起動
 ######################################################################
 $ cd /u00/unyo/scripts/ebs
 $ pwd
@@ -20,22 +21,49 @@ $ pwd
 
 $ ls -l dev_ebs_pscheck.sh
 $ ls -l sub_pscheck_AP.sh
-$ ls -l lcl_ebs_stop_appl.sh
-$ ls -l lcl_ebs_stop_db.sh
+$ ls -l lcl_ebs_start_appl.sh
+$ ls -l lcl_ebs_start_db.sh
 
 #
 # DB-Tier 側でpscheckを行う
 #
 $ ./dev_ebs_pscheck.sh ${tgtSID}
-	#! 起動していることを確認
+	#! 停止していることを確認(WARNING)
+
+$ echo \$?
+	99
+
+#
+# DB-Tier DB 起動テスト
+#
+$ ./lcl_ebs_start_db.sh ${tgtSID}
+	#! 正常に起動することを確認
 
 $ echo \$?
 	0
 
+#
+# DB-Tier EBS 起動テスト
+#
+$ ./lcl_ebs_start_appl.sh ${tgtSID}
+	#! 正常に起動することを確認
+
+$ echo \$?
+	0
+
+#
+# DB-Tier 側でpscheckを行う
+#
+$ ./dev_ebs_pscheck.sh ${tgtSID}
+	#! AP EBSのみ停止していることを確認
+
+$ echo \$?
+	99
+
 
 #################################
 # Ap-Tier テスト start
-#
+#################################
 $( Macro remote mecerp3a0111 root '/' )
 
 $ uname -n
@@ -50,37 +78,37 @@ $ pwd
 # AP-Tier EBS 確認
 #
 $ ./sub_pscheck_AP.sh ${tgtSID}
-	#! 起動していることを確認
+	#! 停止していることを確認(WARNING)
 
 $ echo \$?
-	0
+	1
 
 #
-# AP-Tier EBS 停止テスト
+# AP-Tier EBS 起動テスト
 #
-$ ./lcl_ebs_stop_appl.sh ${tgtSID}
+$ ./lcl_ebs_start_appl.sh ${tgtSID}
 	#! 正常に停止することを確認
 
 $ echo \$?
 	0
 
 #
-# AP-Tier EBS 停止確認
+# AP-Tier EBS 起動確認
 #
 $ ./sub_pscheck_AP.sh ${tgtSID}
-	#! 起動していないことを確認(WARNING)
+	#! 起動していることを確認(WARNING)
 
 $ echo \$?
-	1
+	0
 
 #
-# AP-Tier テスト exit
+# AP-Tier テスト終了
 #
+
 $( Macro fin mecerp3a0111 root )
-
 #################################
 # DB-Tier処理
-#
+#################################
 $ uname -n
 	mecerp3x0111
 	#! 再確認
@@ -88,37 +116,10 @@ $ uname -n
 # DB-Tier 側でpscheckを行う
 #
 $ ./dev_ebs_pscheck.sh ${tgtSID}
-	#! AP EBSが停止していることを確認
-
-$ echo \$?
-	99
-
-#
-# DB-Tier EBS 停止テスト
-#
-$ ./lcl_ebs_stop_appl.sh ${tgtSID}
-	#! 正常に停止することを確認
+	#! 正常に起動していることを確認
 
 $ echo \$?
 	0
-
-#
-# DB-Tier DB 停止テスト
-#
-$ ./lcl_ebs_stop_db.sh ${tgtSID}
-	#! 正常に停止することを確認
-
-$ echo \$?
-	0
-
-#
-# DB-Tier 側でpscheckを行う
-#
-$ ./dev_ebs_pscheck.sh ${tgtSID}
-	#! 起動していないことを確認
-
-$ echo \$?
-	99
 
 
 EOF

@@ -1,63 +1,15 @@
 #!/bin/sh -u
 
-# Set sheet.prms
-key=${key:-$_key}
-host=${key#*@}
-user=${key%@*}
-#
-Echo "Host  : '$host'"
-Echo "User  : '$user'"
-Echo ""
-
-#
-while read var val;do
-  if [[ "$var" != '*' ]];then
-    printf -v "$var" "$val"
-    eval echo "$var: \$$var"
-  fi
-done <<-EOS
-	$( SelTbl $APPLDIR/sheet.prms  "$host"  "$user" '*' | awk '{print $3,$4}' )
-EOS
-Echo ""
-
 localIP=10.213.32.246
 
 ### Sheet
-cat >> ${stxt} <<EOF
+Adjust >> ${stxt} <<EOF
+  ######################################################################
+  # 00. ${host} に ${user} でログイン
+  ######################################################################
+  $( Macro init    "$host" "$user" "$homeDir" )
 
-######################################################################
-# 00. ${host} に ${user} でログイン
-######################################################################
-$ whoami ; id ; uname -n 
-	${user}
-	{*}(${user}) {*}
-	${host}
-	#! ホスト名、ユーザ名を確認
-	
-$ pwd
-	${homeDir:-未入力}
-
-$ echo \${\$}
-
-$ date
-
-$ export PS1='$ '
-	#! プロンプト'$ 'は'cmd.log'に出力される
+  $( Macro initOra "${oraSID:-}" "${oraHome:-}" "${oraEBS:-}" )
 
 EOF
 
-### Oracle
-
-if [[ "${oraSID:-}" != '' ]];then
-cat >> ${stxt} <<EOS
-$ . $oraSID.env
-$( if [[ $oraEBS = 'on' ]];then echo '> 1';fi )
-
-$ echo \$ORACLE_SID
-	$oraSID
-
-$ echo \$ORACLE_HOME
-	$oraHome
-
-EOS
-fi
