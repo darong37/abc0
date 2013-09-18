@@ -45,6 +45,9 @@ EOS1
 typeset -i idx=2
 while [[ "${prms[$idx]:-}" != '' ]];do
   flnm="${prms[$idx]}"
+
+  flnm="${flnm%:*}"
+  flnm2="${flnm#*:}"
   cat <<EOS2
 > ${prv1} ${flnm}
 	{*} ${flnm}

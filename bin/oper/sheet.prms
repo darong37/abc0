@@ -8,8 +8,8 @@ MECERP3D    	root    	homeDir  	/
 MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
 MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
 
-mecerp3a0111	root    	cronDir  	/var/spool/cron/crontabs/
-mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs/
+mecerp3a0111	root    	cronDir  	/var/spool/cron/crontabs
+mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs
 
 mecerp3a0111	root    	osName   	AIX
 mecerp3x0111	root    	osName   	AIX
@@ -56,6 +56,9 @@ mecerp3x0111	orae001 	alrtLog  	/u43/e001/oracle/diag/rdbms/e001/e001/trace/aler
 mecerp3x0111	orae058 	alrtLog  	/u45/e058/oracle/diag/rdbms/e058/e058/trace/alert_e058.log
 MECERP3D    	orau001 	alrtLog  	/u02/u001/oracle/u001db/9.2.0/admin/u001_mecerp3d/bdump/alert_u001.log
 MECERP3D    	orau058 	alrtLog  	/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+
+mecerp3x0111	orae001 	oraSpfl  	/u43/e001/oracle/db/tech_st/11.2.0/dbs/spfilee001.ora
+mecerp3x0111	orae058 	oraSpfl  	/u45/e058/oracle/db/tech_st/11.2.0/dbs/spfilee058.ora
 
 mecerp3x0111	orae001 	oemURL   	https://mecerp3x0111.in.mec.co.jp:1158/em/console/aboutApplication
 mecerp3x0111	orae058 	oemURL   	https://mecerp3x0111.in.mec.co.jp:5500/em/console/aboutApplication

@@ -1,4 +1,6 @@
 #!/bin/sh -u
+### Restrict
+[[ $user    = 'root' ]] || Die "$user can not run (root only)"
 
 ### Local Parameter
 
@@ -8,10 +10,10 @@ cat >> ${stxt} <<EOF
 ######################################################################
 # 01.cron設定確認及び設定バックアップ
 ######################################################################
-$ cd $crondir
+$ cd $cronDir
 
 $ pwd
-	$crondir
+	$cronDir
 
 $ ls -l
 
@@ -52,6 +54,9 @@ $ crontab cron.${host}
 $ crontab -l
 
 $ diff root cron.${host}
+	#! 差異がないことを確認
+	
+$ cp -pi root root.master
 
 
 EOF

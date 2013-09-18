@@ -25,6 +25,24 @@ sub output {
   }
 }
 
+### ÉVÉOÉiÉãêßå‰
+$SIG{'INT'} = $SIG{'TERM'} = $SIG{'HUP'} = $SIG{'QUIT'} = 'Inthandler';
+sub Inthandler {
+  my $timend = time;
+  my $timoff = $timend - $timbgn;
+
+  output ;
+  output "# received break";
+  output "# execution ${timoff} sec.";
+  print $OUT "\n\n\n";
+  print $CMD "\n";
+
+  close $OUT;
+  close $CMD;
+  
+  exit;
+}
+
 #
 my $timbgn = time;
 while(<>){
@@ -44,3 +62,5 @@ print $CMD "\n";
 
 close $OUT;
 close $CMD;
+
+exit;

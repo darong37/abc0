@@ -23,40 +23,7 @@ STDERR->autoflush(1);
 ### termRepl
 my $timout = 2;
 my $regexP = '/.*[\$>:?#%] +$/';
-sub termRepl {
-  my ( $host, $user, $pass, $logh ) = @_ ;
-  
-  ### Telnet
-  my $telnet = new Net::Telnet(
-    Timeout   => $timout,
-    Prompt    => $regexP, # プロンプト(正規表現)
-    Errmode   => "return",
-    Input_log => $logh,
-  );
-  $telnet->max_buffer_length(10485760);
 
-  ### ホストに接続してログインする
-  $telnet->open($host);
-  my @result = $telnet->login($user, $pass);
-
-  ### 初期コマンドの実行
-  my $init = <<'EOS';
-    export PS1='% '
-    TERM=vt100
-    stty rows 50 columns 144
-EOS
-
-  # 実行
-  for ( split /\n/,$init ){
-    s/^\s+//;
-    print "\% $_\n";
-    @result = $telnet->cmd($_);
-    print @result;
-  }
-  my $last = $telnet->last_prompt;
-  
-  return ( $telnet,$last );
-}
 ### 補助入力
 sub auxread {
   my ( $telnet ) = @_ ;
@@ -147,10 +114,39 @@ print $logh "# Host   : $host\n";
 print $logh "# User   : $user\n";
 print $logh "# Log    : $logf\n";
 print $logh "# Sheet  : $sheet\n";
-my ( $telnet,$last ) = termRepl($host,$user,$pass,$logh);
+
+#my ( $telnet,$last ) = termRepl($host,$user,$pass,$logh);
+### Telnet
+my $telnet = new Net::Telnet(
+  Timeout   => $timout,
+  Prompt    => $regexP, # プロンプト(正規表現)
+  Errmode   => "return",
+  Input_log => $logh,
+);
+$telnet->max_buffer_length(10485760);
+
+### ホストに接続してログインする
+$telnet->open($host);
+my @result0 = $telnet->login($user, $pass);
+
+### 初期コマンドの実行
+my $init = <<'EOS';
+  export PS1='% '
+  TERM=vt100
+  stty rows 50 columns 144
+EOS
+
+# 実行
+for ( split /\n/,$init ){
+  s/^\s+//;
+  print "\% $_\n";
+  @result0 = $telnet->cmd($_);
+  print @result0;
+}
+my $last = $telnet->last_prompt;
 
 ### シグナル制御
-$SIG{'INT'}  = 'Inthandler';
+$SIG{'INT'} = $SIG{'TERM'} = $SIG{'HUP'} = $SIG{'QUIT'} = 'Inthandler';
 sub Inthandler {
   print STDERR "\nyou hit break!,   do you want to\n";
   print STDERR "  0) No op\n";
@@ -159,9 +155,10 @@ sub Inthandler {
   print STDERR "> ";
 
   my $ans = input('No.','0');  # 標準入力から１行分のデータを受け取る
-  if ( $ans == 0 ){
-    $telnet->cmd('');
-  } elsif ( $ans == 1 ) {
+#  if ( $ans == 0 ){
+#    $telnet->cmd('');
+#  } els
+  if ( $ans == 1 ) {
     my $ok = $telnet->break;
     print STDERR "send break($ok)!\n";
   } elsif ( $ans == 2 ) {

@@ -212,7 +212,6 @@ SelTbl () {
   #
   local tbl=$1
   shift
-  
   eles=( $( head -1 $tbl ) )
   typeset -i c=0
   typeset -i n=0
@@ -249,7 +248,10 @@ SelTbl () {
       fi
     else
       c=$( awk " $cond {print} " $tbl | wc -l )
+      
       if (( $c == 0 ));then
+Echo "SelTbl tbl :'$tbl'"  >&2
+Echo "SelTbl cond:'$cond'" >&2
         val="$( Input "$ele" )"
         vals="$vals	$val"
       else
@@ -395,6 +397,7 @@ Asof () {
   
   mkdir -p $LOGSDIR/oper/${_asof}
   mkdir -p $LOGSDIR/oper/${_asof}/logs
+  mkdir -p $LOGSDIR/oper/${_asof}/work
 }
 
 Key () {
@@ -505,19 +508,33 @@ Sheet () {
   ###
   (
     while (( 1==1 ));do
-      typeset -i seqno=1
-      typeset hdr=${desc}
-      if [[ $hdr = '' ]];then
-        printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-        
-        while [ -f $LOGSDIR/oper/${_asof}/${hdr}* ];do
-          seqno=$(( $seqno + 1 ))
-          printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-        done
-      fi
-      typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${sheet%.sheet}_${user}@${host}.stxt"
+#      typeset -i seqno=1
+#      typeset hdr=${desc}
+#      if [[ $hdr = '' ]];then
+##       printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
+#        printf -v 'hdr' '%03d' $seqno
+#        
+#        while [ -f $LOGSDIR/oper/${_asof}/${hdr}_* ];do
+#          seqno=$(( $seqno + 1 ))
+##         printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
+#          printf -v 'hdr' '%03d' $seqno
+#        done
+#      fi
+#     typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${sheet%.sheet}_${user}@${host}.stxt"
+      typeset stxt
       if [[ ${sheet} = '01.sheet' ]];then
-        stxt="$LOGSDIR/oper/${_asof}/_${user}@${host}.stxt"
+        stxt="$LOGSDIR/oper/${_asof}/work/_${user}@${host}.stxt"
+        logf="$LOGSDIR/oper/${_asof}/logs/_${user}@${host}.log"
+      else
+        stxt="$LOGSDIR/oper/${_asof}/work/${sheet%.sheet}_${user}@${host}.stxt"
+        logf="$LOGSDIR/oper/${_asof}/logs/${sheet%.sheet}_${user}@${host}.log"
+      fi
+      ##
+      ## workƒƒO—š—ð•Û‘¶
+      ##
+      if [ -e "$logf" ];then
+        cat $logf >> ${logf%.log}_all.log
+        rm -f $logf
       fi
       ##
       key=${key:-$_key}
@@ -536,21 +553,12 @@ Sheet () {
 		EOS
       Echo ""
       
-      if [[ ${sheet} = '01.sheet' ]];then
-        cat > ${stxt} <<-EOF
-			#@host: ${host}
-			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${_asof}/logs/_${user}@${host}.log
-			#@sheet: $PWD/${sheet}
+      cat > ${stxt} <<-EOF
+		#@host: ${host}
+		#@user: ${user}
+		#@logf: ${logf}
+		#@sheet: $PWD/${sheet}
 		EOF
-      else
-        cat > ${stxt} <<-EOF
-			#@host: ${host}
-			#@user: ${user}
-			#@logf: $LOGSDIR/oper/${_asof}/logs/${hdr}_${sheet%.sheet}_${user}@${host}.log
-			#@sheet: $PWD/${sheet}
-		EOF
-      fi
       . $APPLDIR/sheets/00.sheet
       rtn=${?}
       if (( $rtn == 0 ));then
@@ -563,9 +571,7 @@ Sheet () {
         if (( $rtn == 0 ));then
           . $APPLDIR/sheets/99.sheet
           rtn=${?}
-          if (( $rtn == 0 ));then
-            cat ${stxt}
-          else
+          if (( $rtn != 0 ));then
             Echo "Error 99.sheet"
           fi
         else
@@ -585,7 +591,11 @@ Sheet () {
       
       act=''
       while [[ $act = '' ]];do
-        act=$( Select 'action' 're-create' 'telnet' 'edit-sheet' 'edit-stxt' 'rm' 'N/A' )
+        act=$( Select 'action' 're-create' 'cat' 'telnet' 'edit-sheet' 'edit-stxt' 'Numbering' 'N/A' 'rm' )
+        if [[ "$act" = 'cat' ]];then
+          cat $stxt
+          act=''
+        fi
         if [[ "$act" = 'telnet' ]];then
           Tel $stxt
           act=''
@@ -621,6 +631,23 @@ Sheet () {
         if [ -e $stxt ];then
           eval rm '$stxt'
         fi
+        break
+      fi
+      if [[ "$act" = 'Numbering' ]];then
+        typeset -i seqno=1
+        typeset hdr=${desc}
+        if [[ $hdr = '' ]];then
+          printf -v 'hdr' '%03d' $seqno
+          
+          while [ -f $LOGSDIR/oper/${_asof}/${hdr}_* ];do
+            seqno=$(( $seqno + 1 ))
+            printf -v 'hdr' '%03d' $seqno
+          done
+        fi
+        local ntxt="$( Input 'Stxt Name' "${hdr}_${sheet%.sheet}_${user}@${host}" )"
+        mv $stxt $LOGSDIR/oper/${_asof}/${ntxt}.stxt
+        cat $logf > $LOGSDIR/oper/${_asof}/logs/${ntxt}.log
+        rm  $logf
         break
       fi
     done
