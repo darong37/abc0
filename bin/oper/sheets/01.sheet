@@ -10,8 +10,20 @@ cat >> ${stxt} <<EOF
 # 01. ŽŽ—p
 ###################################################
 $ pwd
-$( Macro sqlplus )
+$(  [[ ${oraSID:-} = '' ]] || 
+    Adjust '      ' <<-EOS
+      $ ls -l $oraData
+      	$oraData
+      $ ls -l $oraSPF
+      	$oraSPF
+      $ ls -l $alrtLog
+      	$alrtLog
+	EOS
+)
 
+$( Macro sqlplus )
+> show parameters spfile
+	$oraSPF
 > exit
 
 $( Macro localftp put oper a.a )

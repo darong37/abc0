@@ -2,18 +2,28 @@ oraSID="${prms[0]}"
 oraHome="${prms[1]}"
 oraEBS="${prms[2]}"
 
-[[ $oraSID = '' ]]  && Die "oraSID not defined"
-[[ $oraHome = '' ]] && Die "oraHome not defined"
+if [[ $oraSID != '' ]];then
+  if [[ $oraSID = 'tmpcpf' ]];then
+    echo "$ . .eyos"
+    echo "> 1"
+  elif [[ $oraSID = 'devcpf' ]];then
+    echo "$ . .eyos"
+    echo "> 2"
+  elif [[ $oraSID = 'uatcpf' ]];then
+    echo "$ . .eyos"
+    echo "> 3"
+  else
+    echo "$ . $oraSID.env"
+    if [[ $oraEBS = 'on' ]];then
+      echo '> 1'
+    fi
+  fi
+  Adjust '    ' <<-EOS
 
-##
-Adjust <<EOS
-  $ . $oraSID.env
-  $( if [[ $oraEBS = 'on' ]];then echo '> 1';fi )
+    $ echo \$ORACLE_SID
+    	$oraSID
 
-  $ echo \$ORACLE_SID
-  	$oraSID
-
-  $ echo \$ORACLE_HOME
-  	$oraHome
-EOS
-
+    $ echo \$ORACLE_HOME
+    	$oraHome
+	EOS
+fi

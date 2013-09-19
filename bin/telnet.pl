@@ -93,11 +93,13 @@ $stxt->read;
 ### TermREPL
 my $host  = $stxt->{'host'};
 my $user  = $stxt->{'user'};
+my $lang  = $stxt->{'lang'};
 my $logf  = $stxt->{'logf'};
 my $sheet = $stxt->{'sheet'};
 
 print "# Host   : $host\n";
 print "# User   : $user\n";
+print "# Lang   : $lang\n";
 print "# Log    : $logf\n";
 print "# Sheet  : $sheet\n";
 
@@ -112,6 +114,7 @@ my $pass = `sh /c/Users/JKK0544/.abc/bin/spass $host $user`;
 open my $logh,"| logging.pl $logf" or die "can not open $logf";
 print $logh "# Host   : $host\n";
 print $logh "# User   : $user\n";
+print $logh "# Lang   : $lang\n";
 print $logh "# Log    : $logf\n";
 print $logh "# Sheet  : $sheet\n";
 

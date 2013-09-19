@@ -69,6 +69,7 @@ Repl () {
       Echo "# c: Clear"  >&2
       Echo "# e: Edit"   >&2
       Echo "# s: Sheet"  >&2
+      Echo "# t: Tel"    >&2
       Echo "# b: Branch" >&2
       Echo "# q: break"  >&2
       ;;
@@ -77,6 +78,7 @@ Repl () {
   c)  Echo "_target=''"  ;;
   e)  Echo "Edit"        ;;
   s)  Echo "Sheet"       ;;
+  t)  Echo "Tel"         ;;
   b)  Echo "Branch"      ;;
   q)  Echo "break"       ;;
   '')
@@ -106,7 +108,7 @@ Input () {
     Echo -n "Input ${prompt} > "  >&2
     read ans
     if [[ $ans = '??' ]];then
-      ans="$( SelTbl $APPLDIR/sheet.prms | awk '{print $4}' )"
+      ans="$( SelTbl $APPLDIR/sheet.prms | awk '{print $5}' )"
       Echo "${prompt} : '$ans'"   >&2
     fi
     if [[ $ans = '.' ]];then
@@ -250,8 +252,8 @@ SelTbl () {
       c=$( awk " $cond {print} " $tbl | wc -l )
       
       if (( $c == 0 ));then
-Echo "SelTbl tbl :'$tbl'"  >&2
-Echo "SelTbl cond:'$cond'" >&2
+        Echo "SelTbl tbl :'$tbl'"  >&2
+        Echo "       cond:'$cond'" >&2
         val="$( Input "$ele" )"
         vals="$vals	$val"
       else
@@ -403,9 +405,20 @@ Asof () {
 Key () {
   local eles=( $( SelTbl $CONFDIR/abc.hosts 'OS' ) )
   #
-  Echo "${eles[3]}@${eles[2]}"
-  _key="${eles[3]}@${eles[2]}"
+  Echo "${eles[3]}@${eles[2]}:${eles[1]}"
+  _key="${eles[3]}@${eles[2]}:${eles[1]}"
   Echo "_defkey=$_key" > $APPLDIR/.sheet
+}
+
+Lang () {
+  local key=${1:-$(   Ask -r "Key: $_key" "$_key" || Key )}
+
+  local mode=${key#*:}
+  local host=${key#*@}
+  host=${host%:*}
+  local user=${key%@*}
+
+  SelTbl $CONFDIR/abc.hosts 'OS' "$mode" "$host" "$user" | awk '{print $6}'
 }
 
 Lsf () {
@@ -484,43 +497,22 @@ Branch () {
 }
 
 Tel () {
-  local stxt=${1:-$( Select 'Sheet' $( Lsf $LOGSDIR/oper/$_asof/*.stxt ) )}
-  
-  Echo
-  Echo "Stxt  : $stxt"
-  local shead=$( basename $stxt .stxt )
-  shead=${shead##*_}
-  Echo "Shead : $shead"
-  
-  local logf=$( dirname $stxt )
-  logf="${logf}/logs/$( basename $stxt '.stxt' ).log"
-  Echo "# logf  : $logf"
-
-  ( /bin/mintty -t "$shead - Tel"  telnet.pl $stxt  )&
+  local stxt=${1:-01.sheet}
+  Sheet "$stxt"
 }
 
 Sheet () {
   local sheet=${1:-$( Ask -r "Sheet: ${_target:-01.sheet}" "${_target:-01.sheet}" || Select 'sheet' $( Lsf ) )}
   local key=${2:-$(   Ask -r "Key: $_key" "$_key" || Key )}
   local desc=${3:-}
+  local act=${4:-}
+  local mode=${key#*:}
   local host=${key#*@}
+  host=${host%:*}
   local user=${key%@*}
   ###
   (
     while (( 1==1 ));do
-#      typeset -i seqno=1
-#      typeset hdr=${desc}
-#      if [[ $hdr = '' ]];then
-##       printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-#        printf -v 'hdr' '%03d' $seqno
-#        
-#        while [ -f $LOGSDIR/oper/${_asof}/${hdr}_* ];do
-#          seqno=$(( $seqno + 1 ))
-##         printf -v 'hdr' '%08d-%03d' "${_asof}" $seqno
-#          printf -v 'hdr' '%03d' $seqno
-#        done
-#      fi
-#     typeset stxt="$LOGSDIR/oper/${_asof}/${hdr}_${sheet%.sheet}_${user}@${host}.stxt"
       typeset stxt
       if [[ ${sheet} = '01.sheet' ]];then
         stxt="$LOGSDIR/oper/${_asof}/work/_${user}@${host}.stxt"
@@ -538,8 +530,11 @@ Sheet () {
       fi
       ##
       key=${key:-$_key}
+      mode=${key#*:}
       host=${key#*@}
+      host=${host%:*}
       user=${key%@*}
+      lang=$( Lang $key )
       Echo ""
 
       # Set sheet.prms
@@ -549,7 +544,7 @@ Sheet () {
           eval echo "$var: \$$var"
         fi
       done <<-EOS
-		$( SelTbl $APPLDIR/sheet.prms  "$host"  "$user" '*' | awk '{print $3,$4}' )
+		$( SelTbl $APPLDIR/sheet.prms  "$mode"  "$host"  "$user" '*' | awk '{print $4,$5}' )
 		EOS
       Echo ""
       
@@ -557,6 +552,7 @@ Sheet () {
 		#@host: ${host}
 		#@user: ${user}
 		#@logf: ${logf}
+		#@lang: ${lang}
 		#@sheet: $PWD/${sheet}
 		EOF
       . $APPLDIR/sheets/00.sheet
@@ -583,13 +579,20 @@ Sheet () {
 
       Echo
       Echo "Key   : '$key'"
+      Echo "Mode  : '$mode'"
       Echo "Host  : '$host'"
       Echo "User  : '$user'"
+      Echo "Lang  : '$lang'"
       Echo "Sheet : '$sheet'"
       Echo "Stxt  : '${stxt}'"
+      Echo "Log   : '$logf'"
       Echo
       
-      act=''
+      if [[ "$lang" = 'utf8' ]];then
+        Echo "Convert UTF-8"
+        cat $stxt | nkf32 -Sw > $stxt.tmp
+        mv  $stxt.tmp $stxt
+      fi
       while [[ $act = '' ]];do
         act=$( Select 'action' 're-create' 'cat' 'telnet' 'edit-sheet' 'edit-stxt' 'Numbering' 'N/A' 'rm' )
         if [[ "$act" = 'cat' ]];then
@@ -597,7 +600,15 @@ Sheet () {
           act=''
         fi
         if [[ "$act" = 'telnet' ]];then
-          Tel $stxt
+          local shead=$( basename $stxt .stxt )
+          shead=${shead##*_}
+          Echo "Header: $shead"
+          if [[ "$lang" = 'utf8' ]];then
+            ( /bin/mintty -o Charset=UTF-8 -t "$shead - Tel"  telnet.pl $stxt  )&
+          else
+            ( /bin/mintty -o Charset=SJIS  -t "$shead - Tel"  telnet.pl $stxt  )&
+          fi
+
           act=''
         fi
         if [[ "$act" = 'edit-sheet' ]];then
@@ -655,16 +666,16 @@ Sheet () {
 }
 
 Find () {
-  local keyword=${1:-''}
-  keyword='^[\$>_] .*'"$keyword"
+  local kword=${1:-''}
+  kword='^[\$>_] .*'"$kword"
 
   find . -type f -name '*.sheet' | while read;do
-    rst="$( egrep "$keyword" "$REPLY" )"
+    rst="$( egrep "$kword" "$REPLY" )"
     if [[ $rst != '' ]];then
       Echo >&2
       ls "${REPLY#./}"
       ls --color "${REPLY#./}"  >&2
-      egrep --color -n "$keyword" "${REPLY#./}" >&2
+      egrep --color -n "$kword" "${REPLY#./}" >&2
     fi
   done
 }

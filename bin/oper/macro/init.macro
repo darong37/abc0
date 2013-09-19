@@ -3,6 +3,7 @@ user="${prms[1]}"
 homeDir="${prms[2]}"
 
 ##
+
 Adjust <<EOS
   $ export PS1='% '
   $ whoami ; id ; uname -n 

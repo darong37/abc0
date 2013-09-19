@@ -12,6 +12,7 @@ sub new {
     stxt  => $stxtFile,
     host  => '',
     user  => '',
+    lang  => '',
     logf  => '',
     sheet => '',
     cmds  => [],
@@ -43,6 +44,7 @@ sub read {
   #
   my $host;
   my $user;
+  my $lang;
   my $logf;
   my $sheet;
 
@@ -63,6 +65,7 @@ sub read {
     if ( /^#\@/ ){
       ( $host )  = $_ =~ /^#\@host: (.+)\s*$/  if /^#\@host: /;
       ( $user )  = $_ =~ /^#\@user: (.+)\s*$/  if /^#\@user: /;
+      ( $lang  ) = $_ =~ /^#\@lang: (.+)\s*$/  if /^#\@lang: /;
       ( $logf )  = $_ =~ /^#\@logf?: (.+)\s*$/ if /^#\@logf?: /;
       ( $sheet ) = $_ =~ /^#\@sheet: (.+)\s*$/ if /^#\@sheet: /;
       next;
@@ -121,6 +124,7 @@ sub read {
   #
   $self->{'host'}  = $host;
   $self->{'user'}  = $user;
+  $self->{'lang'}  = $lang;
   $self->{'logf'}  = $logf;
   $self->{'sheet'} = $sheet;
   

@@ -1,0 +1,29 @@
+#!/bin/sh -u
+
+### Local Parameter
+typeset praNam=$( Input 'Parameter Name' 'user_dump_dest' )
+
+
+### Sheet
+cat >> ${stxt} <<EOF
+
+######################################################################
+# 01. 初期化パラメータのエントリを SPFILE から削除する
+######################################################################
+$ ls -l $oraSPF
+	#! 存在することを確認
+$ cat $oraSPF
+
+$ grep '$praNam' $oraSPF
+
+$( Macro sqlplus )
+> show parameter $praNam
+> alter system reset $praNam;
+> !cat $oraSPF
+
+> exit
+
+$ grep '$praNam' $oraSPF
+
+
+EOF

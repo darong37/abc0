@@ -1,64 +1,100 @@
-#host       	#user   	#name    	value
-mecerp3a0111	root    	homeDir  	/
-mecerp3x0111	root    	homeDir  	/
-mecerp3x0111	orae001 	homeDir  	/u43/e001/orae001
-mecerp3x0111	orae058 	homeDir  	/u45/e058/orae058
-mecerp3x0111	orad301 	homeDir  	/u22/d301/orad301
-MECERP3D    	root    	homeDir  	/
-MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
-MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
+#mode       	#host       	#user   	#name    	value
+DEV         	mecerp3a0111	root    	homeDir  	/
+DEV         	mecerp3x0111	root    	homeDir  	/
+DEV         	mecerp3x0111	orae001 	homeDir  	/u43/e001/orae001
+DEV         	mecerp3x0111	orae058 	homeDir  	/u45/e058/orae058
+DEV         	mecerp3x0111	orad301 	homeDir  	/u22/d301/orad301
+DEV         	MECERP3D    	root    	homeDir  	/
+DEV         	MECERP3D    	orau001 	homeDir  	/u02/u001/orau001
+DEV         	MECERP3D    	orau058 	homeDir  	/u10/u058/orau058
+DEV         	MEC-PRE3D0111	oracle  	homeDir  	/oraapp/home
+UAT         	MEC-PRE3D0111	oracle  	homeDir  	/oraapp/home
+TMP         	MEC-PRE3D0111	oracle  	homeDir  	/oraapp/home
 
-mecerp3a0111	root    	cronDir  	/var/spool/cron/crontabs
-mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs
+DEV         	mecerp3a0111	root    	cronDir  	/var/spool/cron/crontabs
+DEV         	mecerp3x0111	root    	cronDir  	/var/spool/cron/crontabs
 
-mecerp3a0111	root    	osName   	AIX
-mecerp3x0111	root    	osName   	AIX
-mecerp3x0111	orae001 	osName   	AIX
-mecerp3x0111	orae058 	osName   	AIX
-MECERP3D    	root    	osName   	HP-UX
-MECERP3D    	orau001 	osName   	HP-UX
-MECERP3D    	orau058 	osName   	HP-UX
+DEV         	mecerp3a0111	root    	osName   	AIX
+DEV         	mecerp3x0111	root    	osName   	AIX
+DEV         	mecerp3x0111	orae001 	osName   	AIX
+DEV         	mecerp3x0111	orae058 	osName   	AIX
+DEV         	MECERP3D    	root    	osName   	HP-UX
+DEV         	MECERP3D    	orau001 	osName   	HP-UX
+DEV         	MECERP3D    	orau058 	osName   	HP-UX
+DEV         	MEC-PRE3D0111	oracle  	osName   	AIX
+UAT         	MEC-PRE3D0111	oracle  	osName   	AIX
+TMP         	MEC-PRE3D0111	oracle  	osName   	AIX
 
-mecerp3a0111	root    	srvTier  	AP
-mecerp3x0111	root    	srvTier  	DB
+DEV         	mecerp3a0111	root    	srvTier  	AP
+DEV         	mecerp3x0111	root    	srvTier  	DB
 
-mecerp3x0111	orae001 	oraVer   	11g
-mecerp3x0111	orae058 	oraVer   	11g
-MECERP3D    	orau001 	oraVer   	9i
-MECERP3D    	orau058 	oraVer   	9i
+DEV         	mecerp3x0111	orae001 	oraVer   	11g
+DEV         	mecerp3x0111	orae058 	oraVer   	11g
+DEV         	MECERP3D    	orau001 	oraVer   	9i
+DEV         	MECERP3D    	orau058 	oraVer   	9i
+DEV         	MEC-PRE3D0111	oracle  	oraVer   	11g
+UAT         	MEC-PRE3D0111	oracle  	oraVer   	11g
+TMP         	MEC-PRE3D0111	oracle  	oraVer   	11g
 
-mecerp3x0111	orae001 	oraEBS   	off
-mecerp3x0111	orae058 	oraEBS   	off
-MECERP3D    	orau001 	oraEBS   	on
-MECERP3D    	orau058 	oraEBS   	on
+DEV         	mecerp3x0111	orae001 	oraEBS   	off
+DEV         	mecerp3x0111	orae058 	oraEBS   	off
+DEV         	MECERP3D    	orau001 	oraEBS   	on
+DEV         	MECERP3D    	orau058 	oraEBS   	on
+DEV         	MEC-PRE3D0111	oracle  	oraEBS   	off
+UAT         	MEC-PRE3D0111	oracle  	oraEBS   	off
+TMP         	MEC-PRE3D0111	oracle  	oraEBS   	off
 
-mecerp3x0111	orae001 	oraSID   	e001
-mecerp3x0111	orae058 	oraSID   	e058
-MECERP3D    	orau001 	oraSID   	u001
-MECERP3D    	orau058 	oraSID   	u058
+DEV         	mecerp3x0111	orae001 	oraSID   	e001
+DEV         	mecerp3x0111	orae058 	oraSID   	e058
+DEV         	MECERP3D    	orau001 	oraSID   	u001
+DEV         	MECERP3D    	orau058 	oraSID   	u058
+DEV         	MEC-PRE3D0111	oracle  	oraSID   	devcpf
+UAT         	MEC-PRE3D0111	oracle  	oraSID   	uatcpf
+TMP         	MEC-PRE3D0111	oracle  	oraSID   	tmpcpf
 
-mecerp3x0111	orae001 	oraLsnr  	e001
-mecerp3x0111	orae058 	oraLsnr  	e058
-MECERP3D    	orau001 	oraLsnr  	u001
-MECERP3D    	orau058 	oraLsnr  	u058
+DEV         	mecerp3x0111	orae001 	oraLsnr  	e001
+DEV         	mecerp3x0111	orae058 	oraLsnr  	e058
+DEV         	MECERP3D    	orau001 	oraLsnr  	u001
+DEV         	MECERP3D    	orau058 	oraLsnr  	u058
+DEV         	MEC-PRE3D0111	oracle  	oraLsnr  	devcpf
+UAT         	MEC-PRE3D0111	oracle  	oraLsnr  	uatcpf
+TMP         	MEC-PRE3D0111	oracle  	oraLsnr  	tmpcpf
 
-mecerp3x0111	orae001 	oraHome  	/u43/e001/oracle/db/tech_st/11.2.0
-mecerp3x0111	orae058 	oraHome  	/u45/e058/oracle/db/tech_st/11.2.0
-MECERP3D    	orau001 	oraHome  	/u02/u001/oracle/u001db/9.2.0
-MECERP3D    	orau058 	oraHome  	/u10/u058/oracle/u058db/9.2.0
+DEV         	mecerp3x0111	orae001 	oraHome  	/u43/e001/oracle/db/tech_st/11.2.0
+DEV         	mecerp3x0111	orae058 	oraHome  	/u45/e058/oracle/db/tech_st/11.2.0
+DEV         	MECERP3D    	orau001 	oraHome  	/u02/u001/oracle/u001db/9.2.0
+DEV         	MECERP3D    	orau058 	oraHome  	/u10/u058/oracle/u058db/9.2.0
+DEV         	MEC-PRE3D0111	oracle  	oraHome  	/oraapp/oracle/product/11.2.0.2
+UAT         	MEC-PRE3D0111	oracle  	oraHome  	/oraapp/oracle/product/11.2.0.2
+TMP         	MEC-PRE3D0111	oracle  	oraHome  	/oraapp/oracle/product/11.2.0.2
 
-mecerp3x0111	orae001 	oraData  	/u43/e001/oracle/db/apps_st/data/e001
-mecerp3x0111	orae058 	oraData  	/u45/e058/oracle/db/apps_st/data/e058
-MECERP3D    	orau001 	oraData  	/u03/u001/oracle/u001data
-MECERP3D    	orau058 	oraData  	/u11/u058/oracle/u058data
+DEV         	mecerp3x0111	orae001 	oraData  	/u43/e001/oracle/db/apps_st/data/e001
+DEV         	mecerp3x0111	orae058 	oraData  	/u45/e058/oracle/db/apps_st/data/e058
+DEV         	MECERP3D    	orau001 	oraData  	/u03/u001/oracle/u001data
+DEV         	MECERP3D    	orau058 	oraData  	/u11/u058/oracle/u058data
+DEV         	MEC-PRE3D0111	oracle  	oraData  	/oradata/dataf/devcpf
+UAT         	MEC-PRE3D0111	oracle  	oraData  	/oradata/dataf/uatcpf
+TMP         	MEC-PRE3D0111	oracle  	oraData  	/oradata/dataf/tmpcpf
 
-mecerp3x0111	orae001 	alrtLog  	/u43/e001/oracle/diag/rdbms/e001/e001/trace/alert_e001.log
-mecerp3x0111	orae058 	alrtLog  	/u45/e058/oracle/diag/rdbms/e058/e058/trace/alert_e058.log
-MECERP3D    	orau001 	alrtLog  	/u02/u001/oracle/u001db/9.2.0/admin/u001_mecerp3d/bdump/alert_u001.log
-MECERP3D    	orau058 	alrtLog  	/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+DEV         	mecerp3x0111	orae001 	alrtLog  	/u43/e001/oracle/diag/rdbms/e001/e001/trace/alert_e001.log
+DEV         	mecerp3x0111	orae058 	alrtLog  	/u45/e058/oracle/diag/rdbms/e058/e058/trace/alert_e058.log
+DEV         	MECERP3D    	orau001 	alrtLog  	/u02/u001/oracle/u001db/9.2.0/admin/u001_mecerp3d/bdump/alert_u001.log
+DEV         	MECERP3D    	orau058 	alrtLog  	/u10/u058/oracle/u058db/9.2.0/admin/u058_mecerp3d/bdump/alert_u058.log
+DEV         	MEC-PRE3D0111	oracle  	alrtLog  	/oradata/diag/rdbms/devcpf/devcpf/trace/alert_devcpf.log
+UAT         	MEC-PRE3D0111	oracle  	alrtLog  	/oradata/diag/rdbms/uatcpf/uatcpf/trace/alert_uatcpf.log
+TMP         	MEC-PRE3D0111	oracle  	alrtLog  	/oradata/diag/rdbms/tmpcpf/tmpcpf/trace/alert_tmpcpf.log
 
-mecerp3x0111	orae001 	oraSpfl  	/u43/e001/oracle/db/tech_st/11.2.0/dbs/spfilee001.ora
-mecerp3x0111	orae058 	oraSpfl  	/u45/e058/oracle/db/tech_st/11.2.0/dbs/spfilee058.ora
+DEV         	mecerp3x0111	orae001 	oraSPF   	/u43/e001/oracle/db/tech_st/11.2.0/dbs/spfilee001.ora
+DEV         	mecerp3x0111	orae058 	oraSPF   	/u45/e058/oracle/db/tech_st/11.2.0/dbs/spfilee058.ora
+DEV         	MEC-PRE3D0111	oracle  	oraSPF   	/oradata/admin/devcpf/spfile/spfiledevcpf.ora
+UAT         	MEC-PRE3D0111	oracle  	oraSPF   	/oradata/admin/uatcpf/spfile/spfileuatcpf.ora
+TMP         	MEC-PRE3D0111	oracle  	oraSPF   	/oradata/admin/tmpcpf/spfile/spfiletmpcpf.ora
+DEV         	MEC-PRE3D0111	oracle  	oraPFIL  	/oraapp/oracle/product/11.2.0.2/dbs/initdevcpf.ora
+UAT         	MEC-PRE3D0111	oracle  	oraPFIL  	/oraapp/oracle/product/11.2.0.2/dbs/inituatcpf.ora
+TMP         	MEC-PRE3D0111	oracle  	oraPFIL  	/oraapp/oracle/product/11.2.0.2/dbs/inittmpcpf.ora
 
-mecerp3x0111	orae001 	oemURL   	https://mecerp3x0111.in.mec.co.jp:1158/em/console/aboutApplication
-mecerp3x0111	orae058 	oemURL   	https://mecerp3x0111.in.mec.co.jp:5500/em/console/aboutApplication
+DEV         	mecerp3x0111	orae001 	oemURL   	https://mecerp3x0111.in.mec.co.jp:1158/em/console/aboutApplication
+DEV         	mecerp3x0111	orae058 	oemURL   	https://mecerp3x0111.in.mec.co.jp:5500/em/console/aboutApplication
+DEV         	MEC-PRE3D0111	oracle  	oemURL   	https://mec-pre3d0111.in.mec.co.jp:1158/em/console/aboutApplication
+UAT         	MEC-PRE3D0111	oracle  	oemURL   	https://mec-pre3d0111.in.mec.co.jp:5500/em/console/aboutApplication
+TMP         	MEC-PRE3D0111	oracle  	oemURL   	https://mec-pre3d0111.in.mec.co.jp:5501/em/console/aboutApplication
