@@ -18,24 +18,46 @@
 2) msysgit インストール
 	mkdir git
 
-	# Download ポータブルバージョン to .usrlocal/git
+	# Download ポータブルバージョン to apps/git
 	#	https://code.google.com/p/msysgit/downloads/list
 	#
 	# ここに解凍
 	#
+	# 注意）直下に解凍されるのでフォルダ作成、移動をすること
+	# 7za -t $7zip-file > tmp.txt
+	#
 	cd git
 	7za x $7zip-file
 	mv $7zip-file ../archive
+	
+	# sjisファイル名はうまくいかない?
+	# git config --global core.quotepath false
+	# ※日本語の文字化け対策
+	#
+	# git config --global core.autocrlf false
+	# ※改行コードの自動変換の無効化
+
+
 
 	# .profile の変更
 		alias git='console git'
+		
+		
+	git extentionsのインストール(×うまく動かない)
+		git extentions
+		# Download to /apps/GitExtensions
+		#	https://code.google.com/p/gitextensions/
+		
+		kdiff3 のインストール
+		# Download to /apps/kdiff3
+		#	http://sourceforge.jp/projects/sfnet_kdiff3/releases/
+		
 		
 
 3) Ruby
 	# Download to .usrlocal
 	#	http://rubyinstaller.org/downloads/archives
 	#	7zip をとる.
-	#
 	7za x $ruby-7zip-archive
 	mv $ruby-7zip-archive archive
 	mv $ruby-folder ruby
