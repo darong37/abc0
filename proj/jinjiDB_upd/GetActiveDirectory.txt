@@ -1,0 +1,31 @@
+Const ADS_SCOPE_SUBTREE = 2 
+
+Function GetActiveDirectory()
+	Dim objConnection
+	Dim objCommand
+	Dim objRootDSE
+	Dim strAdsPath
+	
+	'ADèÓïÒ 
+	Set objConnection = CreateObject("ADODB.Connection")
+	Set objCommand    = CreateObject("ADODB.Command")
+
+	objConnection.Provider = "ADsDSOObject"
+	objConnection.Open "Active Directory Provider"
+
+	Set objCommand.ActiveConnection = objConnection
+	Set objRootDSE = GetObject("LDAP://rootDSE")
+	
+	strAdsPath = "LDAP://" & objRootDSE.Get("defaultNamingContext")
+	objCommand.CommandText = _ 
+		"Select sAMAccountName , description, displayname, " & _ 
+		"department, mail, sn, givenname, distinguishedName," & _ 
+		" mobile,EmployeeID,homePhone from '" & strAdsPath & "' " _ 
+		& "Where objectClass='User' order by homePhone " 
+
+	objCommand.Properties("Page Size") = 1000 
+	objCommand.Properties("Searchscope") = ADS_SCOPE_SUBTREE 
+
+	'åãâ ÇñﬂÇËílÇ∆ÇµÇƒï‘Ç∑
+	GetActiveDirectory = objCommand
+End Function

@@ -1,0 +1,22 @@
+Function GetSqlServerConnect(sDBSever,sDBName,sLoginID,sPassWD)
+	Dim objConnection
+	Dim connectionString As String 
+
+	'ADOオブジェクトを作成します
+	Set objConnection = CreateObject("ADODB.Connection")
+
+	'接続文字列 
+	connectionString = "Provider=Sqloledb;Data Source=" & sDBSever _ 
+	& ";Initial Catalog=" & sDBName _ 
+	& ";Connect Timeout=15" _ 
+	& ";user id=" & sLoginID _ 
+	& ";password=" & sPassWD _ 
+	& "" 
+
+	objConnection.Open connectionString
+
+	'結果を戻り値として返す
+	GetSqlServerConnect = objConnection
+End Function
+
+

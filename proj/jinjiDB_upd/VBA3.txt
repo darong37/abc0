@@ -1,0 +1,277 @@
+
+Call main()
+If Err<>0 Then
+  WScript.Echo Err.Number & " : " & Err.Description
+  WScript.Quit
+End If
+
+
+
+Sub main() 
+
+	On Error GoTo ERR_PROC 
+
+	AddLogMessage ("処理開始") 
+
+	'AD情報
+	Dim objCommand
+	objCommand = GetActiveDirectory()
+
+	'SQL_SERVER接続 
+	'○接続１　ステージングサーバ 
+	Dim con
+	con = GetSqlServerConnect( _
+		"CORE-DB-xxxxx",       _
+		"hr_db_staging",       _
+		"hr_xxxx_xxxx" ,       _
+		"xxxxx" _
+	)
+	
+	'○接続３　本番サーバ 
+	Dim con3
+	con3 = GetSqlServerConnect( _
+		"192.168.xx,xx,xxxx",   _
+		"hr_db",                _
+		"xxxxxxx",              _
+		"xxxxxxx"               _
+	)
+	
+
+	Dim sSQL As String 
+	Dim REC_COUNT As Integer 
+
+	'ステージングサーバのAD情報クリア 
+	sSQL = "DELETE from hr_test_user.AD_INFO_TMP"
+	con.Execute (sSQL) 
+
+	Dim i 
+	i = 1 
+
+	Set objRecordSet = objCommand.Execute 
+	If objRecordSet.RecordCount > 0 Then 
+		objRecordSet.MoveFirst 
+		Do Until objRecordSet.EOF 
+			If IsNull(objRecordSet.Fields("homePhone").Value) = False And IsNumeric(objRecordSet.Fields("homePhone").Value) And InStr(objRecordSet.Fields("distinguishedName").Value, "退職") = 0 Then 
+				sSQL = "insert into hr_test_user.AD_INFO_TMP(id,sAMAccountName,description,displayname,department,mail,sn,givenname,distinguishedName,mobile,EmployeeID,homePhone) " 
+				sSQL = sSQL & "values ( " 
+				sSQL = sSQL & "'" & i & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("sAMAccountName").Value & "'," 
+				If IsNull(objRecordSet.Fields("description").Value) Then 
+					sSQL = sSQL & "''," 
+				Else 
+					sSQL = sSQL & "'" & Join(objRecordSet.Fields("description").Value, ",") & "'," 
+				End If 
+
+				sSQL = sSQL & "'" & objRecordSet.Fields("displayname").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("department").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("mail").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("sn").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("givenname").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("distinguishedName").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("mobile").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("EmployeeID").Value & "'," 
+				sSQL = sSQL & "'" & objRecordSet.Fields("homePhone").Value & "')" 
+
+				'画面表示
+				'con.Execute (sSQL)
+				WScript.Echo sSQL
+
+				i = i + 1 
+			End If 
+			objRecordSet.MoveNext 
+		Loop 
+	End If 
+
+	'ADアカウントの更新件数 
+	sSQL = "SELECT count(*) as CNT " 
+	sSQL = sSQL & "FROM hr_test_user.AD_INFO_TMP INNER JOIN hr_test_user.employee_main ON " 
+	sSQL = sSQL & "hr_test_user.AD_INFO_TMP.homePhone = hr_test_user.employee_main.employee_num " 
+	sSQL = sSQL & "WHERE (hr_test_user.employee_main.deleted_date >= { fn NOW() } OR hr_test_user.employee_main.deleted_date IS NULL) " 
+	sSQL = sSQL & "AND (isNull(hr_test_user.AD_INFO_TMP.sAMAccountName,'') <> isnull(hr_test_user.employee_main.ad_account,''))" 
+
+	Set objRecordSet = con.Execute(sSQL) 
+	REC_COUNT = CInt(objRecordSet.Fields("CNT").Value) 
+
+	'ADアカウントの更新 
+	sSQL = "SELECT hr_test_user.employee_main.employee_id, hr_test_user.AD_INFO_TMP.sAMAccountName " 
+	sSQL = sSQL & "FROM hr_test_user.AD_INFO_TMP INNER JOIN hr_test_user.employee_main ON " 
+	sSQL = sSQL & "hr_test_user.AD_INFO_TMP.homePhone = hr_test_user.employee_main.employee_num " 
+	sSQL = sSQL & "WHERE (hr_test_user.employee_main.deleted_date >= { fn NOW() } OR hr_test_user.employee_main.deleted_date IS NULL) " 
+	sSQL = sSQL & "AND (isNull(hr_test_user.AD_INFO_TMP.sAMAccountName,'') <> isnull(hr_test_user.employee_main.ad_account,''))" 
+
+	Set objRecordSet = con.Execute(sSQL) 
+
+	If REC_COUNT = 0 Then 
+		AddLogMessage ("ADアカウント更新件数: なし") 
+	Else 
+		AddLogMessage ("ADアカウント更新件数:" & REC_COUNT) 
+	End If 
+
+
+
+
+	Dim objRecordSet2      ' As New ADODB.Recordset 
+	If REC_COUNT > 0 Then 
+		objRecordSet.MoveFirst 
+		Do Until objRecordSet.EOF 
+			sSQL = "UPDATE hr_test_user.employee_main set " 
+			sSQL = sSQL & "ad_account ='" & objRecordSet.Fields("sAMAccountName").Value & "' " 
+			sSQL = sSQL & "where employee_id =" & objRecordSet.Fields("employee_id").Value 
+			con.Execute (sSQL) 
+
+			AddLogMessage ("ステージングdb: " & objRecordSet.Fields("employee_id").Value & "のデータを更新しました。" _ 
+			& "ad_account ='" & objRecordSet.Fields("sAMAccountName").Value & "' ") 
+
+			objRecordSet2.Open "SELECT employee_id from dbo.employee_main where employee_id = " & objRecordSet.Fields("employee_id").Value, con3, adOpenKeyset 
+
+			If objRecordSet2.RecordCount > 0 Then 
+
+				sSQL = "UPDATE dbo.employee_main set " 
+				sSQL = sSQL & "ad_account ='" & objRecordSet.Fields("sAMAccountName").Value & "' " 
+				sSQL = sSQL & "where employee_id =" & objRecordSet.Fields("employee_id").Value 
+
+				con3.Execute (sSQL) 
+
+				AddLogMessage ("本番db: " & objRecordSet.Fields("employee_id").Value & "のデータを更新しました。" _ 
+				& "ad_account ='" & objRecordSet.Fields("sAMAccountName").Value & "' ") 
+
+			End If 
+
+			objRecordSet2.Close 
+			objRecordSet.MoveNext 
+		Loop 
+	End If 
+
+	'Emailの更新 
+	sSQL = "SELECT count(*) as CNT " 
+	sSQL = sSQL & "FROM hr_test_user.AD_INFO_TMP INNER JOIN hr_test_user.employee_main ON " 
+	sSQL = sSQL & "hr_test_user.AD_INFO_TMP.homePhone = hr_test_user.employee_main.employee_num " 
+	sSQL = sSQL & "WHERE (hr_test_user.employee_main.deleted_date >= { fn NOW() } OR hr_test_user.employee_main.deleted_date IS NULL) " 
+	sSQL = sSQL & "AND (isNull(hr_test_user.AD_INFO_TMP.mail,'') <> isnull(hr_test_user.employee_main.email,''))" 
+
+	Set objRecordSet = con.Execute(sSQL) 
+	REC_COUNT = CInt(objRecordSet.Fields("CNT").Value) 
+
+	'Emailの更新 
+	sSQL = "SELECT hr_test_user.employee_main.employee_id, hr_test_user.AD_INFO_TMP.mail " 
+	sSQL = sSQL & "FROM hr_test_user.AD_INFO_TMP INNER JOIN hr_test_user.employee_main ON " 
+	sSQL = sSQL & "hr_test_user.AD_INFO_TMP.homePhone = hr_test_user.employee_main.employee_num " 
+	sSQL = sSQL & "WHERE (hr_test_user.employee_main.deleted_date >= { fn NOW() } OR hr_test_user.employee_main.deleted_date IS NULL) " 
+	sSQL = sSQL & "AND (isNull(hr_test_user.AD_INFO_TMP.mail,'') <> isnull(hr_test_user.employee_main.email,''))" 
+
+	Set objRecordSet = con.Execute(sSQL) 
+
+	If REC_COUNT = 0 Then 
+		AddLogMessage ("Email更新件数: なし") 
+	Else 
+		AddLogMessage ("Email更新件数:" & REC_COUNT) 
+	End If 
+
+	If REC_COUNT > 0 Then 
+		objRecordSet.MoveFirst 
+		Do Until objRecordSet.EOF 
+			sSQL = "UPDATE hr_test_user.employee_main set " 
+			sSQL = sSQL & "email ='" & objRecordSet.Fields("mail").Value & "' " 
+			sSQL = sSQL & "where employee_id =" & objRecordSet.Fields("employee_id").Value 
+			con.Execute (sSQL) 
+
+			AddLogMessage ("ステージングdb: " & objRecordSet.Fields("employee_id").Value & "のデータを更新しました。" _ 
+			& "email ='" & objRecordSet.Fields("mail").Value & "'") 
+
+			objRecordSet2.Open "SELECT employee_id from dbo.employee_main where employee_id = " & objRecordSet.Fields("employee_id").Value, con3, adOpenKeyset 
+
+			If objRecordSet2.RecordCount > 0 Then 
+
+				sSQL = "UPDATE dbo.employee_main set " 
+				sSQL = sSQL & "email ='" & objRecordSet.Fields("mail").Value & "' " 
+				sSQL = sSQL & "where employee_id =" & objRecordSet.Fields("employee_id").Value 
+
+				con3.Execute (sSQL) 
+
+				AddLogMessage ("本番db: " & objRecordSet.Fields("employee_id").Value & "のデータを更新しました。" _ 
+				& "email ='" & objRecordSet.Fields("mail").Value & "'") 
+
+			End If 
+			objRecordSet2.Close 
+			objRecordSet.MoveNext 
+		Loop 
+	End If 
+
+	'クローズ 
+	con.Close 
+	Set con = Nothing 
+	con3.Close 
+	Set con = Nothing 
+
+	ThisWorkbook.Saved = True 
+	' 他にブックが開いていなければ、Excelを終了する 
+
+	AddLogMessage ("処理終了") 
+	Call SendMail 
+
+	ERR_PROC: 
+
+	Dim strMessage As String 
+	Dim errX As ADODB.Error 
+
+	If con.Errors.Count > 0 Then 
+		' データベース処理関連のエラーを取得 
+		For Each errX In con.Errors 
+			strMessage = strMessage & errX.Number & " staging " & errX.Description & vbCrLf 
+		Next 
+
+	ElseIf con3.Errors.Count > 0 Then 
+		' データベース処理関連のエラーを取得 
+		For Each errX In con3.Errors 
+			strMessage = strMessage & errX.Number & " 本番2 " & errX.Description & vbCrLf 
+		Next 
+	Else 
+		' 通常のエラーメッセージを取得 
+			strMessage = Err.Number & " " & Err.Description 
+	End If 
+
+	Open "C:\ADINFO\err.log" For Append As #1 
+	Print #1, Now() & " " & strMessage 
+	Close #1 
+
+	AddLogMessage ("エラー: " & strMessage) 
+
+End Sub 
+
+
+
+
+
+Public MailBody As String 
+
+Public myCDOMsg As New CDO.Message 
+Public Const myADDRESS As String _ 
+= "http://schemas.microsoft.com/cdo/configuration/" 
+
+Sub SendMail() 
+	With myCDOMsg 
+		'.To = "h.okada@amana.jp;s.kiura@amana.jp;m.kanamori@amana.jp;t.hasegawa@amana.jp;h.shimabukuro@amana.jp;s.komatsuzaki@amana.jp;s.tateyama@amana.jp" '----- 宛先 
+		.To = "shinsei_log@amana.jp" '----- 宛先 
+		.CC = "" '----- CC 
+		.From = "no-reply@amana.jp" '----- 送信者 
+		.Subject = "【動作ログ】AD⇒人事DB／アカウント＆メールアドレス更新バッチ" '----- 件名 
+		.TextBody = "お疲れ様です。" & vbCrLf & vbCrLf & "ADから人事DBへ、アカウント情報とメールアドレスを更新する" & vbCrLf & "Excelバッチの実行ログを送付します。" & vbCrLf & vbCrLf & "----------" & vbCrLf & MailBody 
+
+		With .Configuration.Fields 
+			.Item(myADDRESS & "sendusing") = 2 
+			.Item(myADDRESS & "smtpserver") = "mta.amana.co.jp" 
+			.Item(myADDRESS & "smtpserverport") = 25 
+			.Update 
+		End With 
+
+		.Send 
+	End With 
+End Sub 
+
+
+Public Sub AddLogMessage(strMessage) 
+	Open "C:\ADINFO\jinji_ad_upd.log" For Append As #1 
+	Print #1, Now() & " " & strMessage 
+	MailBody = MailBody & vbCrLf & Now() & " " & strMessage 
+	Close #1 
+End Sub
