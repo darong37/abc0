@@ -11,8 +11,15 @@
 	git config --bool core.quotepath false
 	
 
+	ブランチ切替え
+	git checkout -b 'branch-name'
+
+
 	状態確認
 	git status
+
+	ログ1行表示
+	git log --oneline
 
 
 1.Gitの基本操作
@@ -24,13 +31,11 @@
 	
 	git push origin master
 
-
 	リネームする場合
 	git mv old-name new-name
 
 	削除する場合
 	git rm $target
-
 
 	やり直し
 		add後ファイルを戻す
@@ -42,7 +47,7 @@
 		git reset --soft   → ワークディレクトリの内容はそのままでコミットだけを取り消す。
 		git reset --hard   → コミット取り消した上でワークディレクトリの内容も書き換える。
 
-	マージする
+	リモートからの変更反映/マージする
 	git pull
 
 	マージする代わりにリベースする(未確認)
