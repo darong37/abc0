@@ -1,31 +1,41 @@
-### 共通設定
-readonly BASEDIR=$( dirname $APPLDIR )
-readonly TMPFILE=$BASEDIR/temp/${APPLNAM}.tmp
 
-
-### ERROR時の処理を記述
+### alias
 alias TraceON='set  -x'
 alias TraceOFF='set +x'
-Msg () {
+Say () {
 	local level=$1
 	local lno=$2
 	local msg=$3
 	
-	printf "%-5s %d: %s\n" "$level" $lno "$msg"
+	printf "%-5s [$APPLNAM#%d] %s\n" "$level" $lno "$msg" >&2
 }
-alias Info='Msg "INFO" $LINENO'
-alias Warn='Msg "WARN" $LINENO'
-alias Error='Msg "ERROR" $LINENO'
-alias Succ='Msg "SUCC" $LINENO'
-
-
-#
-alias RM=': TODO rm'
+alias Info='Say "INFO" $LINENO'
+alias Warn='Say "WARN" $LINENO'
+alias Error='Say "ERROR" $LINENO'
+alias Succ='Say "SUCC" $LINENO'
 
 ### TRACE時のプロンプト設定
 export PS4='TRACE $LINENO: '                  # TRACE時のプロンプト設定
 
-
 ### 予期せぬエラーが発生した時、'ERRHANDLER'の処理を実行する
 trap 'Error "Unexpected Error Occured";exit 1' ERR
 
+### checK
+if [ ! -d ${APPLDIR:-'undefined'} ];then
+	Error "Env Var APPLDIR:'$APPLDIR' Invalid"
+	exit 1
+fi
+if [ ! -r $APPLDIR/${APPLNAM:-'undefined'}.sh ];then
+	Error "(appl) Env Var APPLNAM:'$APPLNAM' Invalid"
+	exit 1
+fi
+if [ ! -d ${BASEDIR:-'undefined'} ];then
+	Error "Env Var BASEDIR:'$BASEDIR' Invalid"
+	exit 1
+fi
+if [ ! -d ${CONFDIR:-'undefined'} ];then
+	Error "Env Var CONFDIR:'$CONFDIR' Invalid"
+	exit 1
+fi
+
+. $APPLDIR/autofunc

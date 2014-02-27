@@ -3,27 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <title>
-HTML5メモ
+HTML Memo
 </title>
 <!-- Latest compiled and minified CSS -->
-<p><link rel="stylesheet" href="css/bootstrap.min.css"></p>
-<!-- Optional theme -->
-<p><link rel="stylesheet" href="css/bootstrap-theme.min.css"></p>
-<!-- Latest compiled and minified JavaScript -->
+<link rel="stylesheet" href="css/bootstrap.min.css"> <!-- Optional theme --> <link rel="stylesheet" href="css/bootstrap-theme.min.css"> <!-- Latest compiled and minified JavaScript -->
 <script src="js/bootstrap.min.js"></script></head>
 <body>
-<h1 id="datapump-metadata_only">DATAPUMP metadata_only</h1>
+
+<h2 id="msys-bashの起動"><a href="#msys-bashの起動">Msys bashの起動</a></h2>
+<pre><code>\.abc\.sys\bin\bash.exe --login -i -c</code></pre>
 <blockquote>
-<p>DB-ORACLE-DATAPUMP</p>
+<p>2014/02/26 11:33:49 更新</p>
 </blockquote>
-<h2 id="メタ情報のエクスポート">メタ情報のエクスポート</h2>
-<pre><code>#!bash
-expdp hr/hr DIRECTORY=dpump_dir1 DUMPFILE=hr_comp.dmp COMPRESSION=METADATA_ONLY</code></pre>
-<h3 id="writting-code">Writting code</h3>
-<pre><code>#!javascript
-function hi(){
-    alert(&#39;hi!&#39;);
-}</code></pre>
+<hr />
+<h2 id="ｄｄｌ文の取得"><a href="#ｄｄｌ文の取得">ＤＤＬ文の取得</a></h2>
+<p>表「emp」のＤＤＬ文を取得</p>
+<pre><code>set long 2000
+set heading off
+
+select
+dbms_metadata.get_ddl(&#39;TABLE&#39;,&#39;EMP&#39;)
+from dual;</code></pre>
+<blockquote>
+<p>2014/02/26 11:05:03 更新</p>
+</blockquote>
+<hr />
+<h2 id="カラムのコメントの参照方法"><a href="#カラムのコメントの参照方法">カラムのコメントの参照方法</a></h2>
+<pre><code>set pages 1000
+set line 132
+col OWNER for a4
+col TABLE_NAME for a20
+col COLUMN_NAME for a16
+col COMMENTS for a64
+
+select * from DBA_COL_COMMENTS where TABLE_NAME = &#39;DBA_DATA_FILES&#39;;</code></pre>
+<blockquote>
+<p>2014/02/21 17:03:53 更新</p>
+</blockquote>
+<hr />
+<h2 id="cron登録"><a href="#cron登録">cron登録</a></h2>
+<pre><code># root でログイン
+cd /var/spool/cron/crontabs/
+pwd
+
+# cronジョブ設定のバックアップ
+ls -l
+crontab -l
+cp -pi root root.$(date &#39;+%Y%m%d_%H%M%S&#39;)
+ls -l
+
+#一時ファイルの作成と編集
+cp -i root root.tmp
+vi root.tmp
+
+# G
+# $
+# a
+# リターン
+# 以下をペースト
+50 2 * * 0,1,2,3,4,5,6 /oraapp/home/log_rotate.sh &gt;/dev/null 2&gt;&amp;1
+00 7 * * 0,1,2,3,4,5,6 /oraapp/home/log_purge.sh &gt;/dev/null 2&gt;&amp;1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c &quot;tablespace_check_uat.sh&quot; &gt;/dev/null 2&gt;&amp;1
+# エスケープ
+# :wq
+
+# 内容確認
+cat root.tmp
+diff root root.tmp
+
+# 設定の反映
+crontab root.tmp
+crontab -l
+
+# 後始末
+rm -i root.tmp
+ls -l</code></pre>
+<blockquote>
+<p>2014/02/21 16:09:03 更新</p>
+</blockquote>
+<hr />
+<h1 id="gitレポジトリを移行する方法"><a href="#gitレポジトリを移行する方法">Gitレポジトリを移行する方法</a></h1>
+<pre><code>git clone --mirror &lt;SOURCE_REPOSITORY_URL&gt;
+cd &lt;REPOSITORY&gt;
+git push --mirror &lt;DESTINATION_REPOSITORY_URL&gt;</code></pre>
+<blockquote>
+<p>2014/02/20 09:59:23 更新</p>
+</blockquote>
+<hr />
+<h2 id="section"><a href="#section"></a></h2>
+<pre><code>ps auwxx</code></pre>
+<blockquote>
+<p>2014/02/20 18:35:46 更新</p>
+</blockquote>
+<hr />
+<h2 id="クーロン登録"><a href="#クーロン登録">クーロン登録</a></h2>
+<blockquote>
+
+</blockquote>
+<blockquote>
+<p>2014/02/20 17:50:16 更新</p>
+</blockquote>
+<hr />
+<h2 id="hoge"><a href="#hoge">hoge</a></h2>
+<blockquote>
+<p>2014/02/20 16:53:57 更新</p>
+</blockquote>
+<hr />
+<h2 id="gitレポジトリを移行する方法-1"><a href="#gitレポジトリを移行する方法-1">Gitレポジトリを移行する方法</a></h2>
+<pre><code>git clone --mirror &lt;SOURCE_REPOSITORY_URL&gt;
+cd &lt;REPOSITORY&gt;
+git push --mirror &lt;DESTINATION_REPOSITORY_URL&gt;</code></pre>
+<blockquote>
+<p>2014/02/20 09:59:23 更新</p>
+</blockquote>
+<hr />
+<h2 id="datapump-metadata_only"><a href="#datapump-metadata_only">DATAPUMP metadata_only</a></h2>
+<ul>
+<li>DB-ORACLE-DATAPUMP</li>
+</ul>
+<h2 id="メタ情報のエクスポート"><a href="#メタ情報のエクスポート">メタ情報のエクスポート</a></h2>
+<pre><code>expdp hr/hr DIRECTORY=dpump_dir1 DUMPFILE=hr_comp.dmp COMPRESSION=METADATA_ONLY</code></pre>
+<p>2004/02/19 10:00:00 更新</p>
+<hr />
 </body>
 </html>
 

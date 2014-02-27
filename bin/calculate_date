@@ -1,13 +1,11 @@
-#!/usr/bin/ksh
+#!/bin/sh
 ######################################################################
-#@(#) Project        : EBS Version up Project
-#@(#) Team           : Infrastructure
-#@(#) Name           : fa_calculate_date
+#@(#) Name           : calculate_date
 #@(#) Function       : Calculate date
 #@(#) Version        : v.1.0.0
-#@(#) Usege          : fa_calculate_date -d date1 date2
-#@(#)                  fa_calculate_date -o date1 offset
-#@(#)                  fa_calculate_date -w date1
+#@(#) Usege          : calculate_date -d date1 date2
+#@(#)                  calculate_date -o date1 offset
+#@(#)                  calculate_date -w date1
 #@(#)
 #@(#)                  -d date1 date2  : Output the date intervals, between 'date1' and 'date2'.
 #@(#)                                    (calculation: 'date1' - 'date2').
@@ -22,7 +20,7 @@
 #@(#)                  0  : Successful completion.
 #@(#)                  1  : An error condition occurred.
 #@(#)                  2  : Invalid option.
-#@(#) Host           : AIX
+#@(#) Host           : 
 #@(#) ACL            : bin / bin / 0555
 #@(#) Relation file  :
 #@(#) Notes          : Valid value range of date, 1582/10/15 - 9999/12/31.
@@ -31,10 +29,10 @@
 #@(#) Revision history
 #@(#) Date             Developer/Corrector Description
 #@(#) ________________ ___________________ ___________________________
-#@(#) 2007/07/01       Y.Karasawa          New
+#@(#) 2007/07/01       xxxxxxxxxx          New
 ######################################################################
 
-function fa_calculate_date {
+function calculate_date {
 	# ++++++++++++++++++++++++++++++++++++++
 	# Define local vaiable
 	# ++++++++++++++++++++++++++++++++++++++

@@ -1,0 +1,84 @@
+#!/bin/sh -u
+
+### function
+alias ShowPath='( IFS=:;for p in $PATH;do echo $p;done )'
+AddPath () {
+  # option -pre
+  local pre=off
+  if [[ $1 = '-pre' ]];then
+    pre=on
+    shift
+  fi
+  #
+  local pstr="$PATH"
+  for p in "$@";do
+    if [[ ":$pstr:" != *":$p:"* ]];then
+      if [[ $pre = 'on' ]];then
+        pstr=".:${p}:${pstr#.:}"
+      else
+        pstr="${pstr}:${p}"
+      fi
+    fi
+  done
+  echo "$pstr"
+}
+
+ConvPath () {
+  if [[ $1 = '-r' ]];then
+    {
+		cat <<-'_PERL_'
+			s{^/([a-zA-Z])/}{$1:\\};   # windows drive
+			s{/}{\\}g;                 # windows path
+			__END__
+		_PERL_
+		echo "$2"
+    } | perl -pl
+  else
+    {
+		cat <<-'_PERL_'
+			$_ = lcfirst;              # windows drive
+			s{^([a-zA-Z]):\\}{/$1/};   # windows drive
+			s{\\}{/}g;                 # windows path
+			__END__
+		_PERL_
+		echo "$1"
+    } | perl -pl
+  fi
+}
+
+Mvr () {
+	local fld=$1
+	shift
+	
+	for fn in "$@";do
+		echo "$fn -> $fld/"
+		mv $fn $fld/
+	done
+}
+
+### ls
+alias ls='ls --show-control-chars'
+alias ll='ls -l'
+alias la='ls -la --color=auto --show-control-chars'
+alias lc='ls -l --color=auto --show-control-chars'
+alias ld='ls -l | grep ^d'
+alias lf='ls -l | grep -v ^d'
+
+### exe
+alias dif='console diff.bat'
+alias edit='console edit.bat'
+alias es="$( ConvPath "$DIR_APPS" )/Everything/es.exe"
+alias exp='console explorer "/select,$( ConvPath -r $PWD )"'
+alias ffftp="$( ConvPath "$DIR_APPS" )/ffftp/FFFTP.exe"
+alias kdiff3="$( ConvPath "$DIR_APPS" )/kdiff3/kdiff3.exe"
+alias irb='console irb.bat'
+alias gem='console gem.bat'
+alias git='console git'
+alias m2h='/c/Users/JKK0544/AppData/Local/Pandoc/pandoc.exe -f markdown -t html5'
+alias npm='console npm.cmd'
+alias ruby='console ruby'
+alias pandoc='/c/Users/JKK0544/AppData/Local/Pandoc/pandoc.exe'
+alias pry='console pry.bat'
+alias tree='/c/Windows/System32/tree.com'
+
+

@@ -12,7 +12,9 @@
 	
 
 	ブランチ切替え
-	git checkout -b 'branch-name'
+	git branch                    # 表示
+	git checkout -b 'branch-name' # 作成あり
+	git checkout 'branch-name'
 
 
 	状態確認
@@ -26,8 +28,8 @@
 	git add $target
 	git add -u
 	
-	git commit -m 'reorder'
-	git commit -a -m 'reorder'
+	git commit -m 'Add|Mod|Del reorder'
+	git commit -a -m 'Add|Mod|Del reorder'
 	
 	git push origin master
 

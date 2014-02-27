@@ -1,9 +1,0 @@
-function setPrompt {
-  echo
-  echo "# -> $1"
-  echo "# $( date +"%H:%M:%S" ) $$"
-  echo "# $( id -un )@$( uname -n ):${PWD##$HOME/}"
-  echo "#"
-
-}
-trap 'setPrompt $?' DEBUG
