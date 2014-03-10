@@ -3,6 +3,7 @@
 
 	cd
 	git clone https://github.com/darong37/.abc.git
+	(	git clone https://gitlab.com/darong37/abc.git	)
 
 	.gitconfig.samp
 	exe/_init.bat.samp

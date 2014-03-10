@@ -1,3 +1,11 @@
+#Usage
+# #!/bin/sh -u
+# readonly APPLNAM=`basename $0 .sh`                # スクリプト名
+# 
+# readonly APPLDIR=$( cd `dirname $0`;pwd )         # スクリプト格納場所
+# readonly BASEDIR=$( dirname $APPLDIR )            # Base
+# readonly CONFDIR=$BASEDIR/conf                    # 設定用ディレクトリ
+# . $APPLDIR/appl
 
 ### alias
 alias TraceON='set  -x'
