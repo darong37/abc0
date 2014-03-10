@@ -1,4 +1,49 @@
 
+## Windows Event Log ID
+Start Log Service: 6005
+Shutdown: 6006
+
+> 2014/03/03 15:14:11 更新
+
+------------------
+
+
+## 未使用ブロック情報
+	select 
+	        fs.file_id
+	    ,   df.file_name
+	    ,   fs.block_id
+	    ,   fs.bytes/8/1024  "size"
+	    ,   fs.block_id + fs.bytes/8/1024 "next ID"
+	    ,   max(fs.block_id) over ( partition by fs.file_id)
+	            max_block
+	from  dba_free_space fs
+	join  dba_data_files df 
+	      on df.file_id = fs.file_id
+	where fs.tablespace_name = upper('"&TABLESPACE_NAME&"')
+	order by fs.file_id,fs.block_id;
+
+> 2014/02/27 14:07:26 更新
+
+------------------
+
+
+## 表領域、データファイル一覧
+
+	set pagesize 1000
+	set linesize 200
+	col TABLESPACE_NAME for a20
+	col FILE_NAME for a50
+	col MAXBYTES for 99999999999999
+	select tablespace_name, file_name, bytes/1024/1024 MBytes, autoextensible, maxbytes/1024/1024 MaxMBytes
+	from dba_data_files
+	order by tablespace_name, file_name ;
+
+> 2014/02/26 18:48:06 更新
+
+------------------
+
+
 ## Msys bashの起動
 
 	\.abc\.sys\bin\bash.exe --login -i -c

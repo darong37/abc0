@@ -1,0 +1,205 @@
+□共通DBリリース手順
+サーバ： MEC-PRE3D0111
+ユーザ： root 
+パスワード: 必要
+
+■FFFTPを利用してサーバに以下のファイルを送信する
+送信先： oracle@MEC-PRE3D0111:/oraapp/home
+ASCIIモード
+無変換
+
+ファイル：
+log_purge.sh
+log_purge.lst
+log_rotate.sh
+log_rotate.lst
+tablespace_check_uat.sh
+tablespace_check_tmp.sh
+tablespace_check_tmp2.sh
+tablespace_check_tmp3.sh
+
+# 動作チェック用
+log_rotate.lst.tst
+
+
+■Teraterm でログインする
+ログイン： oracle@MEC-PRE3D0111
+
+#! bash
+pwd
+	/oraapp/home
+chmod 744 log_purge.sh
+chmod 744 log_rotate.sh
+chmod 644 log_purge.lst
+chmod 644 log_rotate.lst
+chmod 744 tablespace_check_uat.sh
+chmod 744 tablespace_check_tmp.sh
+chmod 744 tablespace_check_tmp2.sh
+chmod 744 tablespace_check_tmp3.sh
+
+chmod 644 log_rotate.lst.tst
+
+su - root
+whoami
+	root
+cd /oraapp/home
+pwd
+	/oraapp/home
+
+chown root:system log_purge.sh
+chown root:system log_purge.lst
+chown root:system log_rotate.sh
+chown root:system log_rotate.lst
+chown root:system log_rotate.lst.tst
+
+ls -ltr
+	-rwxr--r--    1 root     system         6032 Mar 04 11:52 log_rotate.sh
+	-rwxr--r--    1 root     system         4166 Mar 04 11:52 log_purge.sh
+	-rw-r--r--    1 root     system         5903 Mar 04 11:52 log_rotate.lst
+	-rw-r--r--    1 root     system         5783 Mar 04 11:52 log_purge.lst
+	-rwxr--r--    1 oracle   oinstall       5146 Mar 04 11:52 tablespace_check_uat.sh
+	-rwxr--r--    1 oracle   oinstall       5146 Mar 04 11:52 tablespace_check_tmp.sh
+	-rwxr--r--    1 oracle   oinstall       5151 Mar 04 11:52 tablespace_check_tmp2.sh
+	-rwxr--r--    1 oracle   oinstall       5151 Mar 04 11:52 tablespace_check_tmp3.sh
+	-rw-r--r--    1 root     system         3842 Mar 04 11:52 log_rotate.lst.tst
+
+#!
+
+■現存しないローテートログを作成
+touch log_perge.log
+
+exit
+whoami
+	oracle
+pwd
+	/oraapp/home
+
+touch statspack_delete_tmp.log
+touch statspack_snap_tmp.log
+touch stop_em_tmp.log
+touch stop_em_tmp2.log
+touch stop_em_tmp3.log
+touch tablespace_check_dev.log
+touch tablespace_check_dev.txt
+touch tablespace_check_tmp.log
+touch tablespace_check_tmp.txt
+touch tablespace_check_tmp2.log
+touch tablespace_check_tmp2.txt
+touch tablespace_check_tmp3.log
+touch tablespace_check_tmp3.txt
+touch tablespace_check_uat.log
+touch tablespace_check_uat.txt
+
+ls -ltr
+	-rw-r--r--    1 root     system            0 Mar 04 12:17 log_perge.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:18 statspack_delete_tmp.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 statspack_snap_tmp.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 stop_em_tmp.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 stop_em_tmp2.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 stop_em_tmp3.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_dev.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_dev.txt
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_uat.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_uat.txt
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp.txt
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp2.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp2.txt
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp3.log
+	-rw-r--r--    1 oracle   oinstall          0 Mar 04 12:19 tablespace_check_tmp3.txt
+
+
+■動作チェック
+# root でログイン
+su - root
+whoami
+	root
+pwd
+	/
+
+# tablespace_check_uatチェック
+su - oracle -c "tablespace_check_uat.sh"
+	（SUCC  nnn: Normal Endを確認）
+cat /oraapp/home/tablespace_check_uat.txt
+$
+
+cd /oraapp/home
+pwd
+	/oraapp/home
+
+# log_purgeチェック
+ls -ltr /oradata/diag/rdbms/uatcpf/uatcpf/trace > before.txt
+
+LANG=JA_JP ./log_purge.sh >/dev/null
+	（SUCC  nnn: Normal Endを確認）
+    
+### 別ウィンドウを起動し、log_perge.logをモニタリングする
+
+ls -ltr /oradata/diag/rdbms/uatcpf/uatcpf/trace > after.txt
+diff before.txt after.txt > diff.txt
+cat diff.txt | egrep -v 'trc$' | egrep -v 'trm$'
+	（出力がないことを確認）
+head diff.txt 
+tail diff.txt
+	（93日超の日時であることを確認）
+rm -i after.txt before.txt diff.txt
+$
+
+# log_rotateチェック
+cp -p log_rotate.lst log_rotate.lst.back
+cp -p log_rotate.lst.tst log_rotate.lst
+
+ls -ltr log/
+LANG=JA_JP ./log_rotate.sh
+	（SUCC  nnn: Normal Endを確認）
+ls -ltr log/
+	（ローテートされたファイルを確認）
+cp -p log_rotate.lst.back log_rotate.lst
+rm -i log_rotate.lst.back log_rotate.lst.tst
+$
+
+
+
+■cron登録
+# root でログイン
+cd /var/spool/cron/crontabs/
+pwd
+
+# cronジョブ設定のバックアップ
+ls -l
+crontab -l
+cp -pi root root.$(date '+%Y%m%d_%H%M%S')
+ls -l
+
+#一時ファイルの作成と編集
+cp -i root root.tmp
+vi root.tmp
+
+# G
+# $
+# a
+# リターン
+# 以下をペースト
+50 2 * * 0,1,2,3,4,5,6 LANG=JA_JP /oraapp/home/log_rotate.sh >/dev/null 2>&1
+00 7 * * 0,1,2,3,4,5,6 LANG=JA_JP /oraapp/home/log_purge.sh >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_dev.sh"  >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_uat.sh"  >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_tmp.sh"  >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_tmp2.sh" >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_tmp3.sh" >/dev/null 2>&1
+# エスケープ
+# :wq
+
+# 内容確認
+cat root.tmp
+diff root root.tmp
+
+# 設定の反映
+crontab root.tmp
+crontab -l
+
+# 後始末
+rm -i root.tmp
+ls -l
+
+

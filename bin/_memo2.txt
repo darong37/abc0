@@ -1,0 +1,389 @@
+■事前準備
+事前に　_
+行う
+準備
+
+####■EM起動
+
+####・EM起動シェルの確認
+####ls -l ./start_em_uat.sh
+####
+####・EM起動シェル実行
+####./start_em_uat.sh
+
+
+###############################################
+#    !!!!!!!  作業当日             !!!!!!!    #
+###############################################
+
+■エクステントマップ確認
+・EnterpriseManagerで確認
+  https://mec-pre3d0111.in.mec.co.jp:5500/em/console/aboutApplication
+  
+  system / MECpswdUATCPF_SYSTEM
+
+
+ 「データベース」⇒「サーバー」⇒「表領域」を選択
+
+・ 対象表領域をクリック
+  「アクション」にて「表領域の内容表示」を選択し、「実行」ボタンを押下
+
+  「エクステント・マップ」を展開
+   ズームを２５％に変更、内容を確認
+   先頭のデータファイルのヘッダーをクリック（赤から黄色に変わる）
+   各データファイル毎の最後尾の未使用領域（緑色）の先頭と最後のBlock情報を表示させ、
+   それぞれの画面ショットを取得する
+
+・対象表領域
+	. BANDATA
+	. BGADATA
+	. BRBDATA
+	. BREDATA
+	. CMMDATA_TBS
+	. CPTDATA_TBS
+	. GFBDATA
+	. GORDATA
+	. GPRDATA
+	. GPRINDX
+	. GRCDATA
+	. RCODATA
+	. ROADATA
+	. STATS_TBS
+
+
+■ディスクスペース確認(事前)
+#!bash
+df -g
+#!
+
+■SQLPLUS
+#!bash
+export ORACLE_SID=uatcpf
+env |grep ORACLE_SID
+
+sqlplus / as sysdba
+#!
+
+#!sql
+set pagesize 5000
+set line 200
+
+col HOST_NAME for a20	
+select HOST_NAME,INSTANCE_NAME,STATUS from v$instance;	
+	HOST_NAME            INSTANCE_NAME                                    STATUS
+	-------------------- ------------------------------------------------ ------------------------------------
+	MEC-PRE3D0111        uatcpf                                           OPEN
+#!
+
+■テーブルスペースの使用状況確認
+#!sql
+col 表領域名 format a20
+col 現サイズ[MB] for 99,999,990
+col 使用容量[MB] for 99,999,990
+col 空き容量[MB] for 99,999,990
+col 使用率[％] for 990
+col 最大サイズ[MB] for 99,999,990
+col 最大空き容量[MB] for 99,999,990
+col 最大使用率[％] for 990
+
+SELECT 
+    D.TABLESPACE_NAME                     AS "表領域名"
+  , D.SIZE_MB                             AS "現サイズ[MB]"
+  ,(D.SIZE_MB - F.FREE_MB)                AS "使用容量[MB]"
+  , F.FREE_MB                             AS "空き容量[MB]"
+  ,(1 - F.FREE_MB/D.SIZE_MB) * 100        AS "使用率[％]"
+  , D.MAX_MB                              AS "最大サイズ[MB]"
+  ,(D.MAX_MB - (D.SIZE_MB - F.FREE_MB))   AS "最大空き容量[MB]"
+  ,(1 - (D.MAX_MB - (D.SIZE_MB - F.FREE_MB))/D.MAX_MB) * 100 
+                                          AS "最大使用率[％]"
+FROM (
+  SELECT 
+    TABLESPACE_NAME
+  , SUM(BYTES)/1024/1024 AS SIZE_MB
+  , case
+      when AUTOEXTENSIBLE = 'YES'
+      then SUM(MAXBYTES)/1024/1024
+      else   SUM(BYTES)/1024/1024
+    end  AS MAX_MB
+  FROM  DBA_DATA_FILES
+  GROUP BY TABLESPACE_NAME,AUTOEXTENSIBLE
+) D,
+(
+  SELECT 
+    TABLESPACE_NAME
+  , SUM(BYTES)/1024/1024 AS FREE_MB
+  FROM  DBA_FREE_SPACE
+  GROUP BY TABLESPACE_NAME
+) F
+WHERE D.TABLESPACE_NAME = F.TABLESPACE_NAME
+order by D.TABLESPACE_NAME;
+
+
+
+・データファイルの設定確認（事前）
+col TABLESPACE_NAME format a12
+col FILE_NAME format a40
+col next_MB for 999,999,999.99
+col size_MB for 999,999,999.99
+col maxsize_MB for 999,999,999.99
+
+select TABLESPACE_NAME
+       ,FILE_NAME
+       ,AUTOEXTENSIBLE
+       ,MAXBYTES/1024/1024    maxsize_MB
+       ,BYTES/1024/1024       size_MB
+       ,INCREMENT_BY*8/1024   next_MB
+from   DBA_DATA_FILES 
+where  tablespace_name not in ('UNDOTBS1')
+order  by tablespace_name;
+
+・データファイルの設定確認2（事前）
+col TABLESPACE_NAME format a12
+col FILE_NAME format a40
+col MAXBYTES for 999,999,999,999
+col BYTES for 999,999,999,999
+col INCREMENT_BY for 999,999,999,999
+
+select TABLESPACE_NAME
+       ,FILE_NAME
+       ,AUTOEXTENSIBLE
+       ,MAXBYTES
+       ,BYTES
+       ,INCREMENT_BY
+from   DBA_DATA_FILES 
+where  tablespace_name not in ('UNDOTBS1')
+order  by tablespace_name;
+
+#!
+
+■データエクスポート
+・ディレクトリオブジェクト確認
+SQL> SELECT * FROM ALL_DIRECTORIES;
+
+・SQLPLUSを抜ける
+SQL> exit
+
+$ expdp system/MECpswdUATCPF_SYSTEM directory=DATA_PUMP_DIR job_name=job_expdp logfile=exp20140303.log dumpfile=STATS.dmp tablespaces=STATS_TBS
+
+・STATSパックの実行される時間帯をエクスポート/インポートで避けること
+
+
+■データインポート
+$ impdp system/MECpswdUATCPF_SYSTEM directory=DATA_PUMP_DIR job_name=job_impdp logfile=imp20140303.log dumpfile=STATS.dmp tablespaces=STATS_TBS table_exists_action=replace
+
+(impdp/expdp停止手順)
+	注）絶対、CNTRL-Cを2度押さないこと
+	
+	CNTRL-Cを一度押下
+	プロンプトが出るので、
+	Import> kill_job
+
+・STATSパックの実行される時間帯をエクスポート/インポートで避けること
+・STATS_TBSのエクステントマップとリサイズはインポート後、取り直す
+
+
+■SQLPLUS
+sqlplus / as sysdba
+
+set pagesize 5000
+set line 200
+
+col HOST_NAME for a20	
+select HOST_NAME,INSTANCE_NAME,STATUS from v$instance;	
+	HOST_NAME            INSTANCE_NAME                                    STATUS
+	-------------------- ------------------------------------------------ ------------------------------------
+	MEC-PRE3D0111        uatcpf                                           OPEN
+
+
+■データファイルのリサイズ
+
+・[リサイズ」シートにより作成(事前に作成)
+----------
+alter database datafile '/oradata/dataf/uatcpf/bandata01.dbf' resize 1792m ;
+alter database datafile '/oradata/dataf/uatcpf/bgadata01.dbf' resize 256m ;
+
+alter database datafile '/oradata/dataf/uatcpf/bredata01.dbf' resize 768m ;
+alter database datafile '/oradata/dataf/uatcpf/cmmdata01.dbf' resize 1152m ;
+alter database datafile '/oradata/dataf/uatcpf/cptdata01.dbf' resize 384m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gfbdata01.dbf' resize 128m ;
+alter database datafile '/oradata/dataf/uatcpf/gordata01.dbf' resize 640m ;
+alter database datafile '/oradata/dataf/uatcpf/gordata02.dbf' resize 640m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gprdata01.dbf' resize 896m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata02.dbf' resize 896m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata03.dbf' resize 896m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gprdata04.dbf' resize 896m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata05.dbf' resize 896m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata06.dbf' resize 896m ;
+
+alter database datafile '/oradata/dataf/uatcpf/grcdata01.dbf' resize 256m ;
+alter database datafile '/oradata/dataf/uatcpf/rcodata01.dbf' resize 128m ;
+alter database datafile '/oradata/dataf/uatcpf/rcodata02.dbf' resize 128m ;
+
+----------
+・STATS_TBSのリサイズを上に反映させる
+
+
+
+■最大サイズの変更
+
+・[最大サイズ変更」シートにより作成(作業中作成)
+----------
+alter database datafile '/oradata/dataf/uatcpf/bandata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/bgadata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/brbdata01.dbf' autoextend on next 128m maxsize 4096m ;
+
+alter database datafile '/oradata/dataf/uatcpf/brbindx01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/bredata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/breindx01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/cmmdata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/cmmindx01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/cpfdata01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/cptdata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gfbdata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gfbindx01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gordata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gordata02.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gorindx01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gprdata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata02.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata03.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gprdata04.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata05.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/gprdata06.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/gprindx01.dbf' autoextend on next 128m maxsize 6144m ;
+alter database datafile '/oradata/dataf/uatcpf/grcdata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/grcindx01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/rcodata01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/rcodata02.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/dataf/uatcpf/rcoindx01.dbf' autoextend on next 128m maxsize 2048m ;
+
+alter database datafile '/oradata/dataf/uatcpf/roadata01.dbf' autoextend on next 128m maxsize 4096m ;
+alter database datafile '/oradata/dataf/uatcpf/roaindx01.dbf' autoextend on next 128m maxsize 2048m ;
+alter database datafile '/oradata/sysf/uatcpf/sysaux01.dbf' autoextend on next 128m maxsize 4096m ;
+
+alter database datafile '/oradata/sysf/uatcpf/system01.dbf' autoextend on next 128m maxsize 4096m ;
+alter database datafile '/oradata/sysf/uatcpf/users01.dbf' autoextend on next 128m maxsize 2048m ;
+
+----------
+
+-- 再拡張
+alter database datafile '/oradata/dataf/uatcpf/bandata01.dbf' autoextend on next 128m maxsize 4096m ;
+----------
+
+
+・TABLESPACE状況確認（事後）
+SELECT 
+    D.TABLESPACE_NAME                     AS "表領域名"
+  , D.SIZE_MB                             AS "現サイズ[MB]"
+  ,(D.SIZE_MB - F.FREE_MB)                AS "使用容量[MB]"
+  , F.FREE_MB                             AS "空き容量[MB]"
+  ,(1 - F.FREE_MB/D.SIZE_MB) * 100        AS "使用率[％]"
+  , D.MAX_MB                              AS "最大サイズ[MB]"
+  ,(D.MAX_MB - (D.SIZE_MB - F.FREE_MB))   AS "最大空き容量[MB]"
+  ,(1 - (D.MAX_MB - (D.SIZE_MB - F.FREE_MB))/D.MAX_MB) * 100 
+                                          AS "最大使用率[％]"
+FROM (
+  SELECT 
+    TABLESPACE_NAME
+  , SUM(BYTES)/1024/1024 AS SIZE_MB
+  , case
+      when AUTOEXTENSIBLE = 'YES'
+      then SUM(MAXBYTES)/1024/1024
+      else   SUM(BYTES)/1024/1024
+    end  AS MAX_MB
+  FROM  DBA_DATA_FILES
+  GROUP BY TABLESPACE_NAME,AUTOEXTENSIBLE
+) D,
+(
+  SELECT 
+    TABLESPACE_NAME
+  , SUM(BYTES)/1024/1024 AS FREE_MB
+  FROM  DBA_FREE_SPACE
+  GROUP BY TABLESPACE_NAME
+) F
+WHERE D.TABLESPACE_NAME = F.TABLESPACE_NAME
+order by D.TABLESPACE_NAME;
+
+
+・データファイルの設定確認（事後）
+col TABLESPACE_NAME format a12
+col FILE_NAME format a40
+col next_MB for 999,999,999.99
+col size_MB for 999,999,999.99
+col maxsize_MB for 999,999,999.99
+
+select TABLESPACE_NAME
+       ,FILE_NAME
+       ,AUTOEXTENSIBLE
+       ,MAXBYTES/1024/1024    maxsize_MB
+       ,BYTES/1024/1024       size_MB
+       ,INCREMENT_BY*8/1024   next_MB
+from   DBA_DATA_FILES 
+where  tablespace_name not in ('UNDOTBS1')
+order  by tablespace_name;
+
+
+
+・データファイルの設定確認2（事後）
+col TABLESPACE_NAME format a12
+col FILE_NAME format a40
+col MAXBYTES for 999,999,999,999
+col BYTES for 999,999,999,999
+col INCREMENT_BY for 999,999,999,999
+
+select TABLESPACE_NAME
+       ,FILE_NAME
+       ,AUTOEXTENSIBLE
+       ,MAXBYTES
+       ,BYTES
+       ,INCREMENT_BY
+from   DBA_DATA_FILES 
+where  tablespace_name not in ('UNDOTBS1')
+order  by tablespace_name;
+
+
+exit
+
+
+■ディスクスペース確認(事後)
+df -g
+
+(参考)
+Filesystem     GB blocks      Free %Used    Iused %Iused Mounted on
+#Before
+/dev/pre3dlv10    200.00     73.77   64%       34     1% /oradata/dataf/uatcpf
+/dev/pre3dlv11      0.25      0.25    1%        5     1% /oradata/duplf/uatcpf
+/dev/pre3dlv12     24.00     19.13   21%      127     1% /oradata/arcf/uatcpf
+#After
+/dev/pre3dlv10    200.00    178.39   11%       34     1% /oradata/dataf/uatcpf
+/dev/pre3dlv11      0.25      0.25    1%        5     1% /oradata/duplf/uatcpf
+/dev/pre3dlv12     24.00     19.13   21%      127     1% /oradata/arcf/uatcpf
+
+
+□作成したファイル
+	/oraapp/oracle/admin/uatcpf/dpdump
+		STATS.dmp
+
+
+####■EM停止
+・Oracleユーザであることを確認
+whoami
+####
+####・カレントディレクトリ確認「/oraapp/home」
+####pwd
+####
+####・EM停止シェルの確認
+####ls -l ./stop_em_prd.sh
+####
+####・EM停止シェル実行
+####./stop_em_prd.sh

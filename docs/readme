@@ -25,26 +25,42 @@
 
 
 1.Gitの基本操作
-	git add $target
+	
+	git status
+	
+	# 追加/変更
+	git add $target-file
 	git add -u
-	
-	git commit -m 'Add|Mod|Del reorder'
-	git commit -a -m 'Add|Mod|Del reorder'
-	
-	git push origin master
 
-	リネームする場合
+	# 移動/リネームする場合
 	git mv old-name new-name
 
-	削除する場合
+	# 削除する場合
 	git rm $target
+
+	# ローカルリポジトリ
+	git commit -m 'Add|Mod|Del reorder'
+	git commit -a -m 'Add|Mod|Del reorder'
+
+	#
+
+
+	ブランチをマージする
+		# ブランチ確認
+		git branch
+		git checkout master
+		git merger $target-branch
+		# ブランチを消去
+		git branch -d $target-branch
+	
+	git push origin master
 
 	やり直し
 		add後ファイルを戻す
 		git reset HEAD <file>..
 
 		直前にしたコミットをやり直す
-		(?) git commit --amend
+		git commit --amend
 
 		git reset --soft   → ワークディレクトリの内容はそのままでコミットだけを取り消す。
 		git reset --hard   → コミット取り消した上でワークディレクトリの内容も書き換える。
