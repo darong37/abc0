@@ -275,3 +275,15 @@ pre {
   pre code, pre tt {
     background-color: transparent;
     border: none; }
+    
+/*
+nav {
+    width                   : 70%;
+    float                   : right;
+    display                 : inline;
+    margin                  : 10px 0 10px 2%;
+    padding                 : 0;
+    border                  : 0;
+    position                : relative;
+}
+*/

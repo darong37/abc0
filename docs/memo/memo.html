@@ -1,15 +1,504 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>
-HTML Memo
-</title>
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="css/bootstrap.min.css"> <!-- Optional theme --> <link rel="stylesheet" href="css/bootstrap-theme.min.css"> <!-- Latest compiled and minified JavaScript -->
-<script src="js/bootstrap.min.js"></script></head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="memo.css">
+</head>
 <body>
+<nav id="TOC">
+<ul>
+<li><a href="#エクステンションマップ">エクステンションマップ</a></li>
+<li><a href="#packageのソースを取得する">Packageのソースを取得する</a></li>
+<li><a href="#パスワードがわからないユーザの期限切れを解除する">パスワードがわからないユーザの期限切れを解除する</a></li>
+<li><a href="#テーブルカラムのコメント">テーブルカラムのコメント</a></li>
+<li><a href="#sqlplusで結果をhtmlファイルに出力">sqlplusで結果をHTMLファイルに出力</a></li>
+<li><a href="#sqlplus-起動">sqlplus 起動</a></li>
+<li><a href="#viコマンド">viコマンド</a></li>
+<li><a href="#teraterm-でログインする">Teraterm でログインする</a></li>
+<li><a href="#windows-event-log-id">Windows Event Log ID</a></li>
+<li><a href="#未使用ブロック情報">未使用ブロック情報</a></li>
+<li><a href="#表領域データファイル一覧">表領域、データファイル一覧</a></li>
+<li><a href="#msys-bashの起動">Msys bashの起動</a></li>
+<li><a href="#ｄｄｌ文の取得">ＤＤＬ文の取得</a></li>
+<li><a href="#カラムのコメントの参照方法">カラムのコメントの参照方法</a></li>
+<li><a href="#cron登録">cron登録</a></li>
+<li><a href="#gitレポジトリを移行する方法">Gitレポジトリを移行する方法</a></li>
+<li><a href="#datapump-metadata_only">DATAPUMP metadata_only</a></li>
+<li><a href="#メタ情報のエクスポート">メタ情報のエクスポート</a></li>
+</ul>
+</nav>
+<h2 id="エクステンションマップ"><a href="#エクステンションマップ">エクステンションマップ</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql">col tablespace_name <span class="kw">for</span> a12  
+<span class="kw">select</span> tablespace_name <span class="kw">from</span> dba_tablespaces <span class="kw">order</span> <span class="kw">by</span> tablespace_name;  
 
+<span class="kw">break</span> <span class="kw">on</span> FILE_ID <span class="kw">skip</span> page  
+col <span class="kw">segment</span> <span class="kw">for</span> a40  
+<span class="kw">select</span>  
+  tablespace_name,   
+  file_id,   
+  block_id,   
+  blocks,   
+  owner||<span class="st">&#39;.&#39;</span>||segment_name     <span class="kw">segment</span>   
+<span class="kw">from</span>   
+  dba_extents  
+<span class="kw">where</span>  
+  TABLESPACE_NAME = <span class="st">&#39;</span><span class="ch">&amp;&amp;TABLESPACE_NAME</span><span class="st">&#39;</span>  
+<span class="kw">union</span>   
+<span class="kw">select</span>   
+  tablespace_name,   
+  file_id,   
+  block_id,   
+  blocks,   
+  <span class="st">&#39;&lt;free&gt;&#39;</span>   
+<span class="kw">from</span>   
+  dba_free_space   
+<span class="kw">where</span>  
+  TABLESPACE_NAME = <span class="st">&#39;</span><span class="ch">&amp;&amp;TABLESPACE_NAME</span><span class="st">&#39;</span>  
+<span class="kw">order</span> <span class="kw">by</span> <span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>;  
+
+undefine TABLESPACE_NAME</code></pre>
+<blockquote>
+<p>2014/03/14 10:23:16 更新</p>
+</blockquote>
+<hr />
+<h2 id="packageのソースを取得する"><a href="#packageのソースを取得する">Packageのソースを取得する</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="kw">distinct</span> name <span class="kw">from</span> dba_source <span class="kw">where</span> <span class="kw">TYPE</span> =<span class="st">&#39;PACKAGE&#39;</span> <span class="kw">and</span> name <span class="kw">like</span> <span class="st">&#39;</span><span class="ch">&amp;name</span><span class="st">&#39;</span>;  
+
+<span class="kw">select</span> text <span class="kw">from</span> dba_source <span class="kw">where</span> <span class="kw">TYPE</span> =<span class="st">&#39;PACKAGE&#39;</span> <span class="kw">and</span> name = <span class="st">&#39;</span><span class="ch">&amp;name</span><span class="st">&#39;</span> <span class="kw">order</span> <span class="kw">by</span> line;  
+
+<span class="kw">select</span> text <span class="kw">from</span> dba_source <span class="kw">where</span> <span class="kw">TYPE</span> =<span class="st">&#39;PACKAGE BODY&#39;</span> <span class="kw">and</span> name = <span class="st">&#39;</span><span class="ch">&amp;name</span><span class="st">&#39;</span> <span class="kw">order</span> <span class="kw">by</span> line;  
+</code></pre>
+<blockquote>
+<p>2014/03/12 18:22:25 更新</p>
+</blockquote>
+<hr />
+<h2 id="パスワードがわからないユーザの期限切れを解除する"><a href="#パスワードがわからないユーザの期限切れを解除する">パスワードがわからないユーザの期限切れを解除する</a></h2>
+<p>sysdbaでsqlplus起動</p>
+<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> NAME,<span class="kw">PASSWORD</span> <span class="kw">from</span> sys.user$ <span class="kw">where</span> name=<span class="st">&#39;</span><span class="ch">&amp;name</span><span class="st">&#39;</span>;  
+
+<span class="kw">ALTER</span> <span class="fu">USER</span> SYS <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="kw">VALUES</span> <span class="st">&#39;</span><span class="ch">&amp;PASSWORD</span><span class="st">&#39;</span>;  </code></pre>
+<blockquote>
+<p>2014/03/12 16:10:36 更新</p>
+</blockquote>
+<hr />
+<h2 id="テーブルカラムのコメント"><a href="#テーブルカラムのコメント">テーブルカラムのコメント</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql">col COLUMN_NAME <span class="kw">for</span> a50
+col COMMENTS <span class="kw">for</span> a80
+
+<span class="kw">select</span> table_name <span class="kw">from</span> <span class="kw">dictionary</span> <span class="kw">where</span> table_name <span class="kw">like</span> <span class="st">&#39;</span><span class="ch">&amp;table_name</span><span class="st">&#39;</span>;
+
+<span class="kw">select</span> COLUMN_NAME,COMMENTS 
+<span class="kw">from</span>   DBA_COL_COMMENTS 
+<span class="kw">join</span>   DBA_TAB_COLS <span class="kw">using</span>(TABLE_NAME,COLUMN_NAME) 
+<span class="kw">where</span>  table_name = <span class="st">&#39;</span><span class="ch">&amp;table_name</span><span class="st">&#39;</span> 
+<span class="kw">order</span>  <span class="kw">by</span> COLUMN_ID;</code></pre>
+<blockquote>
+<p>2014/03/12 13:05:46 更新</p>
+</blockquote>
+<hr />
+<h2 id="sqlplusで結果をhtmlファイルに出力"><a href="#sqlplusで結果をhtmlファイルに出力">sqlplusで結果をHTMLファイルに出力</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql">spool a.html
+<span class="kw">set</span> markup html <span class="kw">on</span> 
+
+<span class="kw">select</span> ; 
+
+<span class="kw">set</span> markup html <span class="kw">off</span> 
+spool <span class="kw">off</span>
+
+host a.html <span class="co">--ブラウザでhtmlファイルを開きます。</span>
+  </code></pre>
+<blockquote>
+<p>2014/03/12 11:40:33 更新</p>
+</blockquote>
+<hr />
+<h2 id="sqlplus-起動"><a href="#sqlplus-起動">sqlplus 起動</a></h2>
+<pre class="sourceCode bash"><code class="sourceCode bash">  
+<span class="kw">export</span> <span class="ot">ORACLE_SID=</span>prdcpf
+<span class="kw">sqlplus</span> / as sysdba</code></pre>
+<pre class="sourceCode sql"><code class="sourceCode sql">
+<span class="kw">set</span> pagesize <span class="dv">2000</span>
+<span class="kw">set</span> line <span class="dv">200</span>
+
+col HOST_NAME <span class="kw">for</span> a20
+<span class="kw">select</span> HOST_NAME,INSTANCE_NAME,STATUS <span class="kw">from</span> v$instance;
+    <span class="co">-- HOST_NAME            INSTANCE_NAME                                    STATUS</span>
+    <span class="co">-- -------------------- ------------------------------------------------ ------------------------------------</span>
+    <span class="co">-- MEC-PRE3D0111        prdcpf                                           OPEN</span></code></pre>
+<blockquote>
+<p>2014/03/11 11:01:16 更新</p>
+</blockquote>
+<hr />
+<h2 id="viコマンド"><a href="#viコマンド">viコマンド</a></h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">区分</th>
+<th style="text-align: left;">コマンド</th>
+<th style="text-align: left;">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">h</td>
+<td style="text-align: left;">左</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">j</td>
+<td style="text-align: left;">下</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">k</td>
+<td style="text-align: left;">上</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">l</td>
+<td style="text-align: left;">右</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">5l</td>
+<td style="text-align: left;">５文字右にカーソルを移動する</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">Shift +g</td>
+<td style="text-align: left;">ファイルの最後の行の先頭に移動</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">gg</td>
+<td style="text-align: left;">ファイルの先頭に移動</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">$</td>
+<td style="text-align: left;">行の最後に移動</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">０ ゼロ</td>
+<td style="text-align: left;">行の先頭に移動</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">^</td>
+<td style="text-align: left;">行の最初の空白でない文字に移動</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">G</td>
+<td style="text-align: left;">ファイルの末尾に移動</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">Ctrl +f</td>
+<td style="text-align: left;">ページアップ</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">Ctrl +ｂ</td>
+<td style="text-align: left;">ページダウン</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">カーソル移動</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">カーソルを画面の中心に移動</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">File再読込</td>
+<td style="text-align: left;">:e!</td>
+<td style="text-align: left;">編集を破棄してFileの再読み込み</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">File保存</td>
+<td style="text-align: left;">:wq</td>
+<td style="text-align: left;">現在編集中の内容を元のファイルに書き込んで終了</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">File保存終了</td>
+<td style="text-align: left;">:w</td>
+<td style="text-align: left;">編集結果を保存</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ヘルプ</td>
+<td style="text-align: left;">:help +Enter</td>
+<td style="text-align: left;">オンラインヘルプ表示</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：UNDO</td>
+<td style="text-align: left;">u</td>
+<td style="text-align: left;">直前の編集状態に戻す</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：検索</td>
+<td style="text-align: left;">/</td>
+<td style="text-align: left;">前方</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：検索</td>
+<td style="text-align: left;">?</td>
+<td style="text-align: left;">後方</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：検索</td>
+<td style="text-align: left;">n</td>
+<td style="text-align: left;">前方再検索</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：検索</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">後方再検索</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">x</td>
+<td style="text-align: left;">現在カーソルのある文字を削除</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">3x</td>
+<td style="text-align: left;">現在カーソルのある文字を削除　カウントの使用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">カーソル直前の文字を削除</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">D</td>
+<td style="text-align: left;">カーソル以降を削除</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">dw</td>
+<td style="text-align: left;">現在カーソルのある単語を削除</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">Shift +d</td>
+<td style="text-align: left;">カーソルから行末までを削除</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">dd</td>
+<td style="text-align: left;">現在カーソルのある行を削除（カット）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：削除</td>
+<td style="text-align: left;">100dd</td>
+<td style="text-align: left;">現在カーソルのある行を削除　カウントの使用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：置換</td>
+<td style="text-align: left;">s/xxx/yyy/</td>
+<td style="text-align: left;">xxxをｙｙｙに置換</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：置換</td>
+<td style="text-align: left;">:s/xxx/yyy/g</td>
+<td style="text-align: left;">カーソル行を全範囲として、xxxをyyyに置換</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：置換</td>
+<td style="text-align: left;">:%s/xxx/yyy/g</td>
+<td style="text-align: left;">ファイルを全範囲として、xxxをyyyに置換</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：置換</td>
+<td style="text-align: left;">:%s/xxx/yyy/gc</td>
+<td style="text-align: left;">ファイルを全範囲として、xxxをyyyに置換 確認しながら。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：ペースト</td>
+<td style="text-align: left;">p</td>
+<td style="text-align: left;">カーソル行の下にペースト</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：ペースト</td>
+<td style="text-align: left;">3p</td>
+<td style="text-align: left;">カーソル行の下にペースト　バッファーが３回ペーストされる。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：ペースト</td>
+<td style="text-align: left;">P</td>
+<td style="text-align: left;">カーソル行の上にペースト</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">i</td>
+<td style="text-align: left;">インサートモードになり、カーソルの前に文字列を挿入可能</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">a</td>
+<td style="text-align: left;">インサートモードになり、カーソルの後ろに文字列を挿入可能</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">o</td>
+<td style="text-align: left;">カーソル行の下に一行空白行を挿入</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">Shift + o</td>
+<td style="text-align: left;">カーソル行の上に一行空白行を挿入</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">ESC</td>
+<td style="text-align: left;">インサートモードからコマンドモードに戻る</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">I</td>
+<td style="text-align: left;">カーソル行の先頭から入力開始</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">A</td>
+<td style="text-align: left;">カーソル行の末尾から入力開始</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">r</td>
+<td style="text-align: left;">カーソル上の文字を置換</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">R</td>
+<td style="text-align: left;">以降の入力を上書き状態</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">O</td>
+<td style="text-align: left;">カーソル行の上に一行空白行を挿入</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：文字入力</td>
+<td style="text-align: left;">J</td>
+<td style="text-align: left;">カーソル行と直下の行を連結</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">編集：ヤンク</td>
+<td style="text-align: left;">yy</td>
+<td style="text-align: left;">カーソル行をヤンク（コピー）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">編集：ヤンク</td>
+<td style="text-align: left;">3yy</td>
+<td style="text-align: left;">カーソル行をヤンク（コピー）　カウントの使用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">モードについて</td>
+<td style="text-align: left;">起動直後</td>
+<td style="text-align: left;">コマンドモード</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">モードについて</td>
+<td style="text-align: left;">i</td>
+<td style="text-align: left;">コマンド　−＞　インサート　モード</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">モードについて</td>
+<td style="text-align: left;">ESC</td>
+<td style="text-align: left;">インサート　−＞　コマンド　モード</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">モードについて</td>
+<td style="text-align: left;">:</td>
+<td style="text-align: left;">コマンド　−＞　ｅｘラインエディタ　モード</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">モードについて</td>
+<td style="text-align: left;">ESC</td>
+<td style="text-align: left;">ｅｘラインエディタ　−＞　コマンド　モード</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>2014/03/10 18:33:22 更新</p>
+</blockquote>
+<hr />
+<h2 id="teraterm-でログインする"><a href="#teraterm-でログインする">Teraterm でログインする</a></h2>
+<h6 id="ログイン-oraclemec-pre3d0111"><a href="#ログイン-oraclemec-pre3d0111">ログイン： oracle@MEC-PRE3D0111</a></h6>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">whoami;</span> <span class="kw">id;</span> <span class="kw">hostname;</span> <span class="kw">date</span>
+    <span class="co"># oracle</span>
+    <span class="co"># uid=1100(oracle) gid=1000(oinstall) groups=1100(dba),1200(oper)</span>
+    <span class="co"># MEC-PRE3D0111</span>
+<span class="kw">cd</span> /oraapp/home
+<span class="kw">pwd</span>
+    <span class="co"># /oraapp/home</span></code></pre>
+<blockquote>
+<p>2014/03/10 11:22:42 更新</p>
+</blockquote>
+<hr />
+<h2 id="windows-event-log-id"><a href="#windows-event-log-id">Windows Event Log ID</a></h2>
+<p>Start Log Service: 6005 Shutdown: 6006</p>
+<blockquote>
+<p>2014/03/03 15:14:11 更新</p>
+</blockquote>
+<hr />
+<h2 id="未使用ブロック情報"><a href="#未使用ブロック情報">未使用ブロック情報</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> 
+        fs.file_id
+    ,   df.file_name
+    ,   fs.block_id
+    ,   fs.bytes/<span class="dv">8</span>/<span class="dv">1024</span>  <span class="ot">&quot;size&quot;</span>
+    ,   fs.block_id + fs.bytes/<span class="dv">8</span>/<span class="dv">1024</span> <span class="ot">&quot;next ID&quot;</span>
+    ,   <span class="fu">max</span>(fs.block_id) <span class="kw">over</span> ( <span class="kw">partition</span> <span class="kw">by</span> fs.file_id)
+            max_block
+<span class="kw">from</span>  dba_free_space fs
+<span class="kw">join</span>  dba_data_files df 
+      <span class="kw">on</span> df.file_id = fs.file_id
+<span class="kw">where</span> fs.tablespace_name = <span class="fu">upper</span>(<span class="st">&#39;&quot;</span><span class="ch">&amp;TABLESPACE_NAME</span><span class="st">&amp;&quot;&#39;</span>)
+<span class="kw">order</span> <span class="kw">by</span> fs.file_id,fs.block_id;</code></pre>
+<blockquote>
+<p>2014/02/27 14:07:26 更新</p>
+</blockquote>
+<hr />
+<h2 id="表領域データファイル一覧"><a href="#表領域データファイル一覧">表領域、データファイル一覧</a></h2>
+<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">set</span> pagesize <span class="dv">1000</span>
+<span class="kw">set</span> linesize <span class="dv">200</span>
+col TABLESPACE_NAME <span class="kw">for</span> a20
+col FILE_NAME <span class="kw">for</span> a50
+col MAXBYTES <span class="kw">for</span> <span class="dv">99999999999999</span>
+<span class="kw">select</span> tablespace_name, file_name, bytes/<span class="dv">1024</span>/<span class="dv">1024</span> MBytes, autoextensible, maxbytes/<span class="dv">1024</span>/<span class="dv">1024</span> MaxMBytes
+<span class="kw">from</span> dba_data_files
+<span class="kw">order</span> <span class="kw">by</span> tablespace_name, file_name ;</code></pre>
+<blockquote>
+<p>2014/02/26 18:48:06 更新</p>
+</blockquote>
+<hr />
 <h2 id="msys-bashの起動"><a href="#msys-bashの起動">Msys bashの起動</a></h2>
 <pre><code>\.abc\.sys\bin\bash.exe --login -i -c</code></pre>
 <blockquote>
@@ -18,12 +507,12 @@ HTML Memo
 <hr />
 <h2 id="ｄｄｌ文の取得"><a href="#ｄｄｌ文の取得">ＤＤＬ文の取得</a></h2>
 <p>表「emp」のＤＤＬ文を取得</p>
-<pre><code>set long 2000
-set heading off
+<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">set</span> <span class="dt">long</span> <span class="dv">2000</span>
+<span class="kw">set</span> heading <span class="kw">off</span>
 
-select
-dbms_metadata.get_ddl(&#39;TABLE&#39;,&#39;EMP&#39;)
-from dual;</code></pre>
+<span class="kw">select</span>
+dbms_metadata.get_ddl(<span class="st">&#39;TABLE&#39;</span>,<span class="st">&#39;EMP&#39;</span>)
+<span class="kw">from</span> dual;</code></pre>
 <blockquote>
 <p>2014/02/26 11:05:03 更新</p>
 </blockquote>
@@ -82,34 +571,7 @@ ls -l</code></pre>
 <p>2014/02/21 16:09:03 更新</p>
 </blockquote>
 <hr />
-<h1 id="gitレポジトリを移行する方法"><a href="#gitレポジトリを移行する方法">Gitレポジトリを移行する方法</a></h1>
-<pre><code>git clone --mirror &lt;SOURCE_REPOSITORY_URL&gt;
-cd &lt;REPOSITORY&gt;
-git push --mirror &lt;DESTINATION_REPOSITORY_URL&gt;</code></pre>
-<blockquote>
-<p>2014/02/20 09:59:23 更新</p>
-</blockquote>
-<hr />
-<h2 id="section"><a href="#section"></a></h2>
-<pre><code>ps auwxx</code></pre>
-<blockquote>
-<p>2014/02/20 18:35:46 更新</p>
-</blockquote>
-<hr />
-<h2 id="クーロン登録"><a href="#クーロン登録">クーロン登録</a></h2>
-<blockquote>
-
-</blockquote>
-<blockquote>
-<p>2014/02/20 17:50:16 更新</p>
-</blockquote>
-<hr />
-<h2 id="hoge"><a href="#hoge">hoge</a></h2>
-<blockquote>
-<p>2014/02/20 16:53:57 更新</p>
-</blockquote>
-<hr />
-<h2 id="gitレポジトリを移行する方法-1"><a href="#gitレポジトリを移行する方法-1">Gitレポジトリを移行する方法</a></h2>
+<h2 id="gitレポジトリを移行する方法"><a href="#gitレポジトリを移行する方法">Gitレポジトリを移行する方法</a></h2>
 <pre><code>git clone --mirror &lt;SOURCE_REPOSITORY_URL&gt;
 cd &lt;REPOSITORY&gt;
 git push --mirror &lt;DESTINATION_REPOSITORY_URL&gt;</code></pre>
@@ -123,9 +585,18 @@ git push --mirror &lt;DESTINATION_REPOSITORY_URL&gt;</code></pre>
 </ul>
 <h2 id="メタ情報のエクスポート"><a href="#メタ情報のエクスポート">メタ情報のエクスポート</a></h2>
 <pre><code>expdp hr/hr DIRECTORY=dpump_dir1 DUMPFILE=hr_comp.dmp COMPRESSION=METADATA_ONLY</code></pre>
+<blockquote>
 <p>2004/02/19 10:00:00 更新</p>
+</blockquote>
 <hr />
+<p>~~~~/bin/perl<br />use Term::Prompt;</p>
+<pre><code>#my $ans = prompt(&#39;x&#39;, &#39;question&#39;, &#39;help&#39;, &#39;default&#39; );  </code></pre>
+<p>my <span class="math">$ans = prompt('x', 'question ?','','' );   printf &quot;Ans: '$</span>ans'&quot;;</p>
+<p><span class="math">$ans = prompt('x', 'question ?','y/n','' );   printf &quot;Ans: '$</span>ans'&quot;;</p>
+<p><span class="math">$ans = prompt('x', 'question ?','y/n','y' );   printf &quot;Ans: '$</span>ans'&quot;;</p>
+<p><span class="math">$ans = prompt('x', 'question ?','','y' );   printf &quot;Ans: '$</span>ans'&quot;;</p>
+<blockquote>
+<p>2004/02/18 10:00:00 更新</p>
+</blockquote>
 </body>
 </html>
-
-
