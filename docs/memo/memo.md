@@ -1,5 +1,71 @@
 
 
+## アラートログ等の出力先設定  
+
+~~~~sql  
+show parameter dest  
+
+
+~~~~  
+
+> 2014/03/19 09:56:58 更新
+
+------------------
+
+
+
+## テーブルスペースの使用状況確認  
+
+~~~~sql  
+col 表領域名 format a20  
+col 現サイズ[MB] for 99,999,990  
+col 使用容量[MB] for 99,999,990  
+col 空き容量[MB] for 99,999,990  
+col 使用率[％] for 990  
+col 最大サイズ[MB] for 99,999,990  
+col 最大空き容量[MB] for 99,999,990  
+col 最大使用率[％] for 990  
+
+SELECT   
+    D.TABLESPACE_NAME                     AS "表領域名"  
+  , D.SIZE_MB                             AS "現サイズ[MB]"  
+  ,(D.SIZE_MB - F.FREE_MB)                AS "使用容量[MB]"  
+  , F.FREE_MB                             AS "空き容量[MB]"  
+  ,(1 - F.FREE_MB/D.SIZE_MB) * 100        AS "使用率[％]"  
+  , D.MAX_MB                              AS "最大サイズ[MB]"  
+  ,(D.MAX_MB - (D.SIZE_MB - F.FREE_MB))   AS "最大空き容量[MB]"  
+  ,(1 - (D.MAX_MB - (D.SIZE_MB - F.FREE_MB))/D.MAX_MB) * 100   
+                                          AS "最大使用率[％]"  
+FROM (  
+  SELECT   
+    TABLESPACE_NAME  
+  , SUM(BYTES)/1024/1024 AS SIZE_MB  
+  , case  
+      when AUTOEXTENSIBLE = 'YES'  
+      then SUM(MAXBYTES)/1024/1024  
+      else   SUM(BYTES)/1024/1024  
+    end  AS MAX_MB  
+  FROM  DBA_DATA_FILES  
+  GROUP BY TABLESPACE_NAME,AUTOEXTENSIBLE  
+) D,  
+(
+  SELECT   
+    TABLESPACE_NAME  
+  , SUM(BYTES)/1024/1024 AS FREE_MB  
+  FROM  DBA_FREE_SPACE  
+  GROUP BY TABLESPACE_NAME  
+) F  
+WHERE D.TABLESPACE_NAME = F.TABLESPACE_NAME  
+order by D.TABLESPACE_NAME;  
+
+~~~~  
+
+> 2014/03/17 17:50:25 更新
+
+------------------
+
+
+
 ## エクステンションマップ  
 
 ~~~~sql  
@@ -72,7 +138,6 @@ ALTER USER SYS IDENTIFIED BY VALUES '&PASSWORD';
 > 2014/03/12 16:10:36 更新
 
 ------------------
-
 
 
 ## テーブルカラムのコメント
@@ -215,7 +280,8 @@ File保存終了|:w      |編集結果を保存
 
 
 ## Teraterm でログインする
-######ログイン： oracle@MEC-PRE3D0111
+ログイン： oracle@MEC-PRE3D0111  
+
 ~~~~bash
 whoami; id; hostname; date
 	# oracle
@@ -307,62 +373,48 @@ from dual;
 
 > 2014/02/26 11:05:03 更新
 
-------------------
-
-## カラムのコメントの参照方法
-	set pages 1000
-	set line 132
-	col OWNER for a4
-	col TABLE_NAME for a20
-	col COLUMN_NAME for a16
-	col COMMENTS for a64
-
-	select * from DBA_COL_COMMENTS where TABLE_NAME = 'DBA_DATA_FILES';
-
-
-> 2014/02/21 17:03:53 更新
-
 -------------
 
+~~~~bash
 ## cron登録
-	# root でログイン
-	cd /var/spool/cron/crontabs/
-	pwd
+# root でログイン
+cd /var/spool/cron/crontabs/
+pwd
 
-	# cronジョブ設定のバックアップ
-	ls -l
-	crontab -l
-	cp -pi root root.$(date '+%Y%m%d_%H%M%S')
-	ls -l
+# cronジョブ設定のバックアップ
+ls -l
+crontab -l
+cp -pi root root.$(date '+%Y%m%d_%H%M%S')
+ls -l
 
-	#一時ファイルの作成と編集
-	cp -i root root.tmp
-	vi root.tmp
+#一時ファイルの作成と編集
+cp -i root root.tmp
+vi root.tmp
 
-	# G
-	# $
-	# a
-	# リターン
-	# 以下をペースト
-	50 2 * * 0,1,2,3,4,5,6 /oraapp/home/log_rotate.sh >/dev/null 2>&1
-	00 7 * * 0,1,2,3,4,5,6 /oraapp/home/log_purge.sh >/dev/null 2>&1
-	00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_uat.sh" >/dev/null 2>&1
-	# エスケープ
-	# :wq
+# G
+# $
+# a
+# リターン
+# 以下をペースト
+50 2 * * 0,1,2,3,4,5,6 /oraapp/home/log_rotate.sh >/dev/null 2>&1
+00 7 * * 0,1,2,3,4,5,6 /oraapp/home/log_purge.sh >/dev/null 2>&1
+00 8 * * 0,1,2,3,4,5,6 /bin/su - oracle -c "tablespace_check_uat.sh" >/dev/null 2>&1
+# エスケープ
+# :wq
 
-	# 内容確認
-	cat root.tmp
-	diff root root.tmp
+# 内容確認
+cat root.tmp
+diff root root.tmp
 
-	# 設定の反映
-	crontab root.tmp
-	crontab -l
+# 設定の反映
+crontab root.tmp
+crontab -l
 
-	# 後始末
-	rm -i root.tmp
-	ls -l
+# 後始末
+rm -i root.tmp
+ls -l
 
-
+~~~~
 
 
 > 2014/02/21 16:09:03 更新
@@ -384,7 +436,6 @@ from dual;
 
 * DB-ORACLE-DATAPUMP
 
-## メタ情報のエクスポート
 
 	expdp hr/hr DIRECTORY=dpump_dir1 DUMPFILE=hr_comp.dmp COMPRESSION=METADATA_ONLY
 
@@ -393,9 +444,10 @@ from dual;
 
 -------------
 
+## Perl Prompt
 
 
-~~~~/bin/perl  
+~~~~perl  
 use Term::Prompt;  
 
 	#my $ans = prompt('x', 'question', 'help', 'default' );  
@@ -411,5 +463,8 @@ printf "Ans: '$ans'\n";
 $ans = prompt('x', 'question ?','','y' );  
 printf "Ans: '$ans'\n";  
 
+~~~~
 
 > 2004/02/18 10:00:00 更新
+
+
