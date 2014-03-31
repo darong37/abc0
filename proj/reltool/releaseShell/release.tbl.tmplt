@@ -1,0 +1,12 @@
+﻿#keynam 	#subnam 	val
+SQL     	1       	on
+SQL     	2       	off
+SQL     	3       	off
+SQL     	4       	off
+SQL     	5       	off
+MV      	1       	/opt/share/st/release/sql
+MV      	2       	/opt/share/st/script/shell
+MV      	3       	/opt/share/st/script/sql
+MV      	4       	/opt/share/st/script/control
+MV      	5       	/opt/share/st/job/shell
+

@@ -1,0 +1,131 @@
+;======================================================================
+; 0.環境差分(フォルダのフルパスを\まで指定。Ex: C:\Users\JKK0535\Desktop\log\)
+;======================================================================
+SVRPRMS=param2
+strsplit SVRPRMS ',' 5
+
+HOSTNAME=groupmatchstr1
+USERNAME=groupmatchstr2
+PASSWORD=groupmatchstr3
+LOGNAME =groupmatchstr4
+RUNMODE =groupmatchstr5
+
+strcompare RUNMODE "DEBUG"
+if result==0 then
+  DEBUG=1
+else
+  DEBUG=0
+endif
+
+
+CMDLINE  =param3
+strsplit CMDLINE ' ' 3
+OPER=groupmatchstr2
+
+;Teraterm INIファイル保存先
+getdir INIDIR
+
+
+MESSAGE = 'Host : '
+strconcat MESSAGE HOSTNAME
+
+strconcat MESSAGE #13'User :'
+strconcat MESSAGE USERNAME
+
+strconcat MESSAGE #13'Pass :'
+strconcat MESSAGE PASSWORD
+
+strconcat MESSAGE #13'Log  :'
+strconcat MESSAGE LOGNAME
+
+strconcat MESSAGE #13'IniD :'
+strconcat MESSAGE INIDIR
+
+strconcat MESSAGE #13'CMD  :'
+strconcat MESSAGE CMDLINE
+
+if DEBUG==1 then
+  messagebox MESSAGE '接続'
+endif
+;======================================================================
+; 7.対象サーバへ接続(telnet)
+;======================================================================
+:connect
+
+CONCMD="' "
+strconcat CONCMD HOSTNAME
+strconcat CONCMD ':23'
+if DEBUG==1 then
+  strconcat CONCMD " /nossh''"
+else
+  strconcat CONCMD " /V /nossh''"
+endif
+connect CONCMD
+
+showtt -1
+
+;======================================================================
+; 8.サーバ毎のINIファイル読込
+;======================================================================
+strconcat INI_FILE INIDIR
+strconcat INI_FILE "\ttp_release.ini"
+restoresetup INI_FILE
+
+
+;======================================================================
+; 9.ログ取得
+;======================================================================
+logopen LOGNAME 0 1 1 0 1
+
+
+;======================================================================
+; 10.ログイン
+;======================================================================
+wait 'login:'
+sendln USERNAME
+wait 'Password:'
+sendln PASSWORD
+
+
+;======================================================================
+; 11.接続確認（お約束コマンド）
+;======================================================================
+sendln 'export PS1="$ "'
+wait '$ '
+
+if DEBUG == 1 then
+  sendln 'export DEBUG="ON"'
+  wait '$ '
+endif
+
+
+strcompare OPER "INIT"
+if result <> 0 || DEBUG == 1 then
+  ;
+  ; 表示
+  ;
+  pause 1
+
+  sendln CMDLINE
+  if DEBUG == 0 then
+    clearscreen 1
+  endif
+  showtt 1
+else
+  sendln CMDLINE
+endif
+
+wait 'Release Procedure Finished' 'Release Procedure Forced Exit'
+if result == 1 then
+  showtt -1
+else
+  showtt 1
+  setexitcode 1
+endif
+
+wait '$ '
+logwrite #13
+logclose
+
+pause 1
+sendln 'exit'

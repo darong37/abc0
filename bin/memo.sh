@@ -18,8 +18,8 @@ typeset fn=${1:-}
 #
 ### Main
 if [[ $fn = '' ]];then
-	:>  $TMPFILE
 	for fn in $( ls -1  $TRGTDIR/*.txt  2>&- );do
+		:>  $TMPFILE
 		typeset bn=$( basename $fn .txt)
 		typeset yyyy=${bn%????_??????}
 		bn=${bn#????}

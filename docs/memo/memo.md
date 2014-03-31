@@ -1,5 +1,82 @@
 
 
+## データファイルの設定確認（事前）  
+
+~~~~sql  
+col TABLESPACE_NAME format a12  
+col FILE_NAME format a40  
+col next_MB for 999,999,999.99  
+col size_MB for 999,999,999.99  
+col maxsize_MB for 999,999,999.99  
+
+select TABLESPACE_NAME  
+       ,FILE_NAME  
+       ,AUTOEXTENSIBLE  
+       ,MAXBYTES/1024/1024    maxsize_MB  
+       ,BYTES/1024/1024       size_MB  
+       ,INCREMENT_BY*8/1024   next_MB  
+from   DBA_DATA_FILES   
+--where  tablespace_name not in ('UNDOTBS1')  
+order  by tablespace_name;  
+
+~~~~  
+
+
+> 2014/03/27 15:42:50 更新
+
+------------------
+
+
+
+## TEMP容量確認  
+
+~~~~sql  
+set line 1000  
+col TABLESPACE_NAME format a20  
+col FILE_NAME       format a55  
+col SIZE_MBYTES     for 99,999,990  
+col MAXSIZE_MBYTES  for 99,999,990  
+
+SELECT  
+    TABLESPACE_NAME ,   
+    FILE_NAME ,STATUS ,   
+    BYTES/1024/1024 AS SIZE_MBYTES,  
+    AUTOEXTENSIBLE,  
+    MAXBYTES/1024/1024 AS MAXSIZE_MBYTES  
+ FROM  
+    DBA_TEMP_FILES ;   
+
+~~~~  
+
+
+> 2014/03/27 15:46:35 更新
+
+------------------
+
+
+
+## セッション情報  
+
+~~~~sql  
+col USERNAME for a8  
+col SCHEMANAME for a8  
+col PORT for 999999  
+col TERMINAL for a16   
+col TYPE for a12  
+col PROGRAM for a40  
+col STATUS for a8  
+col MACHINE for a28  
+
+select USERNAME,SCHEMANAME,PORT,TERMINAL,TYPE,PROGRAM,STATUS,MACHINE,LOGON_TIME from v$session order by type,username;  
+
+~~~~  
+
+> 2014/03/19 10:58:13 更新
+
+------------------
+
+
+
 ## アラートログ等の出力先設定  
 
 ~~~~sql  
@@ -466,5 +543,4 @@ printf "Ans: '$ans'\n";
 ~~~~
 
 > 2004/02/18 10:00:00 更新
-
 

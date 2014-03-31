@@ -1,0 +1,9 @@
+##ENVNAM:st
+##SID:jebs01
+##RECOMP:off
+##SRVCOD:DB
+##RESULT:.result
+##REPORT:.report
+release.sh	4141	0	
+release.fnc	9278	0	
+release.tbl	356	0	
